@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Streamium — 4K streaming from ₹100/month. 1080p ₹75, 720p ₹50. Watch on any device." />
+  <title>Streamium — Streaming from ₹50/month</title>
+
+
+
+  <style>
+    /* ---------- Design tokens ---------- */
+    :root {
+      --bg: #0f0f0f;
+      --bg-soft: #161616;
+      --accent: #14b8a6;
+      --accent-dark: #0f766e;
+      --accent-light: #5eead4;
+      --text: #f5f5f5;
+      --text-muted: #b3b3b3;
+      --glass: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --radius: 16px;
+      --transition: 0.35s cubic-bezier(0.25, 0.8, 0.35, 1);
+    }
+
+    /* ---------- Reset & base ---------- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.6; overflow-x: hidden;
+    }
+    img { max-width: 100%; display: block; border-radius: 50%; }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+
+    /* ---------- Custom scrollbar ---------- */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg-soft); }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(var(--accent), var(--accent-dark)); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* ---------- Layout helpers ---------- */
+    .container { width: min(1140px, 92%); margin-inline: auto; }
+    .container--narrow { width: min(760px, 92%); }
+    .section { padding: 5rem 0; position: relative; }
+    .section__title { font-size: clamp(1.8rem, 4vw, 2.6rem); text-align: center; }
+    .section__subtitle { text-align: center; color: var(--text-muted); margin: 0.75rem 0 3rem; }
+    .grid { display: grid; gap: 1.5rem; margin-top: 2.5rem; }
+    @media (min-width: 640px)  { .grid--3, .grid--4 { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 960px)  { .grid--3 { grid-template-columns: repeat(3, 1fr); }
+                                 .grid--4 { grid-template-columns: repeat(4, 1fr); } }
+
+    /* Plans stay hidden until "Get Started" is clicked */
+    .hidden-section { display: none; }
+
+    /* ---------- Glassmorphism card ---------- */
+    .glass {
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    }
+    .card {
+      padding: 2rem 1.5rem; text-align: center;
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+    }
+    .card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(20, 184, 166, 0.5);
+      box-shadow: 0 18px 40px rgba(20, 184, 166, 0.15);
+    }
+    .card__icon { font-size: 2.4rem; margin-bottom: 1rem; }
+    .card h3 { margin-bottom: 0.5rem; }
+    .card p { color: var(--text-muted); font-size: 0.95rem; }
+
+    /* ---------- Buttons & ripple ---------- */
+    .btn {
+      display: inline-block; padding: 0.8rem 2rem;
+      border: none; border-radius: 999px;
+      font-weight: 600; font-size: 1rem; cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+    .btn--primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #062622; }
+    .btn--primary:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(20, 184, 166, 0.4); }
+    .btn--outline { background: transparent; color: var(--text); border: 1.5px solid var(--glass-border); }
+    .btn--outline:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-3px); }
+    .btn--lg { padding: 1rem 2.8rem; font-size: 1.1rem; }
+    .btn--sm { padding: 0.45rem 1.3rem; font-size: 0.9rem; }
+
+    .ripple-circle {
+      position: absolute; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.45);
+      transform: scale(0);
+      animation: ripple 0.6s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+    .pulse { animation: pulse 2.4s infinite; }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.5); }
+      50%      { box-shadow: 0 0 0 16px rgba(20, 184, 166, 0); }
+    }
+
+    /* ---------- Floating particles ---------- */
+    .particles { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+    .particle {
+      position: absolute; bottom: -10px; border-radius: 50%;
+      background: rgba(20, 184, 166, 0.35);
+      animation: float linear infinite;
+    }
+    @keyframes float { to { transform: translateY(-110vh) translateX(6vw); opacity: 0; } }
+
+    /* ---------- Navigation: always inline, pinned top right, no hamburger ---------- */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15, 15, 15, 0.7);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid transparent;
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .nav.scrolled { border-bottom-color: var(--glass-border); background: rgba(15, 15, 15, 0.92); }
+    .nav__inner { display: flex; align-items: center; padding: 1rem 0; gap: 1rem; }
+    .nav__logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 0.5px; margin-right: auto; white-space: nowrap; }
+    .nav__logo span { color: var(--accent); }
+
+    .nav__menu { display: flex; align-items: center; gap: 1.6rem; margin-left: auto; }
+    .nav__link { color: var(--text-muted); font-weight: 500; position: relative; transition: color var(--transition); white-space: nowrap; }
+    .nav__link::after {
+      content: ""; position: absolute; left: 0; bottom: -4px;
+      width: 0; height: 2px; background: var(--accent);
+      transition: width var(--transition);
+    }
+    .nav__link:hover, .nav__link:focus-visible { color: var(--text); }
+    .nav__link:hover::after, .nav__link:focus-visible::after { width: 100%; }
+
+    /* Compact navbar on small screens (still inline, no hamburger) */
+    @media (max-width: 640px) {
+      .nav__logo { font-size: 1.1rem; }
+      .nav__menu { gap: 0.9rem; }
+      .nav__link { font-size: 0.85rem; }
+      .btn--sm { padding: 0.35rem 0.9rem; font-size: 0.8rem; }
+    }
+    @media (max-width: 420px) {
+      .nav__menu { gap: 0.6rem; }
+      .nav__link { font-size: 0.78rem; }
+    }
+
+    /* User chip shown after login */
+    .nav__user { display: none; align-items: center; gap: 0.6rem; font-weight: 600; white-space: nowrap; position: relative; }
+    .nav__user.visible { display: flex; }
+    
+    .profile-avatar-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #062622; font-weight: 700; font-size: 0.95rem;
+      border: 2px solid var(--glass-border); cursor: pointer;
+      position: relative; overflow: hidden; transition: transform var(--transition), box-shadow var(--transition);
+      padding: 0;
+    }
+    .profile-avatar-btn:hover { transform: scale(1.05); box-shadow: 0 0 14px rgba(20, 184, 166, 0.4); }
+    .profile-avatar-btn img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+    .profile-dropdown {
+      position: absolute; top: calc(100% + 12px); right: 0;
+      width: 220px; background: rgba(22, 22, 22, 0.96);
+      border: 1px solid var(--glass-border); border-radius: 14px;
+      padding: 1rem; backdrop-filter: blur(16px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+      display: none; flex-direction: column; gap: 0.75rem; z-index: 200;
+    }
+    .profile-dropdown.show { display: flex; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .profile-dropdown__name { font-weight: 700; font-size: 0.92rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .profile-dropdown__email { font-size: 0.78rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 0.15rem; }
+    .profile-dropdown__btn {
+      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+      width: 100%; padding: 0.5rem; border-radius: 8px;
+      border: 1px solid rgba(248, 113, 113, 0.3); background: rgba(248, 113, 113, 0.1);
+      color: #f87171; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: background 0.2s ease;
+      font-family: inherit; margin-top: 0.2rem;
+    }
+    .profile-dropdown__btn:hover { background: rgba(248, 113, 113, 0.25); }
+
+    /* ---------- Hero ---------- */
+    .hero {
+      min-height: 92vh; display: flex; align-items: center; text-align: center;
+      background:
+        radial-gradient(ellipse 80% 55% at 50% -10%, rgba(20, 184, 166, 0.25), transparent),
+        linear-gradient(180deg, #101616 0%, var(--bg) 70%);
+    }
+    .hero__title { font-size: clamp(2.2rem, 6vw, 4rem); line-height: 1.15; }
+    .hero__title span {
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero__subtitle { color: var(--text-muted); font-size: clamp(1rem, 2vw, 1.25rem); margin: 1.2rem auto 2.2rem; max-width: 560px; }
+    .hero__stats { display: flex; justify-content: center; gap: clamp(1.5rem, 6vw, 4rem); margin-top: 3.5rem; flex-wrap: wrap; }
+    .stat__number, .stat__plus { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; color: var(--accent); }
+    .stat__label { display: block; color: var(--text-muted); font-size: 0.9rem; }
+
+    /* ---------- Plans (professional pricing design) ---------- */
+    .plans { align-items: stretch; }
+    .plan {
+      display: flex; flex-direction: column; position: relative;
+      text-align: left; padding: 2.4rem 2rem 2rem;
+      overflow: visible;
+    }
+    .plan::before {
+      content: ""; position: absolute; top: 0; left: 1.5rem; right: 1.5rem; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+      border-radius: 3px;
+    }
+    .plan--featured::before {
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+    .plan__quality {
+      display: inline-block; align-self: flex-start;
+      background: rgba(20, 184, 166, 0.12);
+      border: 1px solid rgba(20, 184, 166, 0.35);
+      color: var(--accent-light);
+      font-weight: 700; font-size: 0.75rem; letter-spacing: 1.5px;
+      padding: 0.25rem 0.8rem; border-radius: 999px;
+      margin-bottom: 1rem; text-transform: uppercase;
+    }
+    .plan__name { font-size: 1.35rem; margin-bottom: 0.2rem; }
+    .plan__desc { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.4rem; }
+    .plan__price-row { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.3rem; }
+    .plan__currency { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+    .plan__amount { font-size: 3rem; font-weight: 800; line-height: 1; }
+    .plan__period { color: var(--text-muted); font-size: 0.95rem; }
+    .plan__billing { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.6rem; }
+    .plan__divider { height: 1px; background: var(--glass-border); margin-bottom: 1.4rem; }
+    .plan__features { margin: 0 0 2rem; flex: 1; display: grid; gap: 0.75rem; }
+    .plan__features li {
+      display: flex; align-items: flex-start; gap: 0.7rem;
+      color: var(--text-muted); font-size: 0.93rem; line-height: 1.45;
+    }
+    .plan__features .check {
+      flex-shrink: 0;
+      display: inline-grid; place-items: center;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(20, 184, 166, 0.15);
+      color: var(--accent); font-size: 0.7rem; font-weight: 800;
+      margin-top: 2px;
+    }
+    .plan__features .cross {
+      flex-shrink: 0;
+      display: inline-grid; place-items: center;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted); font-size: 0.7rem;
+      margin-top: 2px;
+    }
+    .plan__features li.disabled { opacity: 0.5; }
+    .plan .btn { width: 100%; text-align: center; }
+    .plan--featured {
+      border-color: var(--accent);
+      transform: scale(1.04);
+      box-shadow: 0 20px 50px rgba(20, 184, 166, 0.18);
+      background: linear-gradient(180deg, rgba(20, 184, 166, 0.08), var(--glass));
+    }
+    .plan--featured:hover { transform: scale(1.04) translateY(-8px); }
+    .plan__badge {
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #062622;
+      padding: 0.3rem 1.2rem; border-radius: 999px;
+      font-size: 0.78rem; font-weight: 800; white-space: nowrap;
+      letter-spacing: 0.5px;
+      box-shadow: 0 6px 18px rgba(20, 184, 166, 0.4);
+    }
+    .plans__note {
+      text-align: center; color: var(--text-muted);
+      font-size: 0.9rem; margin-top: 2.2rem;
+    }
+    .plans__note strong { color: var(--accent-light); font-weight: 600; }
+
+    /* ---------- Steps ---------- */
+    .steps { text-align: center; }
+    .step__number {
+      display: inline-grid; place-items: center;
+      width: 64px; height: 64px; margin-bottom: 1rem;
+      border-radius: 50%; font-size: 1.5rem; font-weight: 800; color: #062622;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .step:hover .step__number { transform: scale(1.12) rotate(6deg); box-shadow: 0 10px 26px rgba(20, 184, 166, 0.4); }
+    .step p { color: var(--text-muted); }
+
+    /* ---------- Accordion ---------- */
+    .accordion { margin-top: 2.5rem; display: grid; gap: 0.9rem; }
+    .accordion__item { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius); overflow: hidden; }
+    .accordion__header {
+      width: 100%; display: flex; justify-content: space-between; align-items: center;
+      padding: 1.1rem 1.4rem;
+      background: none; border: none; color: var(--text);
+      font-size: 1.05rem; font-weight: 600; cursor: pointer; text-align: left;
+    }
+    .accordion__header:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .accordion__icon { color: var(--accent); font-size: 1.4rem; transition: transform var(--transition); }
+    .accordion__item.active .accordion__icon { transform: rotate(45deg); }
+    .accordion__body { max-height: 0; overflow: hidden; transition: max-height var(--transition); }
+    .accordion__body p { padding: 0 1.4rem 1.2rem; color: var(--text-muted); }
+
+    /* ---------- Testimonials slider ---------- */
+    .slider { margin-top: 2.5rem; overflow: hidden; }
+    .slider__track { display: flex; transition: transform 0.55s ease; }
+    .slide { min-width: 100%; padding: 2.2rem; text-align: center; }
+    .slide p { font-size: 1.1rem; font-style: italic; }
+    .slide footer { display: flex; align-items: center; justify-content: center; gap: 0.9rem; margin-top: 1.4rem; }
+    .slide cite { color: var(--text-muted); font-style: normal; font-size: 0.95rem; }
+    .slider__controls { display: flex; align-items: center; justify-content: center; gap: 1.2rem; margin-top: 1.6rem; }
+    .slider__btn {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      color: var(--text); font-size: 1.4rem; cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: border-color var(--transition), color var(--transition);
+    }
+    .slider__btn:hover { border-color: var(--accent); color: var(--accent); }
+    .slider__dots { display: flex; gap: 8px; }
+    .slider__dot {
+      width: 10px; height: 10px; border-radius: 50%; border: none;
+      background: var(--glass-border); cursor: pointer;
+      transition: background var(--transition), transform var(--transition);
+    }
+    .slider__dot.active { background: var(--accent); transform: scale(1.25); }
+
+    /* ---------- Contact form ---------- */
+    .contact { padding: 2.2rem; margin-top: 2.5rem; display: grid; gap: 1.2rem; }
+    .contact__row { display: grid; gap: 1.2rem; }
+    @media (min-width: 640px) { .contact__row { grid-template-columns: 1fr 1fr; } }
+    .contact label { display: grid; gap: 0.4rem; font-size: 0.9rem; color: var(--text-muted); }
+    .contact input, .contact textarea {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px; padding: 0.8rem 1rem;
+      color: var(--text); font: inherit; resize: vertical;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .contact input:focus, .contact textarea:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+    }
+    .contact__status { color: var(--accent); font-weight: 600; min-height: 1.4em; }
+
+
+
+    /* ---------- Footer ---------- */
+    .footer { border-top: 1px solid var(--glass-border); background: var(--bg-soft); padding: 3.5rem 0 1.5rem; }
+    .footer__grid { display: grid; gap: 2rem; }
+    @media (min-width: 640px) { .footer__grid { grid-template-columns: 2fr 1fr 1fr 1fr; } }
+    .footer h3 { font-size: 1rem; margin-bottom: 0.8rem; }
+    .footer li { margin: 0.45rem 0; }
+    .footer li a { color: var(--text-muted); transition: color var(--transition); }
+    .footer li a:hover { color: var(--accent); }
+    .footer__tagline { color: var(--text-muted); margin: 0.8rem 0 1.2rem; }
+    .footer__social { display: flex; gap: 0.8rem; }
+    .footer__social a {
+      display: grid; place-items: center;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      transition: transform var(--transition), border-color var(--transition), color var(--transition);
+    }
+    .footer__social a:hover { transform: translateY(-4px); border-color: var(--accent); color: var(--accent); }
+    .footer__copy { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 2.5rem; }
+
+    /* ---------- Scroll reveal ---------- */
+    .reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ---------- Reduced motion ---------- */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      html { scroll-behavior: auto; }
+      .reveal { opacity: 1; transform: none; }
+    }
+
+    /* ---------- Top loading progress bar ---------- */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; width: 0; height: 3px; z-index: 9999;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      box-shadow: 0 0 10px rgba(20, 184, 166, 0.5), 0 0 5px rgba(20, 184, 166, 0.3);
+      transition: width 0.4s ease, opacity 0.4s ease;
+      pointer-events: none;
+    }
+    .progress-bar.done { opacity: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Top Loading Progress Bar ===== -->
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- ===== Floating Particles ===== -->
+  <div class="particles" id="particles" aria-hidden="true"></div>
+
+  <!-- ===== Sticky Navigation (inline links, top right, no hamburger) ===== -->
+  <header class="nav" id="nav">
+    <nav class="nav__inner container" aria-label="Main navigation">
+      <a href="#home" class="nav__logo">Stream<span>ium</span></a>
+
+      <ul class="nav__menu" id="navMenu">
+        <li><a href="#home" class="nav__link">Home</a></li>
+        <li><a href="#plans" class="nav__link" id="plansNavLink">Plans</a></li>
+        <li><a href="#faq" class="nav__link">FAQ</a></li>
+        <li><a href="#contact" class="nav__link">Contact</a></li>
+        <li>
+          <a href="login.html" class="btn btn--outline btn--sm ripple" id="loginBtn">Login</a>
+          <span class="nav__user" id="navUser"></span>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ===== Hero ===== -->
+    <section class="hero" id="home">
+      <div class="container hero__content reveal">
+        <h1 class="hero__title">Stream in 4K, 1080p or 720p.<br /><span>Starting at Just ₹50/month.</span></h1>
+        <p class="hero__subtitle">Thousands of movies and shows on any device. Pick your quality, pay only for what you need. Cancel anytime.</p>
+        <button class="btn btn--primary btn--lg ripple pulse" id="getStartedBtn">Get Started</button>
+
+        <!-- Animated counters -->
+        <div class="hero__stats" aria-label="Platform statistics">
+          <div class="stat">
+            <span class="stat__number" data-count="1">0</span><span class="stat__plus">+</span>
+            <span class="stat__label">Titles</span>
+          </div>
+          <div class="stat">
+            <span class="stat__number" data-count="1">0</span><span class="stat__plus">+</span>
+            <span class="stat__label">Subscribers</span>
+          </div>
+          <div class="stat">
+            <span class="stat__number" data-count="1">0</span><span class="stat__plus">+</span>
+            <span class="stat__label">Countries</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Features ===== -->
+    <section class="section" id="features">
+      <div class="container">
+        <h2 class="section__title reveal">Why Streamium?</h2>
+        <p class="section__subtitle reveal">Everything you need for the perfect movie night.</p>
+        <div class="grid grid--4">
+          <article class="card glass reveal">
+            <div class="card__icon" aria-hidden="true">🎬</div>
+            <h3>Up to 4K Ultra HD</h3>
+            <p>Crystal-clear picture quality with HDR and immersive sound.</p>
+          </article>
+          <article class="card glass reveal">
+            <div class="card__icon" aria-hidden="true">📱</div>
+            <h3>Any Device</h3>
+            <p>Watch on TV, laptop, tablet, or phone — switch seamlessly.</p>
+          </article>
+          <article class="card glass reveal">
+            <div class="card__icon" aria-hidden="true">⬇️</div>
+            <h3>Offline Downloads</h3>
+            <p>Save your favorites and watch anywhere, even without internet.</p>
+          </article>
+          <article class="card glass reveal">
+            <div class="card__icon" aria-hidden="true">👨‍👩‍👧</div>
+            <h3>Family Profiles</h3>
+            <p>Personalized profiles and kid-safe mode for the whole family.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Plans (professional pricing, hidden until Get Started) ===== -->
+    <section class="section hidden-section" id="plans">
+      <div class="container">
+        <h2 class="section__title reveal">Simple, Transparent Pricing</h2>
+        <p class="section__subtitle reveal">Pay only for the quality you need. Every plan is billed monthly with no lock-in.</p>
+        <div class="grid grid--3 plans">
+
+          <!-- Basic 720p -->
+          <article class="card glass plan reveal">
+            <span class="plan__quality">720p HD</span>
+            <h3 class="plan__name">Basic</h3>
+            <p class="plan__desc">Great for phones and casual viewing.</p>
+            <div class="plan__price-row">
+              <span class="plan__currency">₹</span>
+              <span class="plan__amount">50</span>
+              <span class="plan__period">/ month</span>
+            </div>
+            <p class="plan__billing">Billed monthly · No hidden fees</p>
+            <div class="plan__divider"></div>
+            <ul class="plan__features">
+              <li><span class="check" aria-hidden="true">✓</span> 720p HD streaming</li>
+              <li><span class="check" aria-hidden="true">✓</span> Watch on any device</li>
+              <li><span class="check" aria-hidden="true">✓</span> Offline downloads</li>
+              <li><span class="check" aria-hidden="true">✓</span> Cancel anytime</li>
+              <li class="disabled"><span class="cross" aria-hidden="true">✕</span> HDR &amp; spatial audio</li>
+              <li class="disabled"><span class="cross" aria-hidden="true">✕</span> 4K Ultra HD</li>
+            </ul>
+            <a href="checkout.html?plan=basic" class="btn btn--outline ripple">Get Basic</a>
+          </article>
+
+          <!-- Standard 1080p -->
+          <article class="card glass plan reveal">
+            <span class="plan__quality">1080p Full HD</span>
+            <h3 class="plan__name">Standard</h3>
+            <p class="plan__desc">Sharp Full HD for laptops and TVs.</p>
+            <div class="plan__price-row">
+              <span class="plan__currency">₹</span>
+              <span class="plan__amount">75</span>
+              <span class="plan__period">/ month</span>
+            </div>
+            <p class="plan__billing">Billed monthly · No hidden fees</p>
+            <div class="plan__divider"></div>
+            <ul class="plan__features">
+              <li><span class="check" aria-hidden="true">✓</span> 1080p Full HD streaming</li>
+              <li><span class="check" aria-hidden="true">✓</span> Watch on any device</li>
+              <li><span class="check" aria-hidden="true">✓</span> Offline downloads</li>
+              <li><span class="check" aria-hidden="true">✓</span> Cancel anytime</li>
+              <li><span class="check" aria-hidden="true">✓</span> HDR &amp; spatial audio</li>
+              <li class="disabled"><span class="cross" aria-hidden="true">✕</span> 4K Ultra HD</li>
+            </ul>
+            <a href="checkout.html?plan=standard" class="btn btn--outline ripple">Get Standard</a>
+          </article>
+
+          <!-- Premium 4K -->
+          <article class="card glass plan plan--featured reveal">
+            <span class="plan__badge">★ Most Popular</span>
+            <span class="plan__quality">4K Ultra HD</span>
+            <h3 class="plan__name">Premium</h3>
+            <p class="plan__desc">Cinema-grade 4K with HDR at home.</p>
+            <div class="plan__price-row">
+              <span class="plan__currency">₹</span>
+              <span class="plan__amount">100</span>
+              <span class="plan__period">/ month</span>
+            </div>
+            <p class="plan__billing">Billed monthly · No hidden fees</p>
+            <div class="plan__divider"></div>
+            <ul class="plan__features">
+              <li><span class="check" aria-hidden="true">✓</span> 4K Ultra HD streaming</li>
+              <li><span class="check" aria-hidden="true">✓</span> Watch on any device</li>
+              <li><span class="check" aria-hidden="true">✓</span> Offline downloads</li>
+              <li><span class="check" aria-hidden="true">✓</span> Cancel anytime</li>
+              <li><span class="check" aria-hidden="true">✓</span> HDR &amp; spatial audio</li>
+              <li><span class="check" aria-hidden="true">✓</span> Priority support</li>
+            </ul>
+            <a href="checkout.html?plan=premium" class="btn btn--primary ripple">Get Premium</a>
+          </article>
+        </div>
+
+        <p class="plans__note reveal">
+          <strong>7-day free trial</strong> on every plan · Secure payments · Switch or cancel anytime, no questions asked.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===== How It Works ===== -->
+    <section class="section" id="how">
+      <div class="container">
+        <h2 class="section__title reveal">How It Works</h2>
+        <div class="grid grid--3 steps">
+          <article class="step reveal">
+            <span class="step__number">1</span>
+            <h3>Sign In with Google</h3>
+            <p>One click with your Google account. No forms, no passwords.</p>
+          </article>
+          <article class="step reveal">
+            <span class="step__number">2</span>
+            <h3>Pick a Plan</h3>
+            <p>720p, 1080p, or 4K — upgrade or downgrade anytime.</p>
+          </article>
+          <article class="step reveal">
+            <span class="step__number">3</span>
+            <h3>Start Watching</h3>
+            <p>Enjoy instantly on all your devices, wherever you are.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FAQ (Accordion) ===== -->
+    <section class="section" id="faq">
+      <div class="container container--narrow">
+        <h2 class="section__title reveal">Frequently Asked Questions</h2>
+        <div class="accordion reveal">
+          <div class="accordion__item">
+            <button class="accordion__header" aria-expanded="false">
+              What is Streamium? <span class="accordion__icon" aria-hidden="true">+</span>
+            </button>
+            <div class="accordion__body"><p>Streamium is an independent subscription platform. Streamium is not affiliated with or endorsed by Netflix, Inc. or other streaming service providers./p></div>
+          </div>
+          <div class="accordion__item">
+            <button class="accordion__header" aria-expanded="false">
+              What do the plans cost? <span class="accordion__icon" aria-hidden="true">+</span>
+            </button>
+            <div class="accordion__body"><p>720p is ₹50/month, 1080p is ₹75/month, and 4K Ultra HD is ₹100/month. All plans are monthly with no lock-in.</p></div>
+          </div>
+          <div class="accordion__item">
+            <button class="accordion__header" aria-expanded="false">
+              Can I cancel anytime? <span class="accordion__icon" aria-hidden="true">+</span>
+            </button>
+            <div class="accordion__body"><p>Yes. There are no contracts and no cancellation fees. Cancel online in two clicks.</p></div>
+          </div>
+          <div class="accordion__item">
+            <button class="accordion__header" aria-expanded="false">
+              How do I log in? <span class="accordion__icon" aria-hidden="true">+</span>
+            </button>
+            <div class="accordion__body"><p>Members sign in with Google — quick and secure. Administrators use the separate admin login in the same dialog.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Testimonials Slider ===== -->
+    <section class="section" id="testimonials">
+      <div class="container container--narrow">
+        <h2 class="section__title reveal">What Our Members Say</h2>
+        <div class="slider reveal" id="slider" aria-roledescription="carousel" aria-label="Member testimonials">
+          <div class="slider__track" id="sliderTrack">
+            <blockquote class="slide glass">
+              <p>"4K at ₹100 a month? Unbeatable. The picture quality is stunning."</p>
+              <footer>
+                <img src="https://placehold.co/56x56/14B8A6/062622?text=A" alt="Avatar of Arjun R." width="56" height="56" />
+                <cite>Arjun R. — Premium member</cite>
+              </footer>
+            </blockquote>
+            <blockquote class="slide glass">
+              <p>"₹50 for HD streaming is perfect for my phone. Great value."</p>
+              <footer>
+                <img src="https://placehold.co/56x56/14B8A6/062622?text=M" alt="Avatar of Meera S." width="56" height="56" />
+                <cite>Meera S. — Basic member</cite>
+              </footer>
+            </blockquote>
+            <blockquote class="slide glass">
+              <p>"Google login means no passwords to remember. So convenient."</p>
+              <footer>
+                <img src="https://placehold.co/56x56/14B8A6/062622?text=J" alt="Avatar of Jay K." width="56" height="56" />
+                <cite>Jay K. — Standard member</cite>
+              </footer>
+            </blockquote>
+          </div>
+          <div class="slider__controls">
+            <button class="slider__btn ripple" id="prevSlide" aria-label="Previous testimonial">‹</button>
+            <div class="slider__dots" id="sliderDots" role="tablist" aria-label="Choose testimonial"></div>
+            <button class="slider__btn ripple" id="nextSlide" aria-label="Next testimonial">›</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Contact ===== -->
+    <section class="section" id="contact">
+      <div class="container container--narrow">
+        <h2 class="section__title reveal">Get in Touch</h2>
+        <form class="contact glass reveal" id="contactForm" novalidate>
+          <div class="contact__row">
+            <label>
+              <span>Name</span>
+              <input type="text" name="name" placeholder="Your name" required />
+            </label>
+            <label>
+              <span>Email</span>
+              <input type="email" name="email" placeholder="you@example.com" required />
+            </label>
+          </div>
+          <label>
+            <span>Message</span>
+            <textarea name="message" rows="4" placeholder="How can we help?" required></textarea>
+          </label>
+          <button type="submit" class="btn btn--primary ripple">Send Message</button>
+          <p class="contact__status" id="contactStatus" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+
+
+  <!-- ===== Footer ===== -->
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <a href="#home" class="nav__logo">Stream<span>ium</span></a>
+        <p class="footer__tagline">Your world of entertainment, anywhere.</p>
+        <div class="footer__social" aria-label="Social media links">
+          <a href="#" aria-label="Twitter / X">𝕏</a>
+          <a href="#" aria-label="Facebook">f</a>
+          <a href="#" aria-label="Instagram">◎</a>
+          <a href="#" aria-label="YouTube">▶</a>
+        </div>
+      </div>
+      <nav aria-label="Company links">
+        <h3>Company</h3>
+        <ul><li><a href="#">About</a></li><li><a href="#">Careers</a></li><li><a href="#">Press</a></li></ul>
+      </nav>
+      <nav aria-label="Support links">
+        <h3>Support</h3>
+        <ul><li><a href="#faq">Help Center</a></li><li><a href="#contact">Contact Us</a></li><li><a href="#">Devices</a></li></ul>
+      </nav>
+      <nav aria-label="Legal links">
+        <h3>Legal</h3>
+        <ul><li><a href="terms.html">Terms of Use</a></li><li><a href="privacy.html">Privacy Policy</a></li><li><a href="#">Cookies</a></li></ul>
+      </nav>
+    </div>
+    <p class="footer__copy">© 2026 Streamium. All rights reserved</p>
+  </footer>
+
+  <script>
+    "use strict";
+
+
+    /* ---------- 1. Floating particles ---------- */
+    (function createParticles() {
+      const container = document.getElementById("particles");
+      for (let i = 0; i < 28; i++) {
+        const p = document.createElement("span");
+        p.className = "particle";
+        const size = Math.random() * 5 + 2;
+        p.style.width = p.style.height = `${size}px`;
+        p.style.left = `${Math.random() * 100}%`;
+        p.style.animationDuration = `${Math.random() * 14 + 10}s`;
+        p.style.animationDelay = `${Math.random() * -20}s`;
+        p.style.opacity = Math.random() * 0.5 + 0.15;
+        container.appendChild(p);
+      }
+    })();
+
+    /* ---------- 2. Sticky nav scrolled style ---------- */
+    const nav = document.getElementById("nav");
+    window.addEventListener("scroll", () => {
+      nav.classList.toggle("scrolled", window.scrollY > 30);
+    }, { passive: true });
+
+    /* ---------- 3. Reveal plans only on "Get Started" ---------- */
+    const plansSection = document.getElementById("plans");
+
+    function showPlans() {
+      plansSection.classList.remove("hidden-section");
+      plansSection.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
+      plansSection.scrollIntoView({ behavior: "smooth" });
+    }
+
+    document.getElementById("getStartedBtn").addEventListener("click", showPlans);
+    document.getElementById("plansNavLink").addEventListener("click", (e) => {
+      e.preventDefault();
+      showPlans();
+    });
+
+    /* ---------- 4. Scroll reveal ---------- */
+    const revealObserver = new IntersectionObserver((entries, obs) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll(".reveal").forEach((el) => {
+      if (!el.closest(".hidden-section")) revealObserver.observe(el);
+    });
+
+    /* ---------- 5. Animated counters ---------- */
+    function animateCounter(el) {
+      const target = Number(el.dataset.count);
+      const duration = 1800;
+      const start = performance.now();
+      function tick(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.floor(target * eased).toLocaleString("en-IN");
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    const counterObserver = new IntersectionObserver((entries, obs) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) { animateCounter(entry.target); obs.unobserve(entry.target); }
+      });
+    }, { threshold: 0.6 });
+
+    document.querySelectorAll(".stat__number").forEach((el) => counterObserver.observe(el));
+
+    /* ---------- 6. FAQ accordion ---------- */
+    document.querySelectorAll(".accordion__header").forEach((header) => {
+      header.addEventListener("click", () => {
+        const item = header.parentElement;
+        const body = item.querySelector(".accordion__body");
+        const isOpen = item.classList.contains("active");
+        document.querySelectorAll(".accordion__item.active").forEach((openItem) => {
+          openItem.classList.remove("active");
+          openItem.querySelector(".accordion__body").style.maxHeight = null;
+          openItem.querySelector(".accordion__header").setAttribute("aria-expanded", "false");
+        });
+        if (!isOpen) {
+          item.classList.add("active");
+          body.style.maxHeight = body.scrollHeight + "px";
+          header.setAttribute("aria-expanded", "true");
+        }
+      });
+    });
+
+    /* ---------- 7. Testimonials slider ---------- */
+    (function slider() {
+      const track = document.getElementById("sliderTrack");
+      const slides = track.children;
+      const dotsWrap = document.getElementById("sliderDots");
+      let index = 0, autoTimer;
+
+      for (let i = 0; i < slides.length; i++) {
+        const dot = document.createElement("button");
+        dot.className = "slider__dot";
+        dot.setAttribute("role", "tab");
+        dot.setAttribute("aria-label", `Testimonial ${i + 1}`);
+        dot.addEventListener("click", () => goTo(i));
+        dotsWrap.appendChild(dot);
+      }
+      const dots = dotsWrap.children;
+
+      function goTo(i) {
+        index = (i + slides.length) % slides.length;
+        track.style.transform = `translateX(-${index * 100}%)`;
+        [...dots].forEach((d, di) => d.classList.toggle("active", di === index));
+        clearInterval(autoTimer);
+        autoTimer = setInterval(() => goTo(index + 1), 6000);
+      }
+
+      document.getElementById("prevSlide").addEventListener("click", () => goTo(index - 1));
+      document.getElementById("nextSlide").addEventListener("click", () => goTo(index + 1));
+      goTo(0);
+    })();
+
+    /* ---------- 8. Ripple effect ---------- */
+    document.querySelectorAll(".ripple").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const circle = document.createElement("span");
+        circle.className = "ripple-circle";
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        circle.style.width = circle.style.height = `${size}px`;
+        circle.style.left = `${e.clientX - rect.left - size / 2}px`;
+        circle.style.top = `${e.clientY - rect.top - size / 2}px`;
+        btn.appendChild(circle);
+        circle.addEventListener("animationend", () => circle.remove());
+      });
+    });
+
+    /* ---------- 9. Contact form (demo, no backend) ---------- */
+    document.getElementById("contactForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const status = document.getElementById("contactStatus");
+      if (!e.target.checkValidity()) {
+        status.textContent = "Please fill in all fields correctly.";
+        return;
+      }
+      status.textContent = "Thanks! Your message has been sent. (Demo)";
+      e.target.reset();
+    });
+
+
+    /* --- Progress bar logic --- */
+    (function() {
+      var bar = document.getElementById('progressBar');
+      if (!bar) return;
+      var w = 0;
+      var iv = setInterval(function() {
+        w += Math.random() * 15 + 5;
+        if (w > 90) w = 90;
+        bar.style.width = w + '%';
+      }, 200);
+      window.addEventListener('load', function() {
+        clearInterval(iv);
+        bar.style.width = '100%';
+        setTimeout(function() { bar.classList.add('done'); }, 400);
+      });
+    })();
+
+    /* ---------- Check User Session (shows profile avatar for customers) ---------- */
+    (async function checkUserSession() {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "same-origin" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.user) {
+          const user = data.user;
+          const loginBtn = document.getElementById("loginBtn");
+          const navUser = document.getElementById("navUser");
+          if (!loginBtn || !navUser) return;
+
+          loginBtn.style.display = "none";
+          navUser.classList.add("visible");
+
+          const initial = (user.name || user.email || "U").charAt(0).toUpperCase();
+          const avatarContent = user.picture
+            ? `<img src="${user.picture}" alt="${user.name || 'User'}">`
+            : `<span>${initial}</span>`;
+
+          const adminDashboardLink = user.isAdmin
+            ? `<a href="admin.html" style="color:var(--accent); font-size:0.84rem; font-weight:600; text-decoration:none; display:block; padding:0.2rem 0; border-bottom:1px solid var(--glass-border); margin-bottom:0.4rem;">⚙️ Admin Dashboard</a>`
+            : "";
+
+          navUser.innerHTML = `
+            <button class="profile-avatar-btn" id="avatarBtn" aria-label="User Profile">
+              ${avatarContent}
+            </button>
+            <div class="profile-dropdown" id="profileDropdown">
+              <div>
+                <div class="profile-dropdown__name">${user.name || 'Customer'}</div>
+                <div class="profile-dropdown__email">${user.email}</div>
+              </div>
+              ${adminDashboardLink}
+              <button class="profile-dropdown__btn" id="logoutBtn">
+                <span>Sign Out</span>
+              </button>
+            </div>
+          `;
+
+          const avatarBtn = document.getElementById("avatarBtn");
+          const profileDropdown = document.getElementById("profileDropdown");
+          const logoutBtn = document.getElementById("logoutBtn");
+
+          avatarBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle("show");
+          });
+
+          document.addEventListener("click", (e) => {
+            if (!navUser.contains(e.target)) {
+              profileDropdown.classList.remove("show");
+            }
+          });
+
+          logoutBtn.addEventListener("click", async () => {
+            try {
+              await fetch("/api/auth/logout", { method: "POST" });
+            } catch (e) {}
+            window.location.reload();
+          });
+        }
+      } catch (e) {
+        console.warn("Session check failed:", e);
+      }
+    })();
+  </script>
+</body>
+</html>

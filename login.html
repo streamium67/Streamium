@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sign in to Streamium — 4K streaming from ₹100/month. Continue with email or Google." />
+  <title>Sign In — Streamium</title>
+
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+
+
+  <style>
+    /* ---------- Design tokens (identical to index.html) ---------- */
+    :root {
+      --bg: #0f0f0f;
+      --bg-soft: #161616;
+      --accent: #14b8a6;
+      --accent-dark: #0f766e;
+      --accent-light: #5eead4;
+      --text: #f5f5f5;
+      --text-muted: #b3b3b3;
+      --glass: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --radius: 16px;
+      --transition: 0.35s cubic-bezier(0.25, 0.8, 0.35, 1);
+    }
+
+    /* ---------- Reset & base ---------- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.6; overflow-x: hidden;
+      display: flex; flex-direction: column; min-height: 100vh;
+    }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+
+    /* ---------- Custom scrollbar ---------- */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg-soft); }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(var(--accent), var(--accent-dark)); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* ---------- Layout helpers ---------- */
+    .container { width: min(1140px, 92%); margin-inline: auto; }
+
+    /* ---------- Glassmorphism ---------- */
+    .glass {
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    }
+
+    /* ---------- Buttons & ripple (identical to index.html) ---------- */
+    .btn {
+      display: inline-block; padding: 0.8rem 2rem;
+      border: none; border-radius: 999px;
+      font-weight: 600; font-size: 1rem; cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+    .btn--primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #062622; }
+    .btn--primary:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(20, 184, 166, 0.4); }
+    .btn--outline { background: transparent; color: var(--text); border: 1.5px solid var(--glass-border); }
+    .btn--outline:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-3px); }
+    .btn--lg { padding: 1rem 2.8rem; font-size: 1.1rem; }
+    .btn--sm { padding: 0.45rem 1.3rem; font-size: 0.9rem; }
+    .btn--block { width: 100%; text-align: center; }
+    .btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .ripple-circle {
+      position: absolute; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.45);
+      transform: scale(0);
+      animation: ripple 0.6s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+    /* ---------- Floating particles (identical to index.html) ---------- */
+    .particles { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+    .particle {
+      position: absolute; bottom: -10px; border-radius: 50%;
+      background: rgba(20, 184, 166, 0.35);
+      animation: float linear infinite;
+    }
+    @keyframes float { to { transform: translateY(-110vh) translateX(6vw); opacity: 0; } }
+
+    /* ---------- Navigation (identical to index.html) ---------- */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15, 15, 15, 0.7);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid transparent;
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .nav.scrolled { border-bottom-color: var(--glass-border); background: rgba(15, 15, 15, 0.92); }
+    .nav__inner { display: flex; align-items: center; padding: 1rem 0; gap: 1rem; }
+    .nav__logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 0.5px; margin-right: auto; white-space: nowrap; }
+    .nav__logo span { color: var(--accent); }
+    .nav__menu { display: flex; align-items: center; gap: 1.6rem; margin-left: auto; }
+    .nav__link { color: var(--text-muted); font-weight: 500; position: relative; transition: color var(--transition); white-space: nowrap; }
+    .nav__link::after {
+      content: ""; position: absolute; left: 0; bottom: -4px;
+      width: 0; height: 2px; background: var(--accent);
+      transition: width var(--transition);
+    }
+    .nav__link:hover, .nav__link:focus-visible { color: var(--text); }
+    .nav__link:hover::after, .nav__link:focus-visible::after { width: 100%; }
+
+    @media (max-width: 640px) {
+      .nav__logo { font-size: 1.1rem; }
+      .nav__menu { gap: 0.9rem; }
+      .nav__link { font-size: 0.85rem; }
+      .btn--sm { padding: 0.35rem 0.9rem; font-size: 0.8rem; }
+    }
+    @media (max-width: 420px) {
+      .nav__menu { gap: 0.6rem; }
+      .nav__link { font-size: 0.78rem; }
+    }
+
+    .auth {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 2.5rem 0; position: relative;
+      background:
+        radial-gradient(ellipse 80% 55% at 50% -10%, rgba(20, 184, 166, 0.25), transparent);
+    }
+    .auth__card {
+      width: min(420px, 92%);
+      padding: 1.5rem 1.8rem 1.4rem;
+      text-align: center;
+      position: relative;
+      /* smooth page entrance */
+      opacity: 0; transform: translateY(28px);
+      animation: cardIn 0.7s cubic-bezier(0.25, 0.8, 0.35, 1) forwards;
+    }
+    @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
+
+    .auth__badge {
+      display: inline-block; align-self: center;
+      background: rgba(20, 184, 166, 0.12);
+      border: 1px solid rgba(20, 184, 166, 0.35);
+      color: var(--accent-light);
+      font-weight: 700; font-size: 0.72rem; letter-spacing: 1.5px;
+      padding: 0.25rem 0.9rem; border-radius: 999px;
+      margin-bottom: 0.8rem; text-transform: uppercase;
+    }
+    .auth__title { font-size: clamp(1.4rem, 3.5vw, 1.8rem); line-height: 1.2; margin-bottom: 0.3rem; }
+    .auth__title span {
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .auth__subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; }
+
+    /* ---------- Email form ---------- */
+    .auth__form { display: grid; gap: 0.35rem; text-align: left; }
+    .field { display: grid; gap: 0.3rem; }
+    .field__label { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; padding-left: 0.2rem; }
+    .field__input {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px; padding: 0.6rem 1rem;
+      color: var(--text); font: inherit;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .field__input::placeholder { color: rgba(179, 179, 179, 0.6); }
+    .field__input:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+    }
+    .field__input.invalid {
+      border-color: #f87171;
+      box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.18);
+    }
+
+    /* ---------- Inline message (animated success/error) ---------- */
+    .auth__message {
+      min-height: 1.3em; font-size: 0.88rem; font-weight: 500;
+      padding-left: 0.2rem; margin-top: 0.1rem;
+      opacity: 0; transform: translateY(-4px);
+      transition: opacity var(--transition), transform var(--transition);
+    }
+    .auth__message.show { opacity: 1; transform: translateY(0); }
+    .auth__message.error { color: #f87171; }
+    .auth__message.success { color: var(--accent-light); }
+
+    .auth__continue { margin-top: 0.4rem; }
+
+    /* ---------- OR divider (identical style to index.html modal divider) ---------- */
+    .auth__divider {
+      display: flex; align-items: center; gap: 0.8rem;
+      color: var(--text-muted); font-size: 0.8rem;
+      margin: 0.7rem 0; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .auth__divider::before, .auth__divider::after {
+      content: ""; flex: 1; height: 1px; background: var(--glass-border);
+    }
+
+    /* ---------- Google button ---------- */
+    .google-btn { display: flex; align-items: center; justify-content: center; gap: 0.7rem; }
+    .google-btn svg { flex-shrink: 0; }
+
+    /* ---------- Loading spinner on buttons ---------- */
+    .btn.loading { color: transparent !important; pointer-events: none; }
+    .btn.loading .google-icon, .btn.loading .btn__label { visibility: hidden; }
+    .btn.loading::after {
+      content: ""; position: absolute; top: 50%; left: 50%;
+      width: 20px; height: 20px; margin: -10px 0 0 -10px;
+      border: 2.5px solid rgba(255, 255, 255, 0.35);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    .btn--primary.loading::after { border-color: rgba(6, 38, 34, 0.35); border-top-color: #062622; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---------- Secondary actions ---------- */
+    .auth__back {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--text-muted); font-size: 0.88rem; font-weight: 500;
+      margin-top: 0.8rem; transition: color var(--transition);
+    }
+    .auth__back:hover { color: var(--accent); }
+    .auth__legal {
+      margin-top: 0.5rem; font-size: 0.78rem; color: var(--text-muted); line-height: 1.5;
+    }
+    .auth__legal a { color: var(--accent-light); transition: color var(--transition); text-underline-offset: 3px; }
+    .auth__legal a:hover { color: var(--accent); text-decoration: underline; }
+
+    /* ---------- Footer (identical to index.html) ---------- */
+    .footer { border-top: 1px solid var(--glass-border); background: var(--bg-soft); padding: 3.5rem 0 1.5rem; }
+    .footer__grid { display: grid; gap: 2rem; }
+    @media (min-width: 640px) { .footer__grid { grid-template-columns: 2fr 1fr 1fr 1fr; } }
+    .footer h3 { font-size: 1rem; margin-bottom: 0.8rem; }
+    .footer li { margin: 0.45rem 0; }
+    .footer li a { color: var(--text-muted); transition: color var(--transition); }
+    .footer li a:hover { color: var(--accent); }
+    .footer__tagline { color: var(--text-muted); margin: 0.8rem 0 1.2rem; }
+    .footer__social { display: flex; gap: 0.8rem; }
+    .footer__social a {
+      display: grid; place-items: center;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      transition: transform var(--transition), border-color var(--transition), color var(--transition);
+    }
+    .footer__social a:hover { transform: translateY(-4px); border-color: var(--accent); color: var(--accent); }
+    .footer__copy { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 2.5rem; }
+
+    /* ---------- Page fade-out transition ---------- */
+    body.leaving { opacity: 0; transition: opacity 0.4s ease; }
+
+    /* ---------- Reduced motion ---------- */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      html { scroll-behavior: auto; }
+      .auth__card { opacity: 1; transform: none; }
+    }
+
+    /* ---------- Top loading progress bar ---------- */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; width: 0; height: 3px; z-index: 9999;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      box-shadow: 0 0 10px rgba(20, 184, 166, 0.5), 0 0 5px rgba(20, 184, 166, 0.3);
+      transition: width 0.4s ease, opacity 0.4s ease;
+      pointer-events: none;
+    }
+    .progress-bar.done { opacity: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Top Loading Progress Bar ===== -->
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- ===== Floating Particles ===== -->
+  <div class="particles" id="particles" aria-hidden="true"></div>
+
+  <!-- ===== Sticky Navigation (matches index.html) ===== -->
+  <header class="nav" id="nav">
+    <nav class="nav__inner container" aria-label="Main navigation">
+      <a href="index.html#home" class="nav__logo">Stream<span>ium</span></a>
+      <ul class="nav__menu">
+        <li><a href="index.html#home" class="nav__link">Home</a></li>
+        <li><a href="index.html#plans" class="nav__link">Plans</a></li>
+        <li><a href="index.html#faq" class="nav__link">FAQ</a></li>
+        <li><a href="index.html#contact" class="nav__link">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- ===== Auth ===== -->
+  <main class="auth">
+    <section class="auth__card glass" aria-labelledby="authTitle">
+      <span class="auth__badge">Streamium Account</span>
+      <h1 class="auth__title" id="authTitle">Welcome <span>back</span></h1>
+      <p class="auth__subtitle">Sign in to pick your plan and start watching in stunning 4K, 1080p, or 720p.</p>
+
+      <!-- Email login (email only, no password, no OTP) -->
+      <form class="auth__form" id="emailForm" novalidate>
+        <div class="field">
+          <label class="field__label" for="email">Email address</label>
+          <input
+            class="field__input" type="email" id="email" name="email"
+            placeholder="you@example.com" autocomplete="email"
+            aria-describedby="emailMessage" required
+          />
+        </div>
+        <p class="auth__message" id="emailMessage" role="status" aria-live="polite"></p>
+        <button type="submit" class="btn btn--primary btn--lg btn--block ripple auth__continue" id="continueBtn">
+          <span class="btn__label">Continue</span>
+        </button>
+      </form>
+
+      <!-- OR divider -->
+      <div class="auth__divider">or</div>
+
+      <!-- Google login -->
+      <div class="google-btn-wrapper" style="position: relative; width: 100%;">
+        <button class="btn btn--outline btn--block google-btn ripple" id="googleBtn" type="button">
+          <span class="google-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 48 48">
+              <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/>
+              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+              <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
+              <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C36.9 40.4 44 35 44 24c0-1.3-.1-2.6-.4-3.9z"/>
+            </svg>
+          </span>
+          <span class="btn__label">Continue with Google</span>
+        </button>
+        <div id="googleBtnContainer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.001; z-index: 5; overflow: hidden; display: flex; justify-content: center; align-items: center;"></div>
+      </div>
+
+      <!-- Back to home -->
+      <a href="index.html" class="auth__back" id="backHome">← Back to Home</a>
+
+      <!-- Legal links -->
+      <p class="auth__legal">
+        By continuing, you agree to Streamium’s
+        <a href="#">Terms &amp; Conditions</a> and <a href="#">Privacy Policy</a>.
+      </p>
+    </section>
+  </main>
+
+  <!-- ===== Footer (matches index.html) ===== -->
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <a href="index.html#home" class="nav__logo">Stream<span>ium</span></a>
+        <p class="footer__tagline">Your world of entertainment, anywhere.</p>
+        <div class="footer__social" aria-label="Social media links">
+          <a href="#" aria-label="Twitter / X">𝕏</a>
+          <a href="#" aria-label="Facebook">f</a>
+          <a href="#" aria-label="Instagram">◎</a>
+          <a href="#" aria-label="YouTube">▶</a>
+        </div>
+      </div>
+      <nav aria-label="Company links">
+        <h3>Company</h3>
+        <ul><li><a href="#">About</a></li><li><a href="#">Careers</a></li><li><a href="#">Press</a></li></ul>
+      </nav>
+      <nav aria-label="Support links">
+        <h3>Support</h3>
+        <ul><li><a href="index.html#faq">Help Center</a></li><li><a href="index.html#contact">Contact Us</a></li><li><a href="#">Devices</a></li></ul>
+      </nav>
+      <nav aria-label="Legal links">
+        <h3>Legal</h3>
+        <ul><li><a href="terms.html">Terms of Use</a></li><li><a href="privacy.html">Privacy Policy</a></li><li><a href="#">Cookies</a></li></ul>
+      </nav>
+    </div>
+    <p class="footer__copy">© 2026 Streamium. All rights reserved</p>
+  </footer>
+
+  <script>
+    "use strict";
+
+    /* ---------- Redirect logic ---------- */
+    const urlParams = new URLSearchParams(window.location.search);
+    const rawRedirect = urlParams.get("redirect") || "index.html";
+
+    function buildRedirectUrl(user) {
+      if (user && user.isAdmin) {
+        return "admin.html";
+      }
+
+      // If user is not an admin, never redirect to admin.html to avoid loops
+      let target = rawRedirect === "admin.html" ? "index.html" : rawRedirect;
+
+      const planParam = urlParams.get("plan");
+      if (target === "checkout.html" && planParam) {
+        return `checkout.html?plan=${encodeURIComponent(planParam)}`;
+      }
+      return target;
+    }
+
+    /* ---------- 1. Floating particles ---------- */
+    (function createParticles() {
+      const container = document.getElementById("particles");
+      for (let i = 0; i < 28; i++) {
+        const p = document.createElement("span");
+        p.className = "particle";
+        const size = Math.random() * 5 + 2;
+        p.style.width = p.style.height = `${size}px`;
+        p.style.left = `${Math.random() * 100}%`;
+        p.style.animationDuration = `${Math.random() * 14 + 10}s`;
+        p.style.animationDelay = `${Math.random() * -20}s`;
+        p.style.opacity = Math.random() * 0.5 + 0.15;
+        container.appendChild(p);
+      }
+    })();
+
+    /* ---------- 2. Sticky nav scrolled style ---------- */
+    const nav = document.getElementById("nav");
+    window.addEventListener("scroll", () => {
+      nav.classList.toggle("scrolled", window.scrollY > 30);
+    }, { passive: true });
+
+    /* ---------- 3. Ripple effect ---------- */
+    document.querySelectorAll(".ripple").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const circle = document.createElement("span");
+        circle.className = "ripple-circle";
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        circle.style.width = circle.style.height = `${size}px`;
+        circle.style.left = `${e.clientX - rect.left - size / 2}px`;
+        circle.style.top = `${e.clientY - rect.top - size / 2}px`;
+        btn.appendChild(circle);
+        circle.addEventListener("animationend", () => circle.remove());
+      });
+    });
+
+    /* ---------- 4. Helpers ---------- */
+    const emailForm = document.getElementById("emailForm");
+    const emailInput = document.getElementById("email");
+    const emailMessage = document.getElementById("emailMessage");
+    const continueBtn = document.getElementById("continueBtn");
+    const googleBtn = document.getElementById("googleBtn");
+
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+    function showMessage(text, type) {
+      emailMessage.textContent = text;
+      emailMessage.classList.remove("error", "success", "show");
+      void emailMessage.offsetWidth;
+      emailMessage.classList.add(type, "show");
+    }
+    function clearMessage() {
+      emailMessage.classList.remove("show", "error", "success");
+      emailMessage.textContent = "";
+    }
+
+    function setLoading(btn, isLoading) {
+      btn.classList.toggle("loading", isLoading);
+      btn.disabled = isLoading;
+    }
+
+    function navigateWithFade(url) {
+      document.body.classList.add("leaving");
+      setTimeout(() => { window.location.href = url; }, 400);
+    }
+
+    /* ---------- 5. Google Sign-In (GIS) ---------- */
+    function handleGoogleCredential(response) {
+      setLoading(googleBtn, true);
+      clearMessage();
+
+      fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ credential: response.credential }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            const user = data.user;
+            const targetUrl = buildRedirectUrl(user);
+            const isDashboard = targetUrl === "admin.html";
+            const roleBadge = user.role ? ` (${user.role})` : "";
+            const welcomeMsg = isDashboard
+              ? `Welcome back, ${user.name || "Admin"}${roleBadge}! Redirecting to Admin Dashboard…`
+              : `Welcome back, ${user.name || "Customer"}! Redirecting to Streamium…`;
+
+            showMessage(welcomeMsg, "success");
+            setTimeout(() => navigateWithFade(targetUrl), 700);
+          } else {
+            setLoading(googleBtn, false);
+            showMessage(data.error || "Sign-in failed. Please try again.", "error");
+          }
+        })
+        .catch(() => {
+          setLoading(googleBtn, false);
+          showMessage("Network error. Check your connection and try again.", "error");
+        });
+    }
+
+    /* Initialize GIS & check existing session when page loads */
+    window.addEventListener("load", async () => {
+      // NOTE: We intentionally do NOT auto-redirect on existing sessions here.
+      // Auto-redirect was causing an infinite loop between login.html and admin.html.
+      // Users will be redirected only after they actively click "Continue with Google".
+
+      try {
+        const res = await fetch("/api/config");
+        const { googleClientId } = await res.json();
+        if (window.google && google.accounts && googleClientId) {
+          google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: handleGoogleCredential,
+          });
+
+          // Render Google's official button inside the transparent overlay container
+          google.accounts.id.renderButton(
+            document.getElementById("googleBtnContainer"),
+            {
+              theme: "filled_black",
+              size: "large",
+              shape: "pill",
+              text: "continue_with",
+              width: 400,
+            }
+          );
+        }
+      } catch (e) {
+        console.warn("Could not load config:", e);
+      }
+    });
+
+    /* Custom Google button click fallback */
+    googleBtn.addEventListener("click", () => {
+      if (window.google && google.accounts) {
+        google.accounts.id.prompt();
+      } else {
+        showMessage("Google sign-in is loading. Make sure the server is running at http://localhost:3000", "error");
+      }
+    });
+
+    /* ---------- 7. Email form submit (placeholder — Google only for now) ---------- */
+    emailForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+
+      if (!email) {
+        emailInput.classList.add("invalid");
+        showMessage("Please enter your email address.", "error");
+        emailInput.focus();
+        return;
+      }
+      if (!EMAIL_RE.test(email)) {
+        emailInput.classList.add("invalid");
+        showMessage("That doesn't look like a valid email. Please check and try again.", "error");
+        emailInput.focus();
+        return;
+      }
+
+      emailInput.classList.remove("invalid");
+      clearMessage();
+      setLoading(continueBtn, true);
+
+      setTimeout(() => {
+        setLoading(continueBtn, false);
+        showMessage("Email sign-in coming soon! Please use Google sign-in for now.", "success");
+      }, 800);
+    });
+
+    emailInput.addEventListener("input", () => {
+      if (emailInput.classList.contains("invalid")) {
+        emailInput.classList.remove("invalid");
+        clearMessage();
+      }
+    });
+
+    /* ---------- 8. Smooth page transition for Back to Home ---------- */
+    document.getElementById("backHome").addEventListener("click", (e) => {
+      e.preventDefault();
+      navigateWithFade("index.html");
+    });
+
+    /* --- Progress bar logic --- */
+    (function() {
+      var bar = document.getElementById('progressBar');
+      if (!bar) return;
+      var w = 0;
+      var iv = setInterval(function() {
+        w += Math.random() * 15 + 5;
+        if (w > 90) w = 90;
+        bar.style.width = w + '%';
+      }, 200);
+      window.addEventListener('load', function() {
+        clearInterval(iv);
+        bar.style.width = '100%';
+        setTimeout(function() { bar.classList.add('done'); }, 400);
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Streamium Privacy Policy — Learn how we collect, use, and protect your personal information. Your privacy matters to us." />
+  <meta name="keywords" content="Streamium, privacy policy, data protection, streaming, personal information" />
+  <meta name="author" content="Streamium" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Privacy Policy — Streamium" />
+  <meta property="og:description" content="Learn how Streamium collects, uses, and protects your personal information." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Streamium" />
+
+  <title>Privacy Policy — Streamium</title>
+
+  <style>
+    /* ========================================================
+       DESIGN TOKENS — identical to index.html
+       ======================================================== */
+    :root {
+      --bg: #0f0f0f;
+      --bg-soft: #161616;
+      --accent: #14b8a6;
+      --accent-dark: #0f766e;
+      --accent-light: #5eead4;
+      --text: #f5f5f5;
+      --text-muted: #b3b3b3;
+      --glass: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --radius: 16px;
+      --transition: 0.35s cubic-bezier(0.25, 0.8, 0.35, 1);
+    }
+
+    /* ========================================================
+       RESET & BASE
+       ======================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.6; overflow-x: hidden;
+    }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+
+    /* ========================================================
+       CUSTOM SCROLLBAR — identical to index.html
+       ======================================================== */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg-soft); }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(var(--accent), var(--accent-dark)); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* ========================================================
+       LAYOUT HELPERS
+       ======================================================== */
+    .container { width: min(1140px, 92%); margin-inline: auto; }
+    .container--narrow { width: min(820px, 92%); margin-inline: auto; }
+
+    /* ========================================================
+       READING PROGRESS BAR
+       ======================================================== */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; z-index: 200;
+      width: 0%; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      transition: width 0.1s linear;
+      box-shadow: 0 0 10px rgba(20, 184, 166, 0.5);
+    }
+
+    /* ========================================================
+       FLOATING PARTICLES — identical to index.html
+       ======================================================== */
+    .particles { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+    .particle {
+      position: absolute; bottom: -10px; border-radius: 50%;
+      background: rgba(20, 184, 166, 0.35);
+      animation: float linear infinite;
+    }
+    @keyframes float { to { transform: translateY(-110vh) translateX(6vw); opacity: 0; } }
+
+    /* ========================================================
+       BUTTONS & RIPPLE — identical to index.html
+       ======================================================== */
+    .btn {
+      display: inline-block; padding: 0.8rem 2rem;
+      border: none; border-radius: 999px;
+      font-weight: 600; font-size: 1rem; cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+    .btn--primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #062622; }
+    .btn--primary:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(20, 184, 166, 0.4); }
+    .btn--outline { background: transparent; color: var(--text); border: 1.5px solid var(--glass-border); }
+    .btn--outline:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-3px); }
+    .btn--sm { padding: 0.45rem 1.3rem; font-size: 0.9rem; }
+
+    .ripple-circle {
+      position: absolute; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.45);
+      transform: scale(0);
+      animation: ripple 0.6s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+    /* ========================================================
+       NAVIGATION — identical to index.html
+       ======================================================== */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15, 15, 15, 0.7);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid transparent;
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .nav.scrolled { border-bottom-color: var(--glass-border); background: rgba(15, 15, 15, 0.92); }
+    .nav__inner { display: flex; align-items: center; padding: 1rem 0; gap: 1rem; }
+    .nav__logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 0.5px; margin-right: auto; white-space: nowrap; }
+    .nav__logo span { color: var(--accent); }
+    .nav__menu { display: flex; align-items: center; gap: 1.6rem; margin-left: auto; }
+    .nav__link { color: var(--text-muted); font-weight: 500; position: relative; transition: color var(--transition); white-space: nowrap; }
+    .nav__link::after {
+      content: ""; position: absolute; left: 0; bottom: -4px;
+      width: 0; height: 2px; background: var(--accent);
+      transition: width var(--transition);
+    }
+    .nav__link:hover, .nav__link:focus-visible { color: var(--text); }
+    .nav__link:hover::after, .nav__link:focus-visible::after { width: 100%; }
+
+    @media (max-width: 640px) {
+      .nav__logo { font-size: 1.1rem; }
+      .nav__menu { gap: 0.9rem; }
+      .nav__link { font-size: 0.85rem; }
+      .btn--sm { padding: 0.35rem 0.9rem; font-size: 0.8rem; }
+    }
+    @media (max-width: 420px) {
+      .nav__menu { gap: 0.6rem; }
+      .nav__link { font-size: 0.78rem; }
+    }
+
+    /* ========================================================
+       PAGE HERO — animated gradient heading
+       ======================================================== */
+    .page-hero {
+      padding: 5rem 0 3rem; text-align: center; position: relative;
+      background:
+        radial-gradient(ellipse 80% 55% at 50% -10%, rgba(20, 184, 166, 0.25), transparent),
+        linear-gradient(180deg, #101616 0%, var(--bg) 70%);
+    }
+    .page-hero__badge {
+      display: inline-block;
+      background: rgba(20, 184, 166, 0.12);
+      border: 1px solid rgba(20, 184, 166, 0.35);
+      color: var(--accent-light);
+      font-weight: 700; font-size: 0.72rem; letter-spacing: 1.5px;
+      padding: 0.25rem 0.9rem; border-radius: 999px;
+      margin-bottom: 1.2rem; text-transform: uppercase;
+    }
+    .page-hero__title {
+      font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.15;
+      background: linear-gradient(135deg, var(--accent), var(--accent-light), #a7f3d0, var(--accent));
+      background-size: 300% 300%;
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      animation: gradientShift 6s ease infinite;
+    }
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    .page-hero__subtitle {
+      color: var(--text-muted); font-size: clamp(0.95rem, 2vw, 1.1rem);
+      margin: 1rem auto 0; max-width: 560px;
+    }
+    .page-hero__updated {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--text-muted); font-size: 0.88rem;
+      margin-top: 1.5rem; padding: 0.4rem 1.2rem;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 999px;
+    }
+
+    /* ========================================================
+       PRIVACY CONTENT — continuous document, no separate cards
+       ======================================================== */
+    .privacy { padding: 3rem 0 5rem; }
+    .privacy__body {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      padding: clamp(2rem, 5vw, 3.5rem);
+    }
+
+    /* Section headings with icons */
+    .privacy__heading {
+      display: flex; align-items: center; gap: 0.8rem;
+      font-size: clamp(1.15rem, 3vw, 1.4rem); font-weight: 700;
+      margin: 2.8rem 0 1rem; color: var(--text);
+      scroll-margin-top: 5rem;
+    }
+    .privacy__heading:first-child { margin-top: 0; }
+    .privacy__heading-icon {
+      display: inline-grid; place-items: center;
+      width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+      background: rgba(20, 184, 166, 0.12);
+      border: 1px solid rgba(20, 184, 166, 0.25);
+      font-size: 1.1rem;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .privacy__heading:hover .privacy__heading-icon {
+      transform: scale(1.1) rotate(4deg);
+      box-shadow: 0 6px 18px rgba(20, 184, 166, 0.25);
+    }
+
+    /* Divider between sections */
+    .privacy__divider {
+      height: 1px; border: none; margin: 2.8rem 0 0;
+      background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+    }
+
+    /* Paragraph & list styling */
+    .privacy__body p {
+      color: var(--text-muted); font-size: 0.98rem;
+      line-height: 1.85; margin-bottom: 0.8rem;
+    }
+    .privacy__body ul {
+      margin: 0.6rem 0 1rem 1.4rem;
+      list-style: none;
+    }
+    .privacy__body ul li {
+      color: var(--text-muted); font-size: 0.96rem;
+      line-height: 1.8; position: relative;
+      padding-left: 1.4rem; margin-bottom: 0.3rem;
+    }
+    .privacy__body ul li::before {
+      content: ""; position: absolute; left: 0; top: 0.7em;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+    }
+    .privacy__body strong { color: var(--text); font-weight: 600; }
+    .privacy__body a {
+      color: var(--accent-light);
+      text-underline-offset: 3px;
+      transition: color var(--transition);
+    }
+    .privacy__body a:hover { color: var(--accent); text-decoration: underline; }
+
+    /* Contact box at the end */
+    .privacy__contact {
+      background: rgba(20, 184, 166, 0.06);
+      border: 1px solid rgba(20, 184, 166, 0.2);
+      border-radius: 12px; padding: 1.5rem 2rem;
+      margin-top: 1rem;
+    }
+    .privacy__contact p {
+      color: var(--text-muted); font-size: 0.95rem;
+      margin-bottom: 0.3rem;
+    }
+    .privacy__contact .label {
+      color: var(--text); font-weight: 600;
+      display: inline-block; min-width: 130px;
+    }
+
+    /* ========================================================
+       BACK TO TOP BUTTON
+       ======================================================== */
+    .back-top {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 90;
+      width: 48px; height: 48px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #062622; border: none; cursor: pointer;
+      font-size: 1.3rem; font-weight: 800;
+      display: grid; place-items: center;
+      opacity: 0; visibility: hidden;
+      transform: translateY(16px);
+      transition: opacity var(--transition), visibility var(--transition),
+                  transform var(--transition), box-shadow var(--transition);
+      box-shadow: 0 8px 24px rgba(20, 184, 166, 0.3);
+    }
+    .back-top.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+    .back-top:hover { box-shadow: 0 12px 32px rgba(20, 184, 166, 0.5); transform: translateY(-3px); }
+
+    /* ========================================================
+       FOOTER — identical to index.html
+       ======================================================== */
+    .footer { border-top: 1px solid var(--glass-border); background: var(--bg-soft); padding: 3.5rem 0 1.5rem; }
+    .footer__grid { display: grid; gap: 2rem; }
+    @media (min-width: 640px) { .footer__grid { grid-template-columns: 2fr 1fr 1fr 1fr; } }
+    .footer h3 { font-size: 1rem; margin-bottom: 0.8rem; }
+    .footer li { margin: 0.45rem 0; }
+    .footer li a { color: var(--text-muted); transition: color var(--transition); }
+    .footer li a:hover { color: var(--accent); }
+    .footer__tagline { color: var(--text-muted); margin: 0.8rem 0 1.2rem; }
+    .footer__social { display: flex; gap: 0.8rem; }
+    .footer__social a {
+      display: grid; place-items: center;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      transition: transform var(--transition), border-color var(--transition), color var(--transition);
+    }
+    .footer__social a:hover { transform: translateY(-4px); border-color: var(--accent); color: var(--accent); }
+    .footer__copy { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 2.5rem; }
+
+    /* ========================================================
+       SCROLL REVEAL
+       ======================================================== */
+    .reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ========================================================
+       REDUCED MOTION
+       ======================================================== */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      html { scroll-behavior: auto; }
+      .reveal { opacity: 1; transform: none; }
+      .page-hero__title { animation: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Reading Progress Bar ===== -->
+  <div class="progress-bar" id="progressBar" aria-hidden="true"></div>
+
+  <!-- ===== Floating Particles ===== -->
+  <div class="particles" id="particles" aria-hidden="true"></div>
+
+  <!-- ===== Sticky Navigation (matches index.html) ===== -->
+  <header class="nav" id="nav">
+    <nav class="nav__inner container" aria-label="Main navigation">
+      <a href="index.html#home" class="nav__logo">Stream<span>ium</span></a>
+      <ul class="nav__menu">
+        <li><a href="index.html#home" class="nav__link">Home</a></li>
+        <li><a href="index.html#plans" class="nav__link">Plans</a></li>
+        <li><a href="index.html#faq" class="nav__link">FAQ</a></li>
+        <li><a href="index.html#contact" class="nav__link">Contact</a></li>
+        <li>
+          <a href="login.html" class="btn btn--outline btn--sm ripple">Login</a>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ===== Page Hero ===== -->
+    <section class="page-hero" aria-labelledby="pageTitle">
+      <div class="container reveal">
+        <span class="page-hero__badge">Legal</span>
+        <h1 class="page-hero__title" id="pageTitle">Privacy Policy</h1>
+        <p class="page-hero__subtitle">Your privacy is important to us. This policy explains how Streamium collects, uses, and safeguards your personal information.</p>
+        <div class="page-hero__updated">
+          <span aria-hidden="true">📅</span> Last Updated: July 31, 2026
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Privacy Content ===== -->
+    <section class="privacy" aria-label="Privacy Policy content">
+      <div class="container container--narrow">
+        <div class="privacy__body">
+
+          <!-- 1. Introduction -->
+          <h2 class="privacy__heading" id="introduction">
+            <span class="privacy__heading-icon" aria-hidden="true">👋</span>
+            1. Introduction
+          </h2>
+          <p>Welcome to <strong>Streamium</strong>. This Privacy Policy describes how we collect, use, disclose, and protect your personal information when you access or use our website, applications, and streaming services (collectively, the "Services"). By using Streamium, you agree to the practices described in this policy.</p>
+          <p>We are committed to protecting your privacy and ensuring transparency about how your data is handled. We collect only the information necessary to provide and improve Streamium services.</p>
+
+          <hr class="privacy__divider" />
+
+          <!-- 2. Information We Collect -->
+          <h2 class="privacy__heading" id="info-collect">
+            <span class="privacy__heading-icon" aria-hidden="true">📋</span>
+            2. Information We Collect
+          </h2>
+          <p>We may collect the following types of information when you interact with our Services:</p>
+          <ul>
+            <li><strong>Personal Information:</strong> Your name, email address, and profile details you provide during registration.</li>
+            <li><strong>Google Account Details:</strong> When signing in with Google, we receive your name, email address, and profile picture as authorized by your Google account settings.</li>
+            <li><strong>Device Information:</strong> Device type, operating system, browser type and version, screen resolution, and unique device identifiers.</li>
+            <li><strong>Network Information:</strong> Your IP address, general geographic location, internet service provider, and connection type.</li>
+            <li><strong>Usage Data:</strong> Pages visited, features used, content viewed, viewing duration, search queries, and interaction patterns.</li>
+            <li><strong>Cookies & Tracking Data:</strong> Information collected through cookies, web beacons, and similar technologies to enhance your experience.</li>
+          </ul>
+
+          <hr class="privacy__divider" />
+
+          <!-- 3. How We Use Your Information -->
+          <h2 class="privacy__heading" id="info-use">
+            <span class="privacy__heading-icon" aria-hidden="true">⚙️</span>
+            3. How We Use Your Information
+          </h2>
+          <p>We use the information we collect for the following purposes:</p>
+          <ul>
+            <li>To provide, operate, maintain, and improve the Streamium streaming platform.</li>
+            <li>To create and manage your user account and authenticate your identity.</li>
+            <li>To personalize your viewing experience and deliver content recommendations.</li>
+            <li>To process subscription payments and manage billing.</li>
+            <li>To send important service notifications, security alerts, and account updates.</li>
+            <li>To respond to customer support inquiries and resolve technical issues.</li>
+            <li>To analyze usage trends, monitor platform performance, and improve service quality.</li>
+            <li>To detect, investigate, and prevent fraudulent or unauthorized activity.</li>
+            <li>To comply with applicable legal obligations and enforce our terms.</li>
+          </ul>
+
+          <hr class="privacy__divider" />
+
+          <!-- 4. Account Information -->
+          <h2 class="privacy__heading" id="account-info">
+            <span class="privacy__heading-icon" aria-hidden="true">👤</span>
+            4. Account Information
+          </h2>
+          <p>When you create a Streamium account, we collect your name and email address to set up and manage your profile. You are responsible for keeping your account credentials secure and for all activity that occurs under your account.</p>
+          <p>Streamium reserves the right to suspend or terminate accounts involved in fraud, abuse, unauthorized access, or violations of our Terms &amp; Conditions. If you suspect unauthorized use of your account, please contact us immediately.</p>
+
+          <hr class="privacy__divider" />
+
+          <!-- 5. Google Sign-In & Authentication -->
+          <h2 class="privacy__heading" id="google-signin">
+            <span class="privacy__heading-icon" aria-hidden="true">🔐</span>
+            5. Google Sign-In &amp; Authentication
+          </h2>
+          <p>Streamium offers <strong>Google Sign-In</strong> as a convenient and secure authentication method. When you choose to sign in with Google, we receive basic profile information (name, email, and profile picture) as authorized by your Google account settings.</p>
+          <p>Google Sign-In is used only for secure authentication and account creation. We do not access your Google Drive, Gmail, contacts, or any other Google services beyond what is required for authentication. You can revoke Streamium's access at any time through your <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">Google Account permissions</a>.</p>
+
+          <hr class="privacy__divider" />
+
+          <!-- 6. Email Verification & OTP -->
+          <h2 class="privacy__heading" id="email-otp">
+            <span class="privacy__heading-icon" aria-hidden="true">✉️</span>
+            6. Email Verification &amp; OTP
+          </h2>
+          <p>Email addresses are used for account verification, login authentication, important service notifications, and customer support. We may send one-time passwords (OTPs) to your registered email address for secure identity verification during login or sensitive account actions.</p>
+          <p>We will never ask for your password or OTP through unsolicited emails, phone calls, or messages. Always verify that communications come from official Streamium channels.</p>
+
+          <hr class="privacy__divider" />
+
+          <!-- 7. Payment Information -->
+          <h2 class="privacy__heading" id="payments">
+            <span class="privacy__heading-icon" aria-hidden="true">💳</span>
+            7. Payment Information
+          </h2>
+          <p>Payment transactions are securely processed through trusted third-party payment gateways. <strong>Streamium does not store your complete card or banking details.</strong> We may retain limited transaction records (such as transaction IDs, payment status, and subscription plan details) for billing, accounting, and dispute resolution purposes.</p>
+          <p>All payment processing complies with industry-standard security protocols, including PCI-DSS compliance, to safeguard your financial information.</p>
+
+          <hr class="privacy__divider" />
+
+          <!-- 8. Cookies & Similar Technologies -->
+          <h2 class="privacy__heading" id="cookies">
+            <span class="privacy__heading-icon" aria-hidden="true">🍪</span>
+            8. Cookies &amp; Similar Technologies
+          </h2>
+          <p>We may use cookies and similar technologies to improve user experience, remember your preferences, maintain login sessions, and enhance website performance. The types of cookies we use include:</p>
+          <ul>
+            <li><strong>Essential Cookies:</strong> Required for basic platform functionality, authentication, and security.</li>
+            <li><strong>Preference Cookies:</strong> Remember your settings, language, and viewing preferences.</li>
+            <li><strong>Analytics Cookies:</strong> Help us understand how users interact with our platform to improve performance and content.</li>
+            <li><strong>Performance Cookies:</strong> Monitor and optimize page load times, streaming quality, and overall platform reliability.</li>
+          </ul>
+          <p>You can manage cookie preferences through your browser settings. Please note that disabling certain cookies may affect the functionality of our Services.</p>
+
+          <hr class="privacy__divider" />
+
+          <!-- 9. Device Information -->
+          <h2 class="privacy__heading" id="device-info">
+            <span class="privacy__heading-icon" aria-hidden="true">📱</span>
+            9. Device Information
+          </h2>
+          <p>We collect device-related information to optimize streaming quality, ensure compatibility, and provide a seamless viewing experience across all your devices. This includes your device type, operating system, browser version, screen resolution, and network connection details.</p>
+          <p>This information helps us deliver the appropriate streaming quality (720p, 1080p, or 4K Ultra HD) based on your device capabilities and network conditions.</p>
+
+          <hr class="privacy__divider" />
+
+          <!-- 10. Data Security -->
+          <h2 class="privacy__heading" id="data-security">
+            <span class="privacy__heading-icon" aria-hidden="true">🛡️</span>
+            10. Data Security
+          </h2>
+          <p>We implement reasonable administrative, technical, and organizational security measures to protect user information against unauthorized access, disclosure, alteration, or destruction. Our security practices include:</p>
+          <ul>
+            <li>Encryption of data in transit using TLS/SSL protocols.</li>
+            <li>Secure storage with access controls and authentication requirements.</li>
+            <li>Regular security assessments and monitoring for vulnerabilities.</li>
+            <li>Employee access restrictions on a need-to-know basis.</li>
+          </ul>
+          <p>While we strive to protect your personal information, no method of electronic transmission or storage is completely secure. We encourage you to use strong passwords and take precautions to protect your account.</p>
+
+          <hr class="privacy__divider" />
+
+          <!-- 11. Data Retention -->
+          <h2 class="privacy__heading" id="data-retention">
+            <span class="privacy__heading-icon" aria-hidden="true">🗄️</span>
+            11. Data Retention
+          </h2>
+          <p>Personal information is retained only as long as necessary to provide services, comply with legal obligations, resolve disputes, or enforce our agreements. When your data is no longer needed for these purposes, we will securely delete or anonymize it.</p>
+          <p>If you request account deletion, we will remove your personal information within a reasonable timeframe, except where retention is required by law or for legitimate business purposes such as fraud prevention.</p>
+
+          <hr class="privacy__divider" />
+
+          <!-- 12. Third-Party Services -->
+          <h2 class="privacy__heading" id="third-party">
+            <span class="privacy__heading-icon" aria-hidden="true">🔗</span>
+            12. Third-Party Services
+          </h2>
+          <p><strong>We do not sell, rent, or trade your personal information to third parties.</strong> We may share limited information with trusted service providers only when necessary to:</p>
+          <ul>
+            <li>Operate and maintain the Streamium platform.</li>
+            <li>Process payments securely through authorized payment gateways.</li>
+            <li>Authenticate users via Google Sign-In and other identity providers.</li>
+            <li>Comply with legal obligations, court orders, or government requests.</li>
+            <li>Protect our legal rights, safety, and property, or those of our users.</li>
+          </ul>
+          <p>These service providers are contractually obligated to protect your data and use it only for the specific purposes we authorize.</p>
+
+          <hr class="privacy__divider" />
+
+          <!-- 13. Children's Privacy -->
+          <h2 class="privacy__heading" id="children">
+            <span class="privacy__heading-icon" aria-hidden="true">👶</span>
+            13. Children's Privacy
+          </h2>
+          <p>Our services are not intended for children under the age required by applicable law without parental or guardian consent. We do not knowingly collect personal information from children under the applicable minimum age in their jurisdiction.</p>
+          <p>If we become aware that we have inadvertently collected personal information from a child without appropriate consent, we will take prompt steps to delete that information. If you believe a child has provided us with personal data, please contact us immediately.</p>
+
+          <hr class="privacy__divider" />
+
+          <!-- 14. Your Rights -->
+          <h2 class="privacy__heading" id="your-rights">
+            <span class="privacy__heading-icon" aria-hidden="true">⚖️</span>
+            14. Your Rights
+          </h2>
+          <p>Depending on your jurisdiction, you may have the following rights regarding your personal information:</p>
+          <ul>
+            <li><strong>Access:</strong> Request a copy of the personal data we hold about you.</li>
+            <li><strong>Correction:</strong> Request updates or corrections to inaccurate or incomplete data.</li>
+            <li><strong>Deletion:</strong> Request deletion of your personal information, subject to applicable legal requirements.</li>
+            <li><strong>Portability:</strong> Request your data in a structured, commonly used, machine-readable format.</li>
+            <li><strong>Objection:</strong> Object to certain types of data processing where applicable.</li>
+            <li><strong>Withdrawal of Consent:</strong> Withdraw previously granted consent at any time.</li>
+          </ul>
+          <p>Users may request to update or delete their personal information by contacting our support team. We will respond to valid requests within the timeframe required by applicable law.</p>
+
+          <hr class="privacy__divider" />
+
+          <!-- 15. Changes to This Privacy Policy -->
+          <h2 class="privacy__heading" id="changes">
+            <span class="privacy__heading-icon" aria-hidden="true">📝</span>
+            15. Changes to This Privacy Policy
+          </h2>
+          <p>Streamium may update this Privacy Policy at any time to reflect changes in our practices, legal requirements, or services. When we make significant changes, we will update the "Last Updated" date at the top of this page and, where appropriate, provide additional notice through our platform or via email.</p>
+          <p>Continued use of the website after changes constitutes acceptance of the updated policy. We encourage you to review this page periodically to stay informed about how we protect your information.</p>
+
+          <hr class="privacy__divider" />
+
+          <!-- 16. Contact Information -->
+          <h2 class="privacy__heading" id="contact-info">
+            <span class="privacy__heading-icon" aria-hidden="true">📧</span>
+            16. Contact Information
+          </h2>
+          <p>If you have questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact us:</p>
+          <div class="privacy__contact">
+            <p><span class="label">Support Email:</span> <a href="mailto:support@streamium.com">support@streamium.com</a></p>
+            <p><span class="label">Business Email:</span> <a href="mailto:business@streamium.com">business@streamium.com</a></p>
+            <p><span class="label">Website:</span> <a href="index.html">Streamium</a></p>
+            <p><span class="label">Business Hours:</span> Monday – Friday, 9:00 AM – 6:00 PM IST</p>
+          </div>
+
+        </div><!-- /.privacy__body -->
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== Back to Top Button ===== -->
+  <button class="back-top" id="backTop" aria-label="Back to top">↑</button>
+
+  <!-- ===== Footer (matches index.html) ===== -->
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <a href="index.html#home" class="nav__logo">Stream<span>ium</span></a>
+        <p class="footer__tagline">Your world of entertainment, anywhere.</p>
+        <div class="footer__social" aria-label="Social media links">
+          <a href="#" aria-label="Twitter / X">𝕏</a>
+          <a href="#" aria-label="Facebook">f</a>
+          <a href="#" aria-label="Instagram">◎</a>
+          <a href="#" aria-label="YouTube">▶</a>
+        </div>
+      </div>
+      <nav aria-label="Company links">
+        <h3>Company</h3>
+        <ul><li><a href="#">About</a></li><li><a href="#">Careers</a></li><li><a href="#">Press</a></li></ul>
+      </nav>
+      <nav aria-label="Support links">
+        <h3>Support</h3>
+        <ul><li><a href="index.html#faq">Help Center</a></li><li><a href="index.html#contact">Contact Us</a></li><li><a href="#">Devices</a></li></ul>
+      </nav>
+      <nav aria-label="Legal links">
+        <h3>Legal</h3>
+        <ul><li><a href="terms.html">Terms of Use</a></li><li><a href="privacy.html">Privacy Policy</a></li><li><a href="#">Cookies</a></li></ul>
+      </nav>
+    </div>
+    <p class="footer__copy">© 2026 Streamium. All rights reserved.</p>
+  </footer>
+
+  <script>
+    "use strict";
+
+    /* ==========================================================
+       1. Floating Particles — identical to index.html
+       ========================================================== */
+    (function createParticles() {
+      const container = document.getElementById("particles");
+      for (let i = 0; i < 28; i++) {
+        const p = document.createElement("span");
+        p.className = "particle";
+        const size = Math.random() * 5 + 2;
+        p.style.width = p.style.height = `${size}px`;
+        p.style.left = `${Math.random() * 100}%`;
+        p.style.animationDuration = `${Math.random() * 14 + 10}s`;
+        p.style.animationDelay = `${Math.random() * -20}s`;
+        p.style.opacity = Math.random() * 0.5 + 0.15;
+        container.appendChild(p);
+      }
+    })();
+
+    /* ==========================================================
+       2. Sticky Nav Scrolled Style
+       ========================================================== */
+    const nav = document.getElementById("nav");
+    window.addEventListener("scroll", () => {
+      nav.classList.toggle("scrolled", window.scrollY > 30);
+    }, { passive: true });
+
+    /* ==========================================================
+       3. Reading Progress Bar
+       ========================================================== */
+    const progressBar = document.getElementById("progressBar");
+    function updateProgress() {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const percent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      progressBar.style.width = `${percent}%`;
+    }
+    window.addEventListener("scroll", updateProgress, { passive: true });
+    updateProgress();
+
+    /* ==========================================================
+       4. Scroll Reveal
+       ========================================================== */
+    const revealObserver = new IntersectionObserver((entries, obs) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
+
+    /* ==========================================================
+       5. Back to Top Button
+       ========================================================== */
+    const backTop = document.getElementById("backTop");
+    window.addEventListener("scroll", () => {
+      backTop.classList.toggle("visible", window.scrollY > 400);
+    }, { passive: true });
+
+    backTop.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    /* ==========================================================
+       6. Ripple Effect — identical to index.html
+       ========================================================== */
+    document.querySelectorAll(".ripple").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const circle = document.createElement("span");
+        circle.className = "ripple-circle";
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        circle.style.width = circle.style.height = `${size}px`;
+        circle.style.left = `${e.clientX - rect.left - size / 2}px`;
+        circle.style.top = `${e.clientY - rect.top - size / 2}px`;
+        btn.appendChild(circle);
+        circle.addEventListener("animationend", () => circle.remove());
+      });
+    });
+  </script>
+</body>
+</html>

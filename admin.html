@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Streamium Admin Dashboard — manage users, orders, subscriptions, plans, payments and analytics for the Streamium OTT platform." />
+  <meta name="robots" content="noindex" />
+  <title>Streamium — Admin Dashboard</title>
+  <style>
+    /* ===================== Design tokens (matched to Streamium index.html) ===================== */
+    :root {
+      --bg: #0f0f0f;
+      --bg-soft: #161616;
+      --accent: #14b8a6;
+      --accent-dark: #0f766e;
+      --accent-light: #5eead4;
+      --text: #f5f5f5;
+      --text-muted: #b3b3b3;
+      --glass: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --radius: 16px;
+      --transition: 0.35s cubic-bezier(0.25, 0.8, 0.35, 1);
+      --green: #22c55e;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --blue: #3b82f6;
+      --purple: #a855f7;
+      --sidebar-w: 260px;
+    }
+
+    /* ===================== Reset & base ===================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.6; overflow-x: hidden; min-height: 100vh;
+    }
+    /* Ambient teal glow behind the layout — mirrors index.html hero gradient */
+    body::before {
+      content: ""; position: fixed; top: -30%; left: -10%; width: 120%; height: 60%;
+      background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(20, 184, 166, 0.12), transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+    button { font-family: inherit; }
+    img { max-width: 100%; display: block; }
+
+    /* ===================== Scrollbar ===================== */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg-soft); }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(var(--accent), var(--accent-dark)); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* ===================== Glass ===================== */
+    .glass {
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    }
+
+    /* ===================== Buttons & ripple ===================== */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.65rem 1.5rem; border: none; border-radius: 999px;
+      font-weight: 600; font-size: 0.95rem; cursor: pointer;
+      position: relative; overflow: hidden; color: var(--text);
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition), border-color var(--transition);
+    }
+    .btn--primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #062622; }
+    .btn--primary:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(20, 184, 166, 0.4); }
+    .btn--outline { background: transparent; color: var(--text); border: 1.5px solid var(--glass-border); }
+    .btn--outline:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-3px); }
+    .btn--danger { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
+    .btn--danger:hover { background: var(--red); color: #fff; transform: translateY(-3px); }
+    .btn--sm { padding: 0.4rem 1rem; font-size: 0.82rem; }
+    .btn--icon { padding: 0.55rem; width: 40px; height: 40px; border-radius: 12px; }
+
+    .ripple-circle {
+      position: absolute; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.45);
+      transform: scale(0); animation: ripple 0.6s ease-out forwards; pointer-events: none;
+    }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+    /* ===================== Floating particles ===================== */
+    .particles { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .particle {
+      position: absolute; bottom: -10px; border-radius: 50%;
+      background: rgba(20, 184, 166, 0.35); animation: float linear infinite;
+    }
+    @keyframes float { to { transform: translateY(-110vh) translateX(6vw); opacity: 0; } }
+
+    /* ===================== Loading overlay ===================== */
+    #loader {
+      position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center;
+      background: var(--bg); transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    #loader.hidden { opacity: 0; visibility: hidden; }
+    .spinner {
+      width: 60px; height: 60px; border-radius: 50%;
+      border: 4px solid rgba(20,184,166,0.15); border-top-color: var(--accent);
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader__brand { margin-top: 1.2rem; font-weight: 800; letter-spacing: 0.5px; font-size: 1.2rem; }
+    .loader__brand span { color: var(--accent); }
+
+    /* ===================== Layout shell ===================== */
+    .layout { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-w);
+      background: linear-gradient(180deg, rgba(15,20,20,0.95) 0%, rgba(15,15,15,0.88) 100%);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-right: 1px solid var(--glass-border);
+      display: flex; flex-direction: column; z-index: 200;
+      transition: transform var(--transition); overflow-y: auto;
+    }
+    /* Subtle teal glow at top of sidebar — matches hero glow style */
+    .sidebar::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 160px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(20, 184, 166, 0.10), transparent 70%);
+      pointer-events: none;
+    }
+    .sidebar__logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 0.5px; padding: 1.4rem 1.5rem 1rem; white-space: nowrap; position: relative; }
+    .sidebar__logo span { color: var(--accent); }
+    .sidebar__profile {
+      display: flex; align-items: center; gap: 0.75rem; margin: 0 1rem 1rem; padding: 0.85rem;
+    }
+    .sidebar__profile img { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--accent); }
+    .sidebar__profile .name { font-weight: 700; font-size: 0.95rem; }
+    .sidebar__profile .role { color: var(--accent-light); font-size: 0.75rem; letter-spacing: 0.5px; }
+    .nav-list { padding: 0.5rem 0.75rem 1.5rem; flex: 1; }
+    .nav-item {
+      display: flex; align-items: center; gap: 0.85rem; width: 100%;
+      padding: 0.75rem 0.9rem; border-radius: 12px; margin-bottom: 0.25rem;
+      color: var(--text-muted); font-weight: 500; font-size: 0.92rem; cursor: pointer;
+      background: none; border: none; text-align: left;
+      transition: background var(--transition), color var(--transition), transform var(--transition);
+    }
+    .nav-item .ico { font-size: 1.1rem; width: 22px; text-align: center; }
+    .nav-item:hover { background: var(--glass); color: var(--text); transform: translateX(4px); }
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(20,184,166,0.2), rgba(20,184,166,0.05));
+      color: var(--accent-light); border: 1px solid rgba(20,184,166,0.35);
+    }
+    .nav-item.logout { color: #fca5a5; margin-top: 0.5rem; }
+    .nav-item.logout:hover { background: rgba(239,68,68,0.12); color: #fff; }
+
+    /* ---------- Main ---------- */
+    .main { flex: 1; margin-left: var(--sidebar-w); min-width: 0; display: flex; flex-direction: column; }
+
+    /* ---------- Top nav ---------- */
+    .topbar {
+      position: sticky; top: 0; z-index: 150;
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0.9rem 1.5rem;
+      background: rgba(15,15,15,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--glass-border);
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .hamburger { display: none; background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; }
+    .search {
+      display: flex; align-items: center; gap: 0.6rem; flex: 1; max-width: 420px;
+      background: var(--glass); border: 1px solid var(--glass-border); border-radius: 999px;
+      padding: 0.5rem 1rem; transition: border-color var(--transition);
+    }
+    .search:focus-within { border-color: var(--accent); }
+    .search input { background: none; border: none; outline: none; color: var(--text); width: 100%; font-size: 0.9rem; }
+    .search input::placeholder { color: var(--text-muted); }
+    .topbar__spacer { flex: 1; }
+    .topbar__datetime { text-align: right; font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+    .topbar__datetime strong { color: var(--text); display: block; font-size: 0.9rem; }
+    .bell { position: relative; cursor: pointer; font-size: 1.3rem; padding: 0.4rem; border-radius: 12px; transition: background var(--transition); }
+    .bell:hover { background: var(--glass); }
+    .bell .dot { position: absolute; top: 4px; right: 4px; width: 16px; height: 16px; background: var(--red); color: #fff; font-size: 0.6rem; border-radius: 50%; display: grid; place-items: center; font-weight: 700; }
+    .profile-card {
+      display: flex; align-items: center; gap: 0.7rem; padding: 0.4rem 0.9rem 0.4rem 0.4rem;
+      background: var(--glass); border: 1px solid var(--glass-border); border-radius: 999px;
+    }
+    .profile-card img { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--accent); }
+    .profile-card .pc-name { font-weight: 700; font-size: 0.85rem; }
+    .profile-card .pc-email { color: var(--text-muted); font-size: 0.72rem; }
+
+    /* ---------- Content area ---------- */
+    .content { padding: 1.75rem; flex: 1; }
+    .page { display: none; animation: fadeIn 0.5s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+    .page-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .page-title {
+      font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800;
+      background: linear-gradient(90deg, var(--text), var(--accent-light));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .page-sub { color: var(--text-muted); font-size: 0.9rem; }
+
+    /* ---------- Stat cards ---------- */
+    .stats-grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+    .stat-card { padding: 1.4rem; position: relative; overflow: hidden;
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition); }
+    .stat-card::before {
+      content: ""; position: absolute; top: 0; left: 1.5rem; right: 1.5rem; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+      border-radius: 3px;
+    }
+    .stat-card:hover { transform: translateY(-8px); border-color: rgba(20,184,166,0.5); box-shadow: 0 18px 40px rgba(20,184,166,0.15); }
+    .stat-card:hover::before { background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+    .stat-card .st-icon { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-size: 1.4rem;
+      background: rgba(20,184,166,0.15); color: var(--accent); margin-bottom: 1rem;
+      transition: transform var(--transition), box-shadow var(--transition); }
+    .stat-card:hover .st-icon { transform: scale(1.1) rotate(4deg); box-shadow: 0 8px 20px rgba(20,184,166,0.3); }
+    .stat-card .st-value { font-size: 1.9rem; font-weight: 800; line-height: 1; }
+    .stat-card .st-label { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem; }
+    .trend { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.78rem; font-weight: 700; margin-top: 0.6rem; padding: 0.15rem 0.55rem; border-radius: 999px; }
+    .trend.up { color: var(--green); background: rgba(34,197,94,0.12); }
+    .trend.down { color: var(--red); background: rgba(239,68,68,0.12); }
+
+    /* ---------- Cards / panels ---------- */
+    .panel { padding: 1.5rem; margin-top: 1.5rem; }
+    .panel__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+    .panel__title { font-size: 1.15rem; font-weight: 700; }
+
+    /* ---------- Tables ---------- */
+    .table-wrap { overflow-x: auto; border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; min-width: 720px; }
+    thead th {
+      text-align: left; padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text-muted); border-bottom: 1px solid var(--glass-border); white-space: nowrap;
+    }
+    tbody td { padding: 0.85rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 0.9rem; vertical-align: middle; }
+    tbody tr { transition: background var(--transition); }
+    tbody tr:hover { background: rgba(20,184,166,0.05); }
+    .cell-user { display: flex; align-items: center; gap: 0.7rem; }
+    .cell-user img { width: 36px; height: 36px; border-radius: 50%; }
+    .cell-user .cu-name { font-weight: 600; }
+    .cell-user .cu-mail { color: var(--text-muted); font-size: 0.75rem; }
+
+    /* ---------- Badges ---------- */
+    .badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.73rem; font-weight: 700; padding: 0.22rem 0.7rem; border-radius: 999px; letter-spacing: 0.4px; white-space: nowrap; }
+    .badge.green { background: rgba(34,197,94,0.14); color: #86efac; }
+    .badge.red { background: rgba(239,68,68,0.14); color: #fca5a5; }
+    .badge.amber { background: rgba(245,158,11,0.14); color: #fcd34d; }
+    .badge.blue { background: rgba(59,130,246,0.14); color: #93c5fd; }
+    .badge.purple { background: rgba(168,85,247,0.14); color: #d8b4fe; }
+    .badge.teal { background: rgba(20,184,166,0.14); color: var(--accent-light); }
+    .badge.gray { background: rgba(255,255,255,0.08); color: var(--text-muted); }
+
+    .provider { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; }
+
+    /* ---------- Row actions ---------- */
+    .row-actions { display: flex; gap: 0.4rem; }
+    .icon-btn { width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-muted); cursor: pointer; display: grid; place-items: center; font-size: 0.85rem; transition: all var(--transition); }
+    .icon-btn:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-2px); }
+    .icon-btn.danger:hover { color: #fff; background: var(--red); border-color: var(--red); }
+
+    /* ---------- Plan cards ---------- */
+    .plans-grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .plan-card { padding: 1.8rem 1.5rem; display: flex; flex-direction: column; position: relative;
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition); }
+    .plan-card::before {
+      content: ""; position: absolute; top: 0; left: 1.5rem; right: 1.5rem; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+      border-radius: 3px;
+    }
+    .plan-card:hover { transform: translateY(-8px); border-color: rgba(20,184,166,0.5); box-shadow: 0 18px 40px rgba(20,184,166,0.15); }
+    .plan-card:hover::before { background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+    .plan-card.featured { border-color: var(--accent); background: linear-gradient(180deg, rgba(20,184,166,0.08), var(--glass)); }
+    .plan-card.featured::before { background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+    .plan-q { align-self: flex-start; background: rgba(20,184,166,0.12); border: 1px solid rgba(20,184,166,0.35); color: var(--accent-light);
+      font-weight: 700; font-size: 0.72rem; letter-spacing: 1.5px; padding: 0.25rem 0.8rem; border-radius: 999px; margin-bottom: 1rem; text-transform: uppercase; }
+    .plan-price { display: flex; align-items: baseline; gap: 0.3rem; margin-bottom: 0.2rem; }
+    .plan-price .cur { font-size: 1.2rem; color: var(--accent); font-weight: 700; }
+    .plan-price .amt { font-size: 2.6rem; font-weight: 800; line-height: 1; }
+    .plan-price .per { color: var(--text-muted); font-size: 0.9rem; }
+    .plan-feats { margin: 1.2rem 0; display: grid; gap: 0.6rem; flex: 1; }
+    .plan-feats li { display: flex; gap: 0.6rem; color: var(--text-muted); font-size: 0.88rem; }
+    .plan-feats .check { color: var(--accent); font-weight: 800; }
+    .plan-users { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .plan-users strong { color: var(--accent-light); }
+    .plan-actions { display: flex; gap: 0.5rem; }
+
+    /* ---------- Payments summary ---------- */
+    .pay-grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+
+    /* ---------- Charts ---------- */
+    .charts-grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+    .chart-card { padding: 1.5rem;
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition); }
+    .chart-card:hover { transform: translateY(-4px); border-color: rgba(20,184,166,0.3); box-shadow: 0 12px 30px rgba(20,184,166,0.08); }
+    .chart-title { font-weight: 700; margin-bottom: 0.3rem; }
+    .chart-sub { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.2rem; }
+    /* bar chart */
+    .bars { display: flex; align-items: flex-end; gap: 0.6rem; height: 180px; padding-top: 1rem; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; height: 100%; justify-content: flex-end; }
+    .bar { width: 100%; max-width: 34px; border-radius: 8px 8px 0 0; background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+      transform-origin: bottom; animation: growBar 1s cubic-bezier(0.25,0.8,0.35,1) both; position: relative; }
+    @keyframes growBar { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .bar:hover { filter: brightness(1.2); }
+    .pm-fill { transform-origin: left; animation: growX 1.2s ease both; }
+    @keyframes growX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    .bar-lbl { font-size: 0.72rem; color: var(--text-muted); }
+    /* line chart (svg) */
+    .line-chart svg { width: 100%; height: 190px; overflow: visible; }
+    .line-path { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+      stroke-dasharray: 1200; stroke-dashoffset: 1200; animation: draw 2s ease forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    /* donut */
+    .donut-wrap { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+    .donut { --p: 0; width: 150px; height: 150px; border-radius: 50%; flex-shrink: 0;
+      background: conic-gradient(var(--accent) 0 40%, var(--blue) 40% 65%, var(--purple) 65% 85%, var(--amber) 85% 100%);
+      display: grid; place-items: center; position: relative; }
+    .donut::before { content: ""; position: absolute; inset: 22px; border-radius: 50%; background: var(--bg-soft); }
+    .donut span { position: relative; font-weight: 800; font-size: 1.1rem; }
+    .legend { display: grid; gap: 0.55rem; }
+    .legend li { display: flex; align-items: center; gap: 0.55rem; font-size: 0.85rem; color: var(--text-muted); }
+    .legend .sw { width: 12px; height: 12px; border-radius: 4px; }
+
+    /* ---------- Notifications ---------- */
+    .notif-list { display: grid; gap: 0.75rem; }
+    .notif { display: flex; align-items: center; gap: 1rem; padding: 1rem;
+      transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition); }
+    .notif:hover { transform: translateX(6px); border-color: rgba(20,184,166,0.4); box-shadow: 0 8px 24px rgba(20,184,166,0.08); }
+    .notif .n-ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 1.2rem; flex-shrink: 0; }
+    .notif .n-body { flex: 1; }
+    .notif .n-title { font-weight: 600; font-size: 0.92rem; }
+    .notif .n-desc { color: var(--text-muted); font-size: 0.82rem; }
+    .notif .n-time { color: var(--text-muted); font-size: 0.75rem; white-space: nowrap; }
+
+    /* ---------- Settings ---------- */
+    .settings-grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+    .setting-card { padding: 1.4rem; }
+    .setting-card .s-ico { font-size: 1.5rem; margin-bottom: 0.6rem; }
+    .setting-card h4 { font-size: 1rem; margin-bottom: 0.3rem; }
+    .setting-card p { color: var(--text-muted); font-size: 0.83rem; margin-bottom: 1rem; }
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 0.65rem 0.9rem; border-radius: 10px; background: rgba(255,255,255,0.04);
+      border: 1px solid var(--glass-border); color: var(--text); font-size: 0.9rem; font-family: inherit; outline: none;
+      transition: border-color var(--transition);
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+    /* toggle */
+    .switch { position: relative; display: inline-block; width: 48px; height: 26px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; background: rgba(255,255,255,0.15); border-radius: 999px; cursor: pointer; transition: var(--transition); }
+    .slider::before { content: ""; position: absolute; height: 20px; width: 20px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: var(--transition); }
+    .switch input:checked + .slider { background: var(--accent); }
+    .switch input:checked + .slider::before { transform: translateX(22px); }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+
+    /* ---------- Modal ---------- */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      display: none; align-items: center; justify-content: center; padding: 1.5rem;
+    }
+    .modal-overlay.open { display: flex; animation: fadeIn 0.3s ease; }
+    .modal {
+      width: min(520px, 100%); max-height: 88vh; overflow-y: auto; padding: 1.75rem;
+      animation: modalPop 0.4s cubic-bezier(0.25,0.8,0.35,1);
+    }
+    @keyframes modalPop { from { opacity: 0; transform: scale(0.92) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .modal__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+    .modal__title { font-size: 1.2rem; font-weight: 700; }
+    .modal__close { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; line-height: 1; transition: color var(--transition); }
+    .modal__close:hover { color: var(--red); }
+    .modal__foot { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
+    .modal__icon-warn { font-size: 2.5rem; text-align: center; margin-bottom: 0.5rem; }
+
+    /* ---------- Toast ---------- */
+    .toast-wrap { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 800; display: grid; gap: 0.6rem; }
+    .toast { display: flex; align-items: center; gap: 0.6rem; padding: 0.85rem 1.2rem; min-width: 240px;
+      animation: slideIn 0.4s ease; font-size: 0.9rem; }
+    .toast .t-ico { color: var(--accent); font-weight: 800; }
+
+    /* ===================== Responsive ===================== */
+    .overlay-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 190; }
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .hamburger { display: block; }
+      .overlay-bg.show { display: block; }
+    }
+    @media (max-width: 680px) {
+      .topbar__datetime { display: none; }
+      .profile-card .pc-info { display: none; }
+      .search { max-width: none; }
+      .content { padding: 1.1rem; }
+    }
+    /* ---------- Top loading progress bar ---------- */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; width: 0; height: 3px; z-index: 9999;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      box-shadow: 0 0 10px rgba(20, 184, 166, 0.5), 0 0 5px rgba(20, 184, 166, 0.3);
+      transition: width 0.4s ease, opacity 0.4s ease;
+      pointer-events: none;
+    }
+    .progress-bar.done { opacity: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Top Loading Progress Bar ===== -->
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- Loading animation -->
+  <div id="loader">
+    <div style="text-align:center">
+      <div class="spinner"></div>
+      <div class="loader__brand">Stream<span>ium</span> Admin</div>
+    </div>
+  </div>
+
+  <!-- Floating particles -->
+  <div class="particles" id="particles" aria-hidden="true"></div>
+
+  <div class="overlay-bg" id="overlayBg"></div>
+
+  <div class="layout">
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__logo">Stream<span>ium</span></div>
+      <div class="sidebar__profile glass">
+        <img src="https://i.pravatar.cc/100?img=12" alt="Admin avatar" />
+        <div>
+          <div class="name">Aarav Mehta</div>
+          <div class="role">SUPER ADMIN</div>
+        </div>
+      </div>
+      <nav class="nav-list">
+        <button class="nav-item active" data-page="dashboard"><span class="ico">▣</span> Dashboard</button>
+        <button class="nav-item" data-page="users"><span class="ico">👥</span> Users</button>
+        <button class="nav-item" data-page="orders"><span class="ico">🧾</span> Orders</button>
+        <button class="nav-item" data-page="subscriptions"><span class="ico">🔁</span> Subscriptions</button>
+        <button class="nav-item" data-page="plans"><span class="ico">🏷️</span> Plans</button>
+        <button class="nav-item" data-page="payments"><span class="ico">💳</span> Payments</button>
+        <button class="nav-item" data-page="coupons"><span class="ico">🎟️</span> Coupons</button>
+        <button class="nav-item" data-page="analytics"><span class="ico">📈</span> Analytics</button>
+        <button class="nav-item" data-page="notifications"><span class="ico">🔔</span> Notifications</button>
+        <button class="nav-item" data-page="support"><span class="ico">🎫</span> Support Tickets</button>
+        <button class="nav-item" data-page="settings"><span class="ico">⚙️</span> Website Settings</button>
+        <button class="nav-item" data-page="admins"><span class="ico">🛡️</span> Admin Management</button>
+        <button class="nav-item" data-page="logs"><span class="ico">📜</span> Activity Logs</button>
+        <button class="nav-item logout" id="logoutBtn"><span class="ico">⏻</span> Logout</button>
+      </nav>
+    </aside>
+
+    <!-- ==================== MAIN ==================== -->
+    <div class="main">
+      <!-- Top navigation -->
+      <header class="topbar">
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu">☰</button>
+        <div class="search">
+          <span>🔍</span>
+          <input type="text" placeholder="Search users, orders, tickets..." aria-label="Search" />
+        </div>
+        <div class="topbar__spacer"></div>
+        <div class="topbar__datetime">
+          <strong id="clockTime">--:--</strong>
+          <span id="clockDate">Loading...</span>
+        </div>
+        <div class="bell" id="bell" title="Notifications">🔔<span class="dot">5</span></div>
+        <div class="profile-card">
+          <img src="https://i.pravatar.cc/100?img=12" alt="Admin" />
+          <div class="pc-info">
+            <div class="pc-name">Aarav Mehta</div>
+            <div class="pc-email">aarav@streamium.io</div>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- ============ DASHBOARD ============ -->
+        <section class="page active" id="page-dashboard">
+          <div class="page-head">
+            <div>
+              <h1 class="page-title">Dashboard Overview</h1>
+              <p class="page-sub">Welcome back, Aarav — here's what's happening today.</p>
+            </div>
+            <button class="btn btn--primary">⬇️ Export Report</button>
+          </div>
+          <div class="stats-grid" id="statsGrid"></div>
+
+          <div class="charts-grid">
+            <div class="chart-card glass line-chart">
+              <div class="chart-title">Monthly Revenue</div>
+              <div class="chart-sub">Last 8 months (₹)</div>
+              <svg viewBox="0 0 400 190" preserveAspectRatio="none">
+                <polyline class="line-path" points="0,150 57,120 114,135 171,90 228,100 285,55 342,65 400,25" />
+              </svg>
+            </div>
+            <div class="chart-card glass">
+              <div class="chart-title">Recent Orders</div>
+              <div class="chart-sub">Latest transactions</div>
+              <div class="notif-list" id="recentOrders"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ USERS ============ -->
+        <section class="page" id="page-users">
+          <div class="page-head">
+            <div><h1 class="page-title">Users Management</h1><p class="page-sub">Manage all registered Streamium users.</p></div>
+            <button class="btn btn--primary" onclick="openModal('modalAddUser')">＋ Add User</button>
+          </div>
+          <div class="panel glass">
+            <div class="table-wrap">
+              <table>
+                <thead><tr>
+                  <th>User</th><th>Provider</th><th>Role</th><th>Plan</th><th>Devices</th><th>Status</th><th>Joined</th><th>Actions</th>
+                </tr></thead>
+                <tbody id="usersBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ ORDERS ============ -->
+        <section class="page" id="page-orders">
+          <div class="page-head"><div><h1 class="page-title">Orders</h1><p class="page-sub">Track all plan purchases and renewals.</p></div></div>
+          <div class="panel glass">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Order ID</th><th>Customer</th><th>Plan</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+                <tbody id="ordersBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SUBSCRIPTIONS ============ -->
+        <section class="page" id="page-subscriptions">
+          <div class="page-head"><div><h1 class="page-title">Subscription Management</h1><p class="page-sub">Active and expired subscriptions.</p></div></div>
+          <div class="panel glass">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Customer</th><th>Plan</th><th>Status</th><th>Renewal Date</th><th>Device Limit</th><th>Actions</th></tr></thead>
+                <tbody id="subsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ PLANS ============ -->
+        <section class="page" id="page-plans">
+          <div class="page-head">
+            <div><h1 class="page-title">Plans Management</h1><p class="page-sub">Manage streaming quality tiers.</p></div>
+            <button class="btn btn--primary" onclick="openModal('modalAddPlan')">＋ Add Plan</button>
+          </div>
+          <div class="plans-grid" id="plansGrid"></div>
+        </section>
+
+        <!-- ============ PAYMENTS ============ -->
+        <section class="page" id="page-payments">
+          <div class="page-head"><div><h1 class="page-title">Payments</h1><p class="page-sub">Payment activity across the platform.</p></div></div>
+          <div class="pay-grid" id="payGrid"></div>
+          <div class="panel glass">
+            <div class="panel__head"><div class="panel__title">Transaction History</div></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Txn ID</th><th>Customer</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+                <tbody id="payBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ COUPONS ============ -->
+        <section class="page" id="page-coupons">
+          <div class="page-head">
+            <div><h1 class="page-title">Coupons</h1><p class="page-sub">Promo codes and discounts.</p></div>
+            <button class="btn btn--primary" onclick="showToast('Coupon created')">＋ Add Coupon</button>
+          </div>
+          <div class="panel glass">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Code</th><th>Discount</th><th>Type</th><th>Usage</th><th>Expiry</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody id="couponsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ ANALYTICS ============ -->
+        <section class="page" id="page-analytics">
+          <div class="page-head"><div><h1 class="page-title">Analytics</h1><p class="page-sub">Platform performance insights (placeholder data).</p></div></div>
+          <div class="charts-grid">
+            <div class="chart-card glass">
+              <div class="chart-title">Revenue</div><div class="chart-sub">Monthly (₹K)</div>
+              <div class="bars" id="barsRevenue"></div>
+            </div>
+            <div class="chart-card glass">
+              <div class="chart-title">Daily Active Users</div><div class="chart-sub">This week</div>
+              <div class="bars" id="barsDaily"></div>
+            </div>
+            <div class="chart-card glass line-chart">
+              <div class="chart-title">User Growth</div><div class="chart-sub">Cumulative signups</div>
+              <svg viewBox="0 0 400 190" preserveAspectRatio="none">
+                <polyline class="line-path" points="0,170 57,150 114,120 171,110 228,80 285,60 342,40 400,15" />
+              </svg>
+            </div>
+            <div class="chart-card glass">
+              <div class="chart-title">Plan Distribution</div><div class="chart-sub">Active subscribers</div>
+              <div class="donut-wrap">
+                <div class="donut"><span>12.4K</span></div>
+                <ul class="legend">
+                  <li><span class="sw" style="background:var(--accent)"></span> 4K Ultra — 40%</li>
+                  <li><span class="sw" style="background:var(--blue)"></span> 1080p — 25%</li>
+                  <li><span class="sw" style="background:var(--purple)"></span> 720p — 20%</li>
+                  <li><span class="sw" style="background:var(--amber)"></span> Free trial — 15%</li>
+                </ul>
+              </div>
+            </div>
+            <div class="chart-card glass">
+              <div class="chart-title">Payment Methods</div><div class="chart-sub">Share of transactions</div>
+              <div id="payMethods"></div>
+            </div>
+            <div class="chart-card glass">
+              <div class="chart-title">Monthly Active Users</div><div class="chart-sub">Last 6 months</div>
+              <div class="bars" id="barsMonthly"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ NOTIFICATIONS ============ -->
+        <section class="page" id="page-notifications">
+          <div class="page-head"><div><h1 class="page-title">Notification Center</h1><p class="page-sub">Recent platform events.</p></div>
+            <button class="btn btn--outline" onclick="showToast('All marked as read')">Mark all read</button></div>
+          <div class="panel glass"><div class="notif-list" id="notifBody"></div></div>
+        </section>
+
+        <!-- ============ SUPPORT ============ -->
+        <section class="page" id="page-support">
+          <div class="page-head"><div><h1 class="page-title">Support Tickets</h1><p class="page-sub">Customer support queue.</p></div></div>
+          <div class="panel glass">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Ticket ID</th><th>User</th><th>Subject</th><th>Priority</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody id="supportBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ WEBSITE SETTINGS ============ -->
+        <section class="page" id="page-settings">
+          <div class="page-head"><div><h1 class="page-title">Website Settings</h1><p class="page-sub">Configure your Streamium platform.</p></div>
+            <button class="btn btn--primary" onclick="showToast('Settings saved')">Save Changes</button></div>
+          <div class="settings-grid">
+            <div class="setting-card glass"><div class="s-ico">🏷️</div><h4>Website Name</h4><p>Public brand name.</p>
+              <div class="field"><input type="text" value="Streamium" /></div></div>
+            <div class="setting-card glass"><div class="s-ico">🖼️</div><h4>Logo</h4><p>Upload brand logo.</p>
+              <div class="field"><input type="file" /></div></div>
+            <div class="setting-card glass"><div class="s-ico">🎨</div><h4>Theme</h4><p>Accent color scheme.</p>
+              <div class="field"><select><option>Teal (Default)</option><option>Purple</option><option>Crimson</option><option>Blue</option></select></div></div>
+            <div class="setting-card glass"><div class="s-ico">🚧</div><h4>Maintenance Mode</h4><p>Take the site offline.</p>
+              <div class="toggle-row"><span style="color:var(--text-muted);font-size:0.85rem">Enable</span><label class="switch"><input type="checkbox"><span class="slider"></span></label></div></div>
+            <div class="setting-card glass"><div class="s-ico">💳</div><h4>Payment Gateway</h4><p>Active provider.</p>
+              <div class="field"><select><option>Razorpay</option><option>Stripe</option><option>PayU</option><option>Paytm</option></select></div></div>
+            <div class="setting-card glass"><div class="s-ico">✉️</div><h4>Email Settings</h4><p>SMTP sender address.</p>
+              <div class="field"><input type="email" value="no-reply@streamium.io" /></div></div>
+            <div class="setting-card glass"><div class="s-ico">🔒</div><h4>Security Settings</h4><p>Two-factor for admins.</p>
+              <div class="toggle-row"><span style="color:var(--text-muted);font-size:0.85rem">Require 2FA</span><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div></div>
+            <div class="setting-card glass"><div class="s-ico">📄</div><h4>Terms &amp; Conditions</h4><p>Legal document.</p>
+              <button class="btn btn--outline btn--sm" onclick="openModal('modalSettings')">Edit</button></div>
+            <div class="setting-card glass"><div class="s-ico">🛡️</div><h4>Privacy Policy</h4><p>Data handling policy.</p>
+              <button class="btn btn--outline btn--sm" onclick="openModal('modalSettings')">Edit</button></div>
+          </div>
+        </section>
+
+        <!-- ============ ADMIN MANAGEMENT ============ -->
+        <section class="page" id="page-admins">
+          <div class="page-head">
+            <div><h1 class="page-title">Admin Management</h1><p class="page-sub">Manage admin accounts and roles.</p></div>
+            <button class="btn btn--primary" onclick="openModal('modalAdmin')">＋ Add Admin</button>
+          </div>
+          <div class="panel glass">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Admin</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+                <tbody id="adminsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ ACTIVITY LOGS ============ -->
+        <section class="page" id="page-logs">
+          <div class="page-head"><div><h1 class="page-title">Activity Logs</h1><p class="page-sub">Admin session and action history.</p></div></div>
+          <div class="panel glass">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Login</th><th>Logout</th><th>IP Address</th><th>Browser</th><th>Device</th><th>Action</th><th>Status</th></tr></thead>
+                <tbody id="logsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+  <div class="modal-overlay" id="modalAddUser">
+    <div class="modal glass">
+      <div class="modal__head"><div class="modal__title">Add User</div><button class="modal__close" onclick="closeModal('modalAddUser')">&times;</button></div>
+      <div class="field"><label>Full Name</label><input type="text" placeholder="e.g. Priya Sharma"></div>
+      <div class="field"><label>Email</label><input type="email" placeholder="priya@email.com"></div>
+      <div class="field"><label>Subscription Plan</label><select><option>4K Ultra</option><option>1080p</option><option>720p</option><option>Free Trial</option></select></div>
+      <div class="field"><label>Role</label><select><option>User</option><option>Premium</option><option>Moderator</option></select></div>
+      <div class="modal__foot"><button class="btn btn--outline" onclick="closeModal('modalAddUser')">Cancel</button><button class="btn btn--primary" onclick="closeModal('modalAddUser'); showToast('User added')">Save User</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalEditUser">
+    <div class="modal glass">
+      <div class="modal__head"><div class="modal__title">Edit User</div><button class="modal__close" onclick="closeModal('modalEditUser')">&times;</button></div>
+      <div class="field"><label>Full Name</label><input type="text" id="editUserName"></div>
+      <div class="field"><label>Email</label><input type="email" id="editUserMail"></div>
+      <div class="field"><label>Status</label><select><option>Active</option><option>Suspended</option></select></div>
+      <div class="modal__foot"><button class="btn btn--outline" onclick="closeModal('modalEditUser')">Cancel</button><button class="btn btn--primary" onclick="closeModal('modalEditUser'); showToast('User updated')">Update</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalDelete">
+    <div class="modal glass" style="max-width:420px">
+      <div class="modal__head"><div class="modal__title">Confirm Delete</div><button class="modal__close" onclick="closeModal('modalDelete')">&times;</button></div>
+      <div class="modal__icon-warn">⚠️</div>
+      <p style="text-align:center;color:var(--text-muted)">Are you sure you want to delete this record? This action cannot be undone.</p>
+      <div class="modal__foot"><button class="btn btn--outline" onclick="closeModal('modalDelete')">Cancel</button><button class="btn btn--danger" onclick="closeModal('modalDelete'); showToast('Record deleted')">Delete</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalAddPlan">
+    <div class="modal glass">
+      <div class="modal__head"><div class="modal__title">Add Plan</div><button class="modal__close" onclick="closeModal('modalAddPlan')">&times;</button></div>
+      <div class="field"><label>Plan Name</label><input type="text" placeholder="e.g. 4K Ultra"></div>
+      <div class="field"><label>Resolution</label><select><option>720p</option><option>1080p</option><option>4K</option></select></div>
+      <div class="field"><label>Price (₹ / month)</label><input type="number" placeholder="100"></div>
+      <div class="field"><label>Device Limit</label><input type="number" placeholder="4"></div>
+      <div class="modal__foot"><button class="btn btn--outline" onclick="closeModal('modalAddPlan')">Cancel</button><button class="btn btn--primary" onclick="closeModal('modalAddPlan'); showToast('Plan added')">Save Plan</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalEditPlan">
+    <div class="modal glass">
+      <div class="modal__head"><div class="modal__title">Edit Plan</div><button class="modal__close" onclick="closeModal('modalEditPlan')">&times;</button></div>
+      <div class="field"><label>Plan Name</label><input type="text" id="editPlanName"></div>
+      <div class="field"><label>Price (₹ / month)</label><input type="number" id="editPlanPrice"></div>
+      <div class="modal__foot"><button class="btn btn--outline" onclick="closeModal('modalEditPlan')">Cancel</button><button class="btn btn--primary" onclick="closeModal('modalEditPlan'); showToast('Plan updated')">Update</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalSettings">
+    <div class="modal glass">
+      <div class="modal__head"><div class="modal__title">Edit Document</div><button class="modal__close" onclick="closeModal('modalSettings')">&times;</button></div>
+      <div class="field"><label>Content</label><textarea rows="6" placeholder="Enter document text..."></textarea></div>
+      <div class="modal__foot"><button class="btn btn--outline" onclick="closeModal('modalSettings')">Cancel</button><button class="btn btn--primary" onclick="closeModal('modalSettings'); showToast('Document saved')">Save</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalAdmin">
+    <div class="modal glass">
+      <div class="modal__head"><div class="modal__title">Admin Details</div><button class="modal__close" onclick="closeModal('modalAdmin')">&times;</button></div>
+      <div class="field"><label>Name</label><input type="text" placeholder="Admin name"></div>
+      <div class="field"><label>Email</label><input type="email" placeholder="admin@streamium.io"></div>
+      <div class="field"><label>Role</label><select><option>Super Admin</option><option>Manager</option><option>Support</option><option>Analyst</option></select></div>
+      <div class="modal__foot"><button class="btn btn--outline" onclick="closeModal('modalAdmin')">Cancel</button><button class="btn btn--primary" onclick="closeModal('modalAdmin'); showToast('Admin saved')">Save Admin</button></div>
+    </div>
+  </div>
+
+  <script>
+    /* ============ Auth Check & Role-based Navigation ============ */
+    var currentUser = null;
+    var ROLE_PERMISSIONS = {
+      "Owner": ['dashboard', 'users', 'orders', 'subscriptions', 'plans', 'payments', 'coupons', 'analytics', 'notifications', 'support', 'settings', 'admins', 'logs'],
+      "Website Manager": ['dashboard', 'users', 'plans', 'support', 'notifications', 'settings', 'admins', 'logs'],
+      "Finance Manager": ['dashboard', 'orders', 'subscriptions', 'payments', 'coupons', 'analytics', 'notifications', 'support', 'admins', 'logs']
+    };
+
+    window.addEventListener('load', async function () {
+      /* --- Step 1: Authenticate (redirect to login ONLY if this fails) --- */
+      try {
+        var res = await fetch('/api/auth/me', { credentials: 'same-origin' });
+        if (!res.ok) throw new Error('Not authenticated');
+        var data = await res.json();
+        if (!data.user || !data.user.isAdmin) throw new Error('Unauthorized');
+        currentUser = data.user;
+      } catch (authErr) {
+        console.warn('Auth check failed:', authErr);
+        window.location.href = 'login.html';
+        return;
+      }
+
+      /* --- Step 2: Setup UI (errors here should NOT redirect) --- */
+      try {
+        // Update profile in sidebar & topbar
+        var avatarUrl = currentUser.picture || 'https://placehold.co/100x100/14B8A6/062622?text=A';
+        document.querySelectorAll('.sidebar__profile img, .profile-card img').forEach(function (img) { img.src = avatarUrl; });
+        var sidebarName = document.querySelector('.sidebar__profile .name');
+        if (sidebarName) sidebarName.textContent = currentUser.name || currentUser.email;
+        var sidebarRole = document.querySelector('.sidebar__profile .role');
+        if (sidebarRole) sidebarRole.textContent = (currentUser.role || 'ADMIN').toUpperCase();
+        var pcName = document.querySelector('.profile-card .pc-name');
+        if (pcName) pcName.textContent = currentUser.name || currentUser.email;
+        var pcEmail = document.querySelector('.profile-card .pc-email');
+        if (pcEmail) pcEmail.textContent = currentUser.email;
+
+        // Welcome toast
+        showToast('👋 Welcome back, ' + (currentUser.name || currentUser.email) + ' (' + currentUser.role + ')');
+
+        // Role-tailored Welcome Banner on Dashboard
+        var dbTitle = document.querySelector('#page-dashboard .page-title');
+        var dbSub = document.querySelector('#page-dashboard .page-sub');
+        if (dbTitle) dbTitle.textContent = 'Welcome, ' + (currentUser.name || currentUser.email) + ' 👋';
+
+        var roleBanners = {
+          "Owner": "👑 <strong>Owner Dashboard:</strong> Complete control over platform analytics, financial revenue, admin accounts, and system configuration.",
+          "Website Manager": "💻 <strong>Website Manager Dashboard:</strong> Managing platform users, plan offerings, content preferences, and customer support tickets.",
+          "Finance Manager": "💳 <strong>Finance Manager Dashboard:</strong> Tracking order transactions, monthly recurring revenue, payment gateways, and active coupons."
+        };
+
+        if (dbSub) {
+          dbSub.innerHTML = roleBanners[currentUser.role] || ("Signed in as " + currentUser.role);
+        }
+
+        // Apply role permissions to nav buttons & pages
+        var allowedPages = ROLE_PERMISSIONS[currentUser.role] || ROLE_PERMISSIONS["Owner"];
+        document.querySelectorAll('.nav-item[data-page]').forEach(function (btn) {
+          var p = btn.getAttribute('data-page');
+          if (!allowedPages.includes(p)) {
+            btn.style.display = 'none';
+          }
+        });
+
+        // Filter stats grid based on role focus
+        renderRoleStats(currentUser.role);
+
+        // Enforce Owner-only controls for non-owners
+        if (currentUser.role !== 'Owner') {
+          var settingsHead = document.querySelector('#page-settings .page-head');
+          if (settingsHead) {
+            var notice = document.createElement('div');
+            notice.style.cssText = 'width:100%;padding:0.75rem 1rem;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);color:#fcd34d;border-radius:12px;font-size:0.88rem;margin-top:0.5rem;display:flex;align-items:center;gap:0.5rem;';
+            notice.innerHTML = '🔒 <strong>Read-Only Mode:</strong> Only the Owner (streamium67@gmail.com) can save settings changes.';
+            settingsHead.appendChild(notice);
+          }
+          document.querySelectorAll('#page-settings input, #page-settings select, #page-settings button').forEach(function(el) {
+            el.disabled = true;
+            el.style.opacity = '0.65';
+            el.style.cursor = 'not-allowed';
+          });
+
+          var addAdminBtn = document.querySelector('#page-admins .page-head .btn');
+          if (addAdminBtn) {
+            addAdminBtn.onclick = function() { showToast('Only the Owner can add or modify admins'); };
+            addAdminBtn.style.opacity = '0.5';
+          }
+        }
+
+        // Load dynamic admins list if tab is available
+        if (allowedPages.includes('admins')) {
+          loadAdminsFromDB();
+        }
+      } catch (uiErr) {
+        console.error('UI setup error (non-fatal):', uiErr);
+      }
+
+      // Always try to load admins separately in case UI setup failed before reaching it
+      try {
+        var allowedCheck = ROLE_PERMISSIONS[currentUser.role] || ROLE_PERMISSIONS["Owner"];
+        if (allowedCheck.includes('admins') && document.getElementById('adminsBody') && document.getElementById('adminsBody').children.length === 0) {
+          loadAdminsFromDB();
+        }
+      } catch (e) { /* ignore */ }
+
+      // Hide loader (always, even if UI setup had issues)
+      setTimeout(function () { document.getElementById('loader').classList.add('hidden'); }, 400);
+    });
+    (function () {
+      var box = document.getElementById('particles');
+      if (!box) return;
+      for (var i = 0; i < 28; i++) {
+        var p = document.createElement('span');
+        p.className = 'particle';
+        var size = Math.random() * 5 + 2;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDuration = (Math.random() * 14 + 10) + 's';
+        p.style.animationDelay = (Math.random() * -20) + 's';
+        p.style.opacity = Math.random() * 0.5 + 0.15;
+        box.appendChild(p);
+      }
+    })();
+
+    /* ============ Ripple effect on all buttons ============ */
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.btn');
+      if (!btn) return;
+      var circle = document.createElement('span');
+      circle.className = 'ripple-circle';
+      var rect = btn.getBoundingClientRect();
+      var size = Math.max(rect.width, rect.height);
+      circle.style.width = circle.style.height = size + 'px';
+      circle.style.left = (e.clientX - rect.left - size / 2) + 'px';
+      circle.style.top = (e.clientY - rect.top - size / 2) + 'px';
+      btn.appendChild(circle);
+      setTimeout(function () { circle.remove(); }, 600);
+    });
+
+    /* ============ Sidebar navigation ============ */
+    var navItems = document.querySelectorAll('.nav-item[data-page]');
+    var pages = document.querySelectorAll('.page');
+    navItems.forEach(function (item) {
+      item.addEventListener('click', function () {
+        var target = item.getAttribute('data-page');
+        navItems.forEach(function (n) { n.classList.remove('active'); });
+        item.classList.add('active');
+        pages.forEach(function (p) { p.classList.remove('active'); });
+        var page = document.getElementById('page-' + target);
+        if (page) page.classList.add('active');
+        closeSidebar();
+        document.querySelector('.content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    /* ============ Mobile sidebar toggle ============ */
+    var sidebar = document.getElementById('sidebar');
+    var overlayBg = document.getElementById('overlayBg');
+    function openSidebar() { if (sidebar) sidebar.classList.add('open'); if (overlayBg) overlayBg.classList.add('show'); }
+    function closeSidebar() { if (sidebar) sidebar.classList.remove('open'); if (overlayBg) overlayBg.classList.remove('show'); }
+    var hamb = document.getElementById('hamburger');
+    if (hamb) hamb.addEventListener('click', openSidebar);
+    if (overlayBg) overlayBg.addEventListener('click', closeSidebar);
+
+    /* ============ Logout ============ */
+    document.getElementById('logoutBtn').addEventListener('click', function () {
+      fetch('/api/auth/logout', { method: 'POST' })
+        .then(function () { window.location.href = 'login.html'; })
+        .catch(function () { window.location.href = 'login.html'; });
+    });
+
+    /* ============ Bell -> notifications ============ */
+    document.getElementById('bell').addEventListener('click', function () {
+      document.querySelector('.nav-item[data-page="notifications"]').click();
+    });
+
+    /* ============ Live clock ============ */
+    function tickClock() {
+      var now = new Date();
+      document.getElementById('clockTime').textContent = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      document.getElementById('clockDate').textContent = now.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    }
+    tickClock(); setInterval(tickClock, 1000);
+
+    /* ============ Toast ============ */
+    function showToast(msg) {
+      var wrap = document.getElementById('toastWrap');
+      var t = document.createElement('div');
+      t.className = 'toast glass';
+      t.innerHTML = '<span class="t-ico">✓</span> ' + msg;
+      wrap.appendChild(t);
+      setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; t.style.transition = 'all .4s ease'; }, 2600);
+      setTimeout(function () { t.remove(); }, 3100);
+    }
+
+    /* ============ Modals ============ */
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    document.querySelectorAll('.modal-overlay').forEach(function (ov) {
+      ov.addEventListener('click', function (e) { if (e.target === ov) ov.classList.remove('open'); });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(function (m) { m.classList.remove('open'); });
+    });
+
+    /* ============ Animated counters ============ */
+    function animateCounter(el, target, prefix, suffix) {
+      prefix = prefix || ''; suffix = suffix || '';
+      var dur = 1400, start = 0, startTime = null;
+      function step(ts) {
+        if (!startTime) startTime = ts;
+        var prog = Math.min((ts - startTime) / dur, 1);
+        var eased = 1 - Math.pow(1 - prog, 3);
+        var val = Math.floor(eased * target);
+        el.textContent = prefix + val.toLocaleString('en-IN') + suffix;
+        if (prog < 1) requestAnimationFrame(step);
+        else el.textContent = prefix + target.toLocaleString('en-IN') + suffix;
+      }
+      requestAnimationFrame(step);
+    }
+
+    /* ============ Placeholder data ============ */
+    /* ============ Role-tailored stats rendering ============ */
+    function renderRoleStats(role) {
+      var statsGrid = document.getElementById('statsGrid');
+      if (!statsGrid) return;
+      statsGrid.innerHTML = '';
+
+      var allStats = [
+        { id: 'users', icon: '👥', label: 'Total Users', value: 48250, trend: '+12.4%', up: true },
+        { id: 'active', icon: '🟢', label: 'Active Users', value: 31820, trend: '+8.1%', up: true },
+        { id: 'premium', icon: '👑', label: 'Premium Subscribers', value: 12440, trend: '+5.7%', up: true },
+        { id: 'orders', icon: '🧾', label: "Today's Orders", value: 386, trend: '+3.2%', up: true },
+        { id: 'revenue', icon: '💰', label: 'Monthly Revenue', value: 1284000, trend: '+15.3%', up: true, prefix: '₹' },
+        { id: 'pending', icon: '⏳', label: 'Pending Payments', value: 74, trend: '-2.1%', up: false },
+        { id: 'plans', icon: '🏷️', label: 'Total Plans', value: 3, trend: '0%', up: true },
+        { id: 'tickets', icon: '🎫', label: 'Support Tickets', value: 128, trend: '-6.4%', up: false }
+      ];
+
+      var allowedStats = allStats;
+      if (role === 'Website Manager') {
+        allowedStats = allStats.filter(function(s) { return ['users', 'active', 'premium', 'plans', 'tickets'].indexOf(s.id) !== -1; });
+      } else if (role === 'Finance Manager') {
+        allowedStats = allStats.filter(function(s) { return ['revenue', 'orders', 'pending', 'premium', 'plans'].indexOf(s.id) !== -1; });
+      }
+
+      allowedStats.forEach(function (s) {
+        var el = document.createElement('div');
+        el.className = 'stat-card glass';
+        el.innerHTML = '<div class="st-icon">' + s.icon + '</div>' +
+          '<div class="st-value" data-target="' + s.value + '" data-prefix="' + (s.prefix || '') + '">0</div>' +
+          '<div class="st-label">' + s.label + '</div>' +
+          '<span class="trend ' + (s.up ? 'up' : 'down') + '">' + (s.up ? '▲' : '▼') + ' ' + s.trend + '</span>';
+        statsGrid.appendChild(el);
+      });
+
+      document.querySelectorAll('.st-value').forEach(function (el) {
+        animateCounter(el, parseInt(el.getAttribute('data-target'), 10), el.getAttribute('data-prefix'), '');
+      });
+    }
+
+    var providers = { google: '🔴 Google', email: '✉️ Email', apple: '🍎 Apple', facebook: '🔵 Facebook' };
+    var users = [
+      ['Priya Sharma','priya@email.com','google','User','4K Ultra',4,'Active','12 Jan 2026',5],
+      ['Rahul Verma','rahul@email.com','email','Premium','1080p',2,'Active','03 Feb 2026',15],
+      ['Ananya Iyer','ananya@email.com','apple','User','720p',1,'Suspended','21 Nov 2025',23],
+      ['Vikram Singh','vikram@email.com','google','Moderator','4K Ultra',3,'Active','08 Mar 2026',31],
+      ['Sara Khan','sara@email.com','facebook','User','1080p',2,'Active','19 Apr 2026',8],
+      ['Arjun Nair','arjun@email.com','email','Premium','4K Ultra',4,'Active','27 May 2026',12]
+    ];
+    var usersBody = document.getElementById('usersBody');
+    users.forEach(function (u) {
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td><div class="cell-user"><img src="https://i.pravatar.cc/80?img=' + u[8] + '" alt=""><div><div class="cu-name">' + u[0] + '</div><div class="cu-mail">' + u[1] + '</div></div></div></td>' +
+        '<td><span class="provider">' + providers[u[2]] + '</span></td>' +
+        '<td><span class="badge ' + (u[3] === 'Premium' ? 'teal' : u[3] === 'Moderator' ? 'purple' : 'gray') + '">' + u[3] + '</span></td>' +
+        '<td>' + u[4] + '</td>' +
+        '<td>' + u[5] + '</td>' +
+        '<td><span class="badge ' + (u[6] === 'Active' ? 'green' : 'red') + '">' + u[6] + '</span></td>' +
+        '<td style="color:var(--text-muted)">' + u[7] + '</td>' +
+        '<td><div class="row-actions">' +
+          '<button class="icon-btn" title="View" onclick="openModal(\'modalEditUser\')">👁️</button>' +
+          '<button class="icon-btn" title="Edit" onclick="editUser(\'' + u[0] + '\',\'' + u[1] + '\')">✏️</button>' +
+          '<button class="icon-btn" title="Suspend" onclick="showToast(\'User suspended\')">⛔</button>' +
+          '<button class="icon-btn danger" title="Delete" onclick="openModal(\'modalDelete\')">🗑️</button>' +
+        '</div></td>';
+      usersBody.appendChild(tr);
+    });
+    function editUser(name, mail) {
+      document.getElementById('editUserName').value = name;
+      document.getElementById('editUserMail').value = mail;
+      openModal('modalEditUser');
+    }
+
+    var methods = { UPI: 'blue', Card: 'teal', NetBanking: 'purple', Wallet: 'amber' };
+    var orders = [
+      ['#STM-10241','Priya Sharma','4K Ultra','₹100','UPI','Paid','31 Jul 2026'],
+      ['#STM-10240','Rahul Verma','1080p','₹75','Card','Paid','31 Jul 2026'],
+      ['#STM-10239','Ananya Iyer','720p','₹50','Wallet','Pending','30 Jul 2026'],
+      ['#STM-10238','Vikram Singh','4K Ultra','₹100','NetBanking','Paid','30 Jul 2026'],
+      ['#STM-10237','Sara Khan','1080p','₹75','UPI','Failed','29 Jul 2026'],
+      ['#STM-10236','Arjun Nair','4K Ultra','₹100','Card','Paid','29 Jul 2026']
+    ];
+    var ordersBody = document.getElementById('ordersBody');
+    orders.forEach(function (o) {
+      var st = o[5] === 'Paid' ? 'green' : o[5] === 'Pending' ? 'amber' : 'red';
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td style="font-weight:600">' + o[0] + '</td><td>' + o[1] + '</td><td>' + o[2] + '</td><td>' + o[3] + '</td>' +
+        '<td><span class="badge ' + (methods[o[4]] || 'gray') + '">' + o[4] + '</span></td>' +
+        '<td><span class="badge ' + st + '">' + o[5] + '</span></td><td style="color:var(--text-muted)">' + o[6] + '</td>' +
+        '<td><button class="icon-btn" onclick="showToast(\'Viewing order\')">👁️</button></td>';
+      ordersBody.appendChild(tr);
+    });
+
+    /* recent orders on dashboard */
+    var recentOrders = document.getElementById('recentOrders');
+    orders.slice(0, 5).forEach(function (o) {
+      var st = o[5] === 'Paid' ? 'green' : o[5] === 'Pending' ? 'amber' : 'red';
+      var d = document.createElement('div');
+      d.className = 'notif glass';
+      d.innerHTML = '<div class="n-ico" style="background:rgba(20,184,166,0.15);color:var(--accent)">🧾</div>' +
+        '<div class="n-body"><div class="n-title">' + o[1] + ' — ' + o[2] + '</div><div class="n-desc">' + o[0] + ' · ' + o[4] + '</div></div>' +
+        '<span class="badge ' + st + '">' + o[3] + '</span>';
+      recentOrders.appendChild(d);
+    });
+
+    var subs = [
+      ['Priya Sharma','4K Ultra','Active','12 Aug 2026',4],
+      ['Rahul Verma','1080p','Active','03 Sep 2026',2],
+      ['Ananya Iyer','720p','Expired','21 Jun 2026',1],
+      ['Vikram Singh','4K Ultra','Active','08 Oct 2026',4],
+      ['Sara Khan','1080p','Active','19 Aug 2026',2]
+    ];
+    var subsBody = document.getElementById('subsBody');
+    subs.forEach(function (s) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td style="font-weight:600">' + s[0] + '</td><td>' + s[1] + '</td>' +
+        '<td><span class="badge ' + (s[2] === 'Active' ? 'green' : 'red') + '">' + s[2] + '</span></td>' +
+        '<td style="color:var(--text-muted)">' + s[3] + '</td><td>' + s[4] + ' devices</td>' +
+        '<td><div class="row-actions"><button class="btn btn--outline btn--sm" onclick="showToast(\'Upgrade started\')">Upgrade</button>' +
+        '<button class="btn btn--danger btn--sm" onclick="showToast(\'Subscription cancelled\')">Cancel</button></div></td>';
+      subsBody.appendChild(tr);
+    });
+
+    var plans = [
+      { q: '720p HD', cur: '₹', amt: 50, feats: ['1 device at a time','HD 720p quality','Ad-free streaming','Mobile + tablet'], users: 9840, featured: false },
+      { q: '1080p Full HD', cur: '₹', amt: 75, feats: ['2 devices at a time','Full HD 1080p','Ad-free streaming','All devices','Offline downloads'], users: 14320, featured: true },
+      { q: '4K Ultra HD', cur: '₹', amt: 100, feats: ['4 devices at a time','4K + HDR quality','Dolby Atmos audio','All devices','Offline downloads','Priority support'], users: 12440, featured: false }
+    ];
+    var plansGrid = document.getElementById('plansGrid');
+    plans.forEach(function (p) {
+      var el = document.createElement('div');
+      el.className = 'plan-card glass' + (p.featured ? ' featured' : '');
+      var feats = p.feats.map(function (f) { return '<li><span class="check">✓</span> ' + f + '</li>'; }).join('');
+      el.innerHTML = '<span class="plan-q">' + p.q + '</span>' +
+        '<div class="plan-price"><span class="cur">' + p.cur + '</span><span class="amt">' + p.amt + '</span><span class="per">/mo</span></div>' +
+        '<ul class="plan-feats">' + feats + '</ul>' +
+        '<div class="plan-users">Active users: <strong>' + p.users.toLocaleString('en-IN') + '</strong></div>' +
+        '<div class="plan-actions"><button class="btn btn--outline btn--sm" onclick="editPlan(\'' + p.q + '\',' + p.amt + ')">Edit</button>' +
+        '<button class="btn btn--danger btn--sm" onclick="openModal(\'modalDelete\')">Delete</button></div>';
+      plansGrid.appendChild(el);
+    });
+    function editPlan(name, price) {
+      document.getElementById('editPlanName').value = name;
+      document.getElementById('editPlanPrice').value = price;
+      openModal('modalEditPlan');
+    }
+
+    var payStats = [
+      { icon: '✅', label: 'Successful Payments', value: 42180, prefix: '' },
+      { icon: '⏳', label: 'Pending Payments', value: 74, prefix: '' },
+      { icon: '❌', label: 'Failed Payments', value: 213, prefix: '' },
+      { icon: '↩️', label: 'Refund Requests', value: 38, prefix: '' },
+      { icon: '💰', label: 'Total Revenue', value: 8940000, prefix: '₹' }
+    ];
+    var payGrid = document.getElementById('payGrid');
+    payStats.forEach(function (s) {
+      var el = document.createElement('div');
+      el.className = 'stat-card glass';
+      el.innerHTML = '<div class="st-icon">' + s.icon + '</div>' +
+        '<div class="st-value" data-target="' + s.value + '" data-prefix="' + s.prefix + '">0</div>' +
+        '<div class="st-label">' + s.label + '</div>';
+      payGrid.appendChild(el);
+    });
+
+    var methods = { 'UPI': 'teal', 'Card': 'blue', 'Wallet': 'amber', 'NetBanking': 'purple' };
+    var payTxns = [
+      ['#TXN-88231','Priya Sharma','₹100','UPI','Success','31 Jul 2026'],
+      ['#TXN-88230','Rahul Verma','₹75','Card','Success','31 Jul 2026'],
+      ['#TXN-88229','Ananya Iyer','₹50','Wallet','Pending','30 Jul 2026'],
+      ['#TXN-88228','Sara Khan','₹75','UPI','Failed','29 Jul 2026'],
+      ['#TXN-88227','Arjun Nair','₹100','Card','Success','29 Jul 2026']
+    ];
+    var payBody = document.getElementById('payBody');
+    if (payBody) {
+      payTxns.forEach(function (t) {
+        var st = t[4] === 'Success' ? 'green' : t[4] === 'Pending' ? 'amber' : 'red';
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td style="font-weight:600">' + t[0] + '</td><td>' + t[1] + '</td><td>' + t[2] + '</td>' +
+          '<td><span class="badge ' + (methods[t[3]] || 'gray') + '">' + t[3] + '</span></td>' +
+          '<td><span class="badge ' + st + '">' + t[4] + '</span></td><td style="color:var(--text-muted)">' + t[5] + '</td>';
+        payBody.appendChild(tr);
+      });
+    }
+
+    var coupons = [
+      ['WELCOME50','50%','Percentage','1240 / 5000','31 Dec 2026','Active'],
+      ['FLAT20','₹20','Fixed','842 / 2000','15 Sep 2026','Active'],
+      ['SUMMER10','10%','Percentage','3000 / 3000','30 Jun 2026','Expired'],
+      ['NEWYEAR','₹100','Fixed','120 / 1000','01 Jan 2027','Scheduled']
+    ];
+    var couponsBody = document.getElementById('couponsBody');
+    coupons.forEach(function (c) {
+      var st = c[5] === 'Active' ? 'green' : c[5] === 'Expired' ? 'red' : 'blue';
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td><span class="badge teal">' + c[0] + '</span></td><td style="font-weight:600">' + c[1] + '</td><td>' + c[2] + '</td>' +
+        '<td style="color:var(--text-muted)">' + c[3] + '</td><td style="color:var(--text-muted)">' + c[4] + '</td>' +
+        '<td><span class="badge ' + st + '">' + c[5] + '</span></td>' +
+        '<td><div class="row-actions"><button class="icon-btn" onclick="showToast(\'Coupon edited\')">✏️</button>' +
+        '<button class="icon-btn danger" onclick="openModal(\'modalDelete\')">🗑️</button></div></td>';
+      couponsBody.appendChild(tr);
+    });
+
+    var notifs = [
+      ['👤','New User Registered','Priya Sharma signed up via Google','2 min ago','teal'],
+      ['💰','Payment Received','₹100 from Rahul Verma (4K Ultra)','18 min ago','green'],
+      ['⚠️','Subscription Expired','Ananya Iyer\'s 720p plan expired','1 hr ago','amber'],
+      ['❌','Failed Payment','Card declined for Sara Khan','3 hrs ago','red'],
+      ['🎫','New Support Ticket','#TKT-4471 — Buffering on 4K','5 hrs ago','blue']
+    ];
+    var notifBody = document.getElementById('notifBody');
+    var notifColors = { teal: 'var(--accent)', green: 'var(--green)', amber: 'var(--amber)', red: 'var(--red)', blue: 'var(--blue)' };
+    var notifBg = { teal: 'rgba(20,184,166,0.15)', green: 'rgba(34,197,94,0.15)', amber: 'rgba(245,158,11,0.15)', red: 'rgba(239,68,68,0.15)', blue: 'rgba(59,130,246,0.15)' };
+    notifs.forEach(function (n) {
+      var d = document.createElement('div');
+      d.className = 'notif glass';
+      d.innerHTML = '<div class="n-ico" style="background:' + notifBg[n[4]] + ';color:' + notifColors[n[4]] + '">' + n[0] + '</div>' +
+        '<div class="n-body"><div class="n-title">' + n[1] + '</div><div class="n-desc">' + n[2] + '</div></div>' +
+        '<span class="n-time">' + n[3] + '</span>';
+      notifBody.appendChild(d);
+    });
+
+    var tickets = [
+      ['#TKT-4471','Priya Sharma','Buffering on 4K streams','High','Open'],
+      ['#TKT-4470','Rahul Verma','Cannot update payment method','Medium','In Progress'],
+      ['#TKT-4469','Ananya Iyer','Refund not received','High','Open'],
+      ['#TKT-4468','Vikram Singh','Subtitle sync issue','Low','Resolved'],
+      ['#TKT-4467','Sara Khan','Login OTP not arriving','Medium','Resolved']
+    ];
+    var supportBody = document.getElementById('supportBody');
+    tickets.forEach(function (t) {
+      var pr = t[3] === 'High' ? 'red' : t[3] === 'Medium' ? 'amber' : 'gray';
+      var st = t[4] === 'Open' ? 'blue' : t[4] === 'In Progress' ? 'amber' : 'green';
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td style="font-weight:600">' + t[0] + '</td><td>' + t[1] + '</td><td>' + t[2] + '</td>' +
+        '<td><span class="badge ' + pr + '">' + t[3] + '</span></td>' +
+        '<td><span class="badge ' + st + '">' + t[4] + '</span></td>' +
+        '<td><button class="btn btn--outline btn--sm" onclick="showToast(\'Reply sent\')">Reply</button></td>';
+      supportBody.appendChild(tr);
+    });
+
+    /* Dynamic fetch for Admins from MongoDB */
+    async function loadAdminsFromDB() {
+      var adminsBody = document.getElementById('adminsBody');
+      if (!adminsBody) {
+        console.warn('loadAdminsFromDB: #adminsBody element not found');
+        return;
+      }
+      try {
+        var res = await fetch('/api/admin/list', { credentials: 'same-origin' });
+        if (!res.ok) {
+          console.warn('loadAdminsFromDB: API returned', res.status);
+          adminsBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">Failed to load admins (Status: ' + res.status + '). Please refresh.</td></tr>';
+          return;
+        }
+        var data = await res.json();
+        if (!data.admins || data.admins.length === 0) {
+          adminsBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">No admins found.</td></tr>';
+          return;
+        }
+        adminsBody.innerHTML = '';
+
+        data.admins.forEach(function (a) {
+          var avatar = a.picture || 'https://placehold.co/80x80/14B8A6/062622?text=' + (a.name ? a.name.charAt(0) : 'A');
+          var lastLog = a.lastLogin ? new Date(a.lastLogin).toLocaleString('en-IN') : 'Never';
+          var badgeColor = a.role === 'Owner' ? 'teal' : a.role === 'Website Manager' ? 'purple' : 'blue';
+
+          var isOwner = currentUser && currentUser.role === 'Owner';
+          var actionCell = isOwner
+            ? '<div class="row-actions"><button class="icon-btn" onclick="openModal(\'modalAdmin\')">✏️</button><button class="icon-btn danger" onclick="openModal(\'modalDelete\')">🗑️</button></div>'
+            : '<span class="badge gray">View Only</span>';
+
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td><div class="cell-user"><img src="' + avatar + '" alt=""><div class="cu-name">' + (a.name || a.email) + '</div></div></td>' +
+            '<td style="color:var(--text-muted)">' + a.email + '</td>' +
+            '<td><span class="badge ' + badgeColor + '">' + a.role + '</span></td>' +
+            '<td><span class="badge green">Active</span></td>' +
+            '<td style="color:var(--text-muted)">' + lastLog + '</td>' +
+            '<td>' + actionCell + '</td>';
+          adminsBody.appendChild(tr);
+        });
+        console.log('loadAdminsFromDB: loaded', data.admins.length, 'admins');
+      } catch (e) {
+        console.warn('Failed to load admins from DB:', e);
+        adminsBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">Error loading admins. Check console.</td></tr>';
+      }
+    }
+
+    var logs = [
+      ['31 Jul 2026, 09:12','—','103.24.11.8','Chrome 128','Desktop','Login','Success'],
+      ['30 Jul 2026, 18:44','30 Jul 2026, 20:10','142.11.9.55','Safari 17','MacBook','Updated plan','Success'],
+      ['30 Jul 2026, 11:03','30 Jul 2026, 13:20','49.36.220.7','Edge 127','Windows','Deleted user','Success'],
+      ['29 Jul 2026, 22:15','—','88.21.44.10','Firefox 129','Android','Failed login','Failed'],
+      ['29 Jul 2026, 08:40','29 Jul 2026, 12:00','103.24.11.8','Chrome 128','iPhone','Edited coupon','Success']
+    ];
+    var logsBody = document.getElementById('logsBody');
+    logs.forEach(function (l) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td style="color:var(--text-muted)">' + l[0] + '</td><td style="color:var(--text-muted)">' + l[1] + '</td>' +
+        '<td>' + l[2] + '</td><td>' + l[3] + '</td><td>' + l[4] + '</td><td>' + l[5] + '</td>' +
+        '<td><span class="badge ' + (l[6] === 'Success' ? 'green' : 'red') + '">' + l[6] + '</span></td>';
+      logsBody.appendChild(tr);
+    });
+
+    /* ============ Bar charts ============ */
+    function buildBars(id, data, labels) {
+      var box = document.getElementById(id);
+      var max = Math.max.apply(null, data);
+      data.forEach(function (v, i) {
+        var col = document.createElement('div');
+        col.className = 'bar-col';
+        col.innerHTML = '<div class="bar" style="height:' + (v / max * 100) + '%;animation-delay:' + (i * 0.09) + 's"></div><span class="bar-lbl">' + labels[i] + '</span>';
+        box.appendChild(col);
+      });
+    }
+    buildBars('barsRevenue', [420, 510, 480, 640, 700, 880, 940, 1284], ['Dec','Jan','Feb','Mar','Apr','May','Jun','Jul']);
+    buildBars('barsDaily', [18, 22, 25, 21, 28, 32, 30], ['M','T','W','T','F','S','S']);
+    buildBars('barsMonthly', [22, 26, 28, 30, 34, 38], ['Feb','Mar','Apr','May','Jun','Jul']);
+
+    /* payment methods bars */
+    var pm = [['UPI', 46, 'var(--accent)'], ['Card', 30, 'var(--blue)'], ['NetBanking', 14, 'var(--purple)'], ['Wallet', 10, 'var(--amber)']];
+    var pmBox = document.getElementById('payMethods');
+    pm.forEach(function (m, i) {
+      var row = document.createElement('div');
+      row.style.marginBottom = '0.9rem';
+      row.innerHTML = '<div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.3rem"><span>' + m[0] + '</span><span style="color:var(--text-muted)">' + m[1] + '%</span></div>' +
+        '<div style="height:8px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden"><div class="pm-fill" style="height:100%;width:' + m[1] + '%;border-radius:999px;background:' + m[2] + ';animation-delay:' + (i * 0.12) + 's"></div></div>';
+      pmBox.appendChild(row);
+    });
+
+    /* --- Progress bar logic --- */
+    (function() {
+      var bar = document.getElementById('progressBar');
+      if (!bar) return;
+      var w = 0;
+      var iv = setInterval(function() {
+        w += Math.random() * 15 + 5;
+        if (w > 90) w = 90;
+        bar.style.width = w + '%';
+      }, 200);
+      window.addEventListener('load', function() {
+        clearInterval(iv);
+        bar.style.width = '100%';
+        setTimeout(function() { bar.classList.add('done'); }, 400);
+      });
+    })();
+  </script>
+</body>
+</html>
