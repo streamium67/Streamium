@@ -502,33 +502,116 @@
       setTimeout(function () { circle.remove(); }, 600);
     });
 
-    // Form validation
+    // Form handling, Auth-check redirect, and Google Sheets Submission
     (function () {
       var form = document.getElementById("contactForm");
       var status = document.getElementById("contactStatus");
+      var currentUser = null;
+
       function setError(field, msg) {
         var el = form.querySelector('[data-error-for="' + field + '"]');
         if (el) el.textContent = msg || "";
       }
-      form.addEventListener("submit", function (e) {
+
+      // Check current login status on page load & restore draft
+      async function checkAuthAndRestore() {
+        try {
+          var res = await fetch("/api/auth/me");
+          if (res.ok) {
+            var data = await res.json();
+            if (data.user) {
+              currentUser = data.user;
+              if (currentUser.name && form.name && !form.name.value) form.name.value = currentUser.name;
+              if (currentUser.email && form.email && !form.email.value) form.email.value = currentUser.email;
+            }
+          }
+        } catch (_) {}
+
+        // Restore draft from sessionStorage if available
+        try {
+          var savedDraft = sessionStorage.getItem("contact_draft");
+          if (savedDraft) {
+            var draft = JSON.parse(savedDraft);
+            if (draft.name && form.name) form.name.value = draft.name;
+            if (draft.email && form.email) form.email.value = draft.email;
+            if (draft.topic && form.topic) form.topic.value = draft.topic;
+            if (draft.plan && form.plan) form.plan.value = draft.plan;
+            if (draft.message && form.message) form.message.value = draft.message;
+          }
+        } catch (_) {}
+      }
+
+      checkAuthAndRestore();
+
+      form.addEventListener("submit", async function (e) {
         e.preventDefault();
         var name = form.name.value.trim();
         var email = form.email.value.trim();
+        var topic = form.topic ? form.topic.value : "billing";
+        var plan = form.plan ? form.plan.value : "";
         var message = form.message.value.trim();
         var ok = true;
+
         setError("name", ""); setError("email", ""); setError("message", "");
         status.textContent = "";
 
         if (!name) { setError("name", "Please enter your name."); ok = false; }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError("email", "Enter a valid email address."); ok = false; }
-        if (message.length < 10) { setError("message", "Tell us a bit more (10+ characters)."); ok = false; }
+        if (message.length < 5) { setError("message", "Tell us a bit more (5+ characters)."); ok = false; }
         if (!ok) return;
 
-        status.textContent = "Sending…";
-        setTimeout(function () {
-          status.textContent = "Thanks, " + name + "! We'll reply within 24 hours.";
-          form.reset();
-        }, 900);
+        // Verify authentication state
+        var user = currentUser;
+        if (!user) {
+          try {
+            var meRes = await fetch("/api/auth/me");
+            if (meRes.ok) {
+              var meData = await meRes.json();
+              if (meData.user) user = meData.user;
+            }
+          } catch (_) {}
+        }
+
+        // IF NOT LOGGED IN: Save draft & redirect to login.html with redirect=/contact
+        if (!user) {
+          try {
+            sessionStorage.setItem("contact_draft", JSON.stringify({ name, email, topic, plan, message }));
+          } catch (_) {}
+
+          status.style.color = "var(--accent-light)";
+          status.textContent = "Please sign in to submit your message. Redirecting to login…";
+          setTimeout(function () {
+            window.location.href = "/login?redirect=/contact";
+          }, 1000);
+          return;
+        }
+
+        // IF LOGGED IN: Submit message to POST /api/contact -> Google Sheets
+        status.style.color = "var(--accent)";
+        status.textContent = "Saving to Google Sheets & submitting message…";
+
+        try {
+          var res = await fetch("/api/contact", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({ name, email, topic, plan, message }),
+          });
+          var data = await res.json();
+
+          if (data.success) {
+            try { sessionStorage.removeItem("contact_draft"); } catch (_) {}
+            status.style.color = "var(--accent)";
+            status.textContent = data.message || ("Thanks, " + name + "! Your message has been saved to Google Sheets. We'll reply within 24 hours.");
+            form.message.value = "";
+          } else {
+            status.style.color = "#ff8b7e";
+            status.textContent = data.error || "Failed to send message. Please try again.";
+          }
+        } catch (err) {
+          status.style.color = "#ff8b7e";
+          status.textContent = "Network error. Please check your connection and try again.";
+        }
       });
     })();
   </script>

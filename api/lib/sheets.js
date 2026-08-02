@@ -20,6 +20,7 @@ SERVICE_KEY = SERVICE_KEY.replace(/\\n/g, "\n");
 const USERS_SHEET = "Users";
 const ORDERS_SHEET = "Orders";
 const SESSIONS_SHEET = "Sessions";
+const CONTACT_SHEET = "Contact";
 
 // Column headers (must match Row 1 in each sheet tab)
 const USER_HEADERS = [
@@ -38,6 +39,11 @@ const SESSION_HEADERS = [
   "Login Date & Time", "Logout Date & Time", "Session Status",
   "IP Address", "Location", "Browser", "Browser Version", "OS",
   "Device Type", "Language", "Time Zone", "Referrer"
+];
+
+const CONTACT_HEADERS = [
+  "Submission ID", "Date & Time", "Full Name", "Email",
+  "Topic", "Plan", "Message", "User ID", "IP Address"
 ];
 
 /* =========================================================
@@ -132,6 +138,9 @@ async function ensureTabsExist() {
     }
     if (!existingTitles.includes(SESSIONS_SHEET)) {
       requests.push({ addSheet: { properties: { title: SESSIONS_SHEET } } });
+    }
+    if (!existingTitles.includes(CONTACT_SHEET)) {
+      requests.push({ addSheet: { properties: { title: CONTACT_SHEET } } });
     }
 
     if (requests.length > 0) {
@@ -604,6 +613,38 @@ async function getAllSessions() {
 }
 
 /* =========================================================
+   CONTACT FORM SUBMISSION TO GOOGLE SHEETS
+   ========================================================= */
+async function saveContactMessage({ name, email, topic, plan, message, userId, req }) {
+  await ensureTabsExist();
+  const rows = await readSheet(CONTACT_SHEET);
+
+  if (rows.length === 0) {
+    await appendRow(CONTACT_SHEET, CONTACT_HEADERS);
+  }
+
+  const submissionId = `MSG-${Date.now().toString(36).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+  const dateTime = formatKolkataTimestamp(new Date());
+  const ip = getClientIP(req);
+
+  const row = [
+    submissionId,
+    dateTime,
+    name || "Anonymous",
+    (email || "").toLowerCase(),
+    topic || "General",
+    plan || "None",
+    message || "",
+    userId || "",
+    ip || ""
+  ];
+
+  await appendRow(CONTACT_SHEET, row);
+  console.log(`[CONTACT MSG SAVED TO GOOGLE SHEETS] ${submissionId} from ${email}`);
+  return { submissionId, dateTime };
+}
+
+/* =========================================================
    EXPORTS
    ========================================================= */
 module.exports = {
@@ -617,8 +658,10 @@ module.exports = {
   revokeAllOtherSessions,
   getUserSessions,
   getAllSessions,
+  saveContactMessage,
   ensureHeaders,
   USER_HEADERS,
   ORDER_HEADERS,
   SESSION_HEADERS,
+  CONTACT_HEADERS,
 };

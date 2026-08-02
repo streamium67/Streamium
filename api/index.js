@@ -49,6 +49,7 @@ const {
   revokeAllOtherSessions,
   getUserSessions,
   getAllSessions,
+  saveContactMessage,
 } = require("./lib/sheets");
 
 /* =========================================================
@@ -680,6 +681,49 @@ app.post(["/user/sessions/revoke", "/api/user/sessions/revoke"], async (req, res
   } catch (err) {
     console.error("Revoke session error:", err.message);
     return res.status(500).json({ error: "Failed to revoke session." });
+  }
+});
+
+/* =========================================================
+   CONTACT FORM ROUTE (Google Sheets Integration)
+   ========================================================= */
+app.post(["/contact", "/api/contact"], async (req, res) => {
+  try {
+    const { name, email, topic, plan, message } = req.body;
+
+    const userEmail = req.user?.email || email;
+    const userName = name || req.user?.name || "";
+
+    if (!userEmail || !userEmail.includes("@")) {
+      return res.status(400).json({ error: "Valid email address is required." });
+    }
+    if (!message || message.trim().length < 5) {
+      return res.status(400).json({ error: "Please enter a message (at least 5 characters)." });
+    }
+
+    let result = null;
+    try {
+      result = await saveContactMessage({
+        name: userName,
+        email: userEmail.trim().toLowerCase(),
+        topic,
+        plan,
+        message: message.trim(),
+        userId: req.user?.userId || "",
+        req,
+      });
+    } catch (sheetErr) {
+      console.error("Google Sheets contact save error:", sheetErr.message);
+    }
+
+    return res.json({
+      success: true,
+      message: `Thank you, ${userName || "Customer"}! Your message has been saved to Google Sheets and sent to support. We will reply within 24 hours.`,
+      submissionId: result?.submissionId || null,
+    });
+  } catch (err) {
+    console.error("Contact API error:", err.message);
+    return res.status(500).json({ error: "Failed to save message. Please try again." });
   }
 });
 
