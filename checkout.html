@@ -341,6 +341,14 @@
           </div>
 
           <p class="error-msg" id="formError" role="alert"></p>
+
+          <div class="section-gap"></div>
+
+          <!-- Signed-in account -->
+          <div id="signedInSection" style="display:none; padding: 0.8rem 1rem; background: rgba(20,184,166,0.08); border: 1px solid rgba(20,184,166,0.25); border-radius: 10px; margin-bottom: 0.5rem;">
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Signed in as</p>
+            <p id="signedInEmail" style="color: var(--accent-light); font-weight: 700; font-size: 1rem; margin: 0.2rem 0 0;"></p>
+          </div>
         </form>
 
         <!-- ===== RIGHT: Plan Details (top) + Price Details (below) ===== -->
@@ -363,12 +371,12 @@
           <!-- Lower card: Price Details -->
           <div class="summary glass">
             <h2>Price Details</h2>
-            <div class="summary__row"><span>Plan price</span><span id="planPrice">₹100</span></div>
+            <div class="summary__row"><span>Base price</span><span id="planPrice">₹166.25</span></div>
+            <div class="summary__row"><span>GST (18%)</span><span id="planGst">₹29.92</span></div>
             <div class="summary__row"><span>Discount</span><span>₹0</span></div>
-            <div class="summary__row"><span>Taxes (GST)</span><span>Included</span></div>
-            <div class="summary__row total"><span>Total Payable</span><span class="amount" id="planTotal">₹100</span></div>
+            <div class="summary__row total"><span>Total Payable</span><span class="amount" id="planTotal">₹196.17</span></div>
 
-            <button type="submit" form="checkoutForm" class="btn btn--primary ripple" id="payBtn">Pay ₹100</button>
+            <button type="submit" form="checkoutForm" class="btn btn--primary ripple" id="payBtn">Pay ₹196.17</button>
             <p class="summary__secure">🔒 Secure checkout · Cancel anytime</p>
             <p class="summary__status" id="payStatus" role="status" aria-live="polite"></p>
           </div>
@@ -405,6 +413,14 @@
           if (profileNameInput && (user.name || user.email)) {
             profileNameInput.value = user.name ? `${user.name.split(" ")[0]}'s Device` : user.email.split("@")[0];
           }
+
+          // Show signed-in email below billing address
+          const signedInSection = document.getElementById("signedInSection");
+          const signedInEmail = document.getElementById("signedInEmail");
+          if (signedInSection && signedInEmail && user.email) {
+            signedInEmail.textContent = user.email;
+            signedInSection.style.display = "block";
+          }
         }
       } catch {
         const plan = new URLSearchParams(location.search).get("plan") || "premium";
@@ -412,32 +428,37 @@
       }
     })();
 
-    /* ---------- Plan catalog ---------- */
+    /* ---------- Plan catalog (base prices EXCLUDING GST) ---------- */
+    const GST_RATE = 0.18;
     const PLANS = {
       basic: {
-        name: "Basic", quality: "720p HD", price: 50,
+        name: "Basic", quality: "720p HD", basePrice: 50,
         features: ["720p HD streaming", "Watch on any device", "Offline downloads"],
       },
       standard: {
-        name: "Standard", quality: "1080p Full HD", price: 75,
+        name: "Standard", quality: "1080p Full HD", basePrice: 75,
         features: ["1080p Full HD streaming", "Watch on any device", "Offline downloads", "HDR & spatial audio"],
       },
       premium: {
-        name: "Premium", quality: "4K Ultra HD", price: 100,
+        name: "Premium", quality: "4K Ultra HD", basePrice: 166.25,
         features: ["4K Ultra HD streaming", "Watch on any device", "Offline downloads", "HDR & spatial audio", "Priority support"],
       },
     };
 
     /* ---------- Load selected plan from URL (?plan=basic|standard|premium) ---------- */
     const params = new URLSearchParams(location.search);
-    const plan = PLANS[params.get("plan")] || PLANS.premium; // default: Premium
+    const plan = PLANS[params.get("plan")] || PLANS.premium;
+
+    const gstAmount = +(plan.basePrice * GST_RATE).toFixed(2);
+    const totalPrice = +(plan.basePrice + gstAmount).toFixed(2);
 
     document.getElementById("planName").textContent = plan.name;
     document.getElementById("planQuality").textContent = plan.quality;
-    document.getElementById("planPrice").textContent = `₹${plan.price}`;
-    document.getElementById("planTotal").textContent = `₹${plan.price}`;
-    document.getElementById("payBtn").textContent = `Pay ₹${plan.price}`;
-    document.title = `Checkout — ${plan.name} (₹${plan.price}) — Streamium`;
+    document.getElementById("planPrice").textContent = `₹${plan.basePrice.toFixed(2)}`;
+    document.getElementById("planGst").textContent = `₹${gstAmount.toFixed(2)}`;
+    document.getElementById("planTotal").textContent = `₹${totalPrice.toFixed(2)}`;
+    document.getElementById("payBtn").textContent = `Pay ₹${totalPrice.toFixed(2)}`;
+    document.title = `Checkout — ${plan.name} (₹${totalPrice.toFixed(2)}) — Streamium`;
 
     /* Fill plan features list */
     const featuresList = document.getElementById("planFeatures");
@@ -491,7 +512,7 @@
 
       const firstName = form.firstName.value.trim();
       payStatus.style.color = "var(--accent)";
-      payStatus.textContent = `🎉 Success, ${firstName}! Your ${plan.name} plan (₹${plan.price}/month) has been activated! Redirecting to home…`;
+      payStatus.textContent = `🎉 Success, ${firstName}! Your ${plan.name} plan (₹${totalPrice.toFixed(2)}/month incl. GST) has been activated! Redirecting to home…`;
 
       setTimeout(() => {
         window.location.href = "index.html";
