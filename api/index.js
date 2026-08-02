@@ -12,6 +12,10 @@ const {
   createOrder,
   updateUserSubscription,
   getOrdersByEmail,
+  createSession,
+  logoutSession,
+  revokeAllOtherSessions,
+  getUserSessions,
 } = require("./lib/sheets");
 
 /* =========================================================
@@ -235,6 +239,7 @@ app.post(["/auth/google", "/api/auth/google"], async (req, res) => {
     const adminDoc = await Admin.findOne({ email: email.toLowerCase() });
 
     if (adminDoc) {
+      // RULE: Do NOT store info in Users or Sessions sheets when Admin logins
       isAdmin = true;
       role = adminDoc.role;
       adminDoc.googleId = googleId;
@@ -242,9 +247,22 @@ app.post(["/auth/google", "/api/auth/google"], async (req, res) => {
       adminDoc.name = name;
       adminDoc.lastLogin = new Date();
       await adminDoc.save();
+
+      const adminUser = {
+        googleId,
+        email: email.toLowerCase(),
+        name,
+        picture,
+        isAdmin: true,
+        role: adminDoc.role,
+      };
+
+      setAuthCookie(res, adminUser);
+      return res.json({ success: true, user: adminUser });
     }
 
-    // Register / update user in Google Sheets
+    // CUSTOMER LOGIN FLOW (Non-Admin):
+    // 1. Register / update user in Google Sheets Users tab
     let sheetUser = null;
     try {
       sheetUser = await getOrCreateUser({
@@ -255,20 +273,35 @@ app.post(["/auth/google", "/api/auth/google"], async (req, res) => {
       });
     } catch (sheetErr) {
       console.error("Google Sheets user error:", sheetErr.message);
-      // Don't block login if Sheets fails — user can still access the site
+    }
+
+    // 2. Create a new login session record in Google Sheets Sessions tab
+    let sessionRecord = null;
+    try {
+      sessionRecord = await createSession({
+        userId: sheetUser?.userId || "",
+        fullName: sheetUser?.fullName || name || "",
+        email: email.toLowerCase(),
+        loginMethod: "Google",
+        req,
+        timeZone: req.body?.timeZone || "Asia/Kolkata",
+      });
+    } catch (sessionErr) {
+      console.error("Google Sheets session error:", sessionErr.message);
     }
 
     const user = {
       googleId,
       email: email.toLowerCase(),
-      name,
+      name: sheetUser?.fullName || name,
       picture,
-      isAdmin,
-      role,
+      isAdmin: false,
+      role: null,
       userId: sheetUser?.userId || null,
       subscriptionStatus: sheetUser?.subscriptionStatus || "None",
       currentPlan: sheetUser?.currentPlan || "None",
       loginCount: sheetUser?.loginCount || 1,
+      sessionId: sessionRecord?.sessionId || null,
     };
 
     setAuthCookie(res, user);
@@ -309,13 +342,20 @@ app.get(["/auth/me", "/api/auth/me"], async (req, res) => {
 });
 
 // POST /api/auth/logout
-app.post(["/auth/logout", "/api/auth/logout"], (req, res) => {
+app.post(["/auth/logout", "/api/auth/logout"], async (req, res) => {
+  if (req.user && req.user.sessionId) {
+    try {
+      await logoutSession(req.user.sessionId, "Logged Out");
+    } catch (err) {
+      console.error("Logout session update error:", err.message);
+    }
+  }
   clearAuthCookie(res);
   return res.json({ success: true });
 });
 
 /* =========================================================
-   USER DATA ROUTES
+   USER DATA & SESSION MANAGEMENT ROUTES
    ========================================================= */
 
 // GET /api/user/orders — get current user's order history
@@ -329,6 +369,45 @@ app.get(["/user/orders", "/api/user/orders"], async (req, res) => {
   } catch (err) {
     console.error("Fetch orders error:", err.message);
     return res.status(500).json({ error: "Failed to fetch orders." });
+  }
+});
+
+// GET /api/user/sessions — get active and past sessions for logged-in user
+app.get(["/user/sessions", "/api/user/sessions"], async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Not authenticated." });
+  }
+  try {
+    const sessions = await getUserSessions(req.user.email);
+    return res.json({ success: true, sessions, currentSessionId: req.user.sessionId || null });
+  } catch (err) {
+    console.error("Fetch sessions error:", err.message);
+    return res.status(500).json({ error: "Failed to fetch user sessions." });
+  }
+});
+
+// POST /api/user/sessions/revoke — revoke a specific session or all other sessions
+app.post(["/user/sessions/revoke", "/api/user/sessions/revoke"], async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Not authenticated." });
+  }
+  try {
+    const { sessionId, revokeAllOthers } = req.body;
+
+    if (revokeAllOthers) {
+      const revokedCount = await revokeAllOtherSessions(req.user.email, req.user.sessionId);
+      return res.json({ success: true, message: `Signed out of ${revokedCount} other device(s).`, revokedCount });
+    }
+
+    if (!sessionId) {
+      return res.status(400).json({ error: "Session ID is required." });
+    }
+
+    await logoutSession(sessionId, "Revoked");
+    return res.json({ success: true, message: "Session revoked successfully." });
+  } catch (err) {
+    console.error("Revoke session error:", err.message);
+    return res.status(500).json({ error: "Failed to revoke session." });
   }
 });
 

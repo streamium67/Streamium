@@ -1,9 +1,11 @@
 const { google } = require("googleapis");
+const { UAParser } = require("ua-parser-js");
 
 /* =========================================================
    Google Sheets Database Helper for Streamium
    - Users sheet: Customer registration & login tracking
    - Orders sheet: Payment/subscription records
+   - Sessions sheet: Session management & security tracking
    ========================================================= */
 
 const SHEET_ID = process.env.GOOGLE_SHEETS_ID;
@@ -17,6 +19,7 @@ SERVICE_KEY = SERVICE_KEY.replace(/\\n/g, "\n");
 
 const USERS_SHEET = "Users";
 const ORDERS_SHEET = "Orders";
+const SESSIONS_SHEET = "Sessions";
 
 // Column headers (must match Row 1 in each sheet tab)
 const USER_HEADERS = [
@@ -28,6 +31,13 @@ const USER_HEADERS = [
 const ORDER_HEADERS = [
   "Order ID", "User ID", "Razorpay Payment ID", "Email", "Plan",
   "Amount Paid", "Purchase Date", "Expiry Date", "Payment Status", "Access Status"
+];
+
+const SESSION_HEADERS = [
+  "Session ID", "User ID", "Full Name", "Email", "Login Method",
+  "Login Date & Time", "Logout Date & Time", "Session Status",
+  "IP Address", "Location", "Browser", "Browser Version", "OS",
+  "Device Type", "User Agent", "Language", "Time Zone", "Referrer"
 ];
 
 /* =========================================================
@@ -119,6 +129,9 @@ async function ensureTabsExist() {
     }
     if (!existingTitles.includes(ORDERS_SHEET)) {
       requests.push({ addSheet: { properties: { title: ORDERS_SHEET } } });
+    }
+    if (!existingTitles.includes(SESSIONS_SHEET)) {
+      requests.push({ addSheet: { properties: { title: SESSIONS_SHEET } } });
     }
 
     if (requests.length > 0) {
@@ -392,6 +405,176 @@ async function getOrdersByEmail(email) {
 }
 
 /* =========================================================
+   SESSION MANAGEMENT
+   ========================================================= */
+
+async function generateSessionId() {
+  const rows = await readSheet(SESSIONS_SHEET);
+  const dataCount = Math.max(rows.length - 1, 0);
+  const nextNum = dataCount + 1;
+  return `SES${String(nextNum).padStart(6, "0")}`;
+}
+
+/**
+ * Creates a new session record in Google Sheets for customer logins
+ */
+async function createSession({ userId, fullName, email, loginMethod, req, timeZone }) {
+  await ensureHeaders(SESSIONS_SHEET, SESSION_HEADERS);
+
+  const sessionId = await generateSessionId();
+  const uaString = req?.headers?.["user-agent"] || "";
+  const parser = new UAParser(uaString);
+  const result = parser.getResult();
+
+  const browserName = result.browser.name || "Unknown Browser";
+  const browserVersion = result.browser.version || "1.0";
+  const osName = result.os.name ? `${result.os.name} ${result.os.version || ""}`.trim() : "Unknown OS";
+
+  let deviceType = "Desktop";
+  if (result.device.type === "mobile") deviceType = "Mobile";
+  else if (result.device.type === "tablet") deviceType = "Tablet";
+  else if (/mobile|android|iphone|ipad/i.test(uaString)) deviceType = "Mobile";
+
+  // IP Address & Vercel Geolocation
+  const ipAddress = (req?.headers?.["x-forwarded-for"] || "").split(",")[0].trim() || req?.socket?.remoteAddress || "127.0.0.1";
+
+  const city = req?.headers?.["x-vercel-ip-city"] ? decodeURIComponent(req.headers["x-vercel-ip-city"]) : "";
+  const region = req?.headers?.["x-vercel-ip-country-region"] || "";
+  const country = req?.headers?.["x-vercel-ip-country"] || "IN";
+  const location = [city, region, country].filter(Boolean).join(", ") || "India";
+
+  const language = (req?.headers?.["accept-language"] || "en-US").split(",")[0].split(";")[0];
+  const referrer = req?.headers?.["referer"] || req?.headers?.["referrer"] || "Direct";
+  const nowFormatted = formatDateTime(new Date());
+
+  const row = [
+    sessionId,
+    userId || "",
+    fullName || "",
+    email.toLowerCase(),
+    loginMethod || "Google",
+    nowFormatted,             // Login Date & Time
+    "—",                       // Logout Date & Time
+    "Active",                  // Session Status
+    ipAddress,
+    location,
+    browserName,
+    browserVersion,
+    osName,
+    deviceType,
+    uaString,
+    language,
+    timeZone || "Asia/Kolkata",
+    referrer
+  ];
+
+  await appendRow(SESSIONS_SHEET, row);
+
+  return {
+    sessionId,
+    userId,
+    fullName,
+    email: email.toLowerCase(),
+    loginMethod,
+    loginDateTime: nowFormatted,
+    logoutDateTime: "—",
+    sessionStatus: "Active",
+    ipAddress,
+    location,
+    browserName,
+    browserVersion,
+    osName,
+    deviceType,
+    userAgent: uaString,
+    language,
+    timeZone: timeZone || "Asia/Kolkata",
+    referrer
+  };
+}
+
+/**
+ * Marks a specific session as Logged Out or Revoked
+ */
+async function logoutSession(sessionId, logoutReason = "Logged Out") {
+  if (!sessionId) return null;
+  const rows = await readSheet(SESSIONS_SHEET);
+  if (rows.length <= 1) return null;
+
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === sessionId) {
+      const rowIdx = i + 1; // 1-based index
+      const nowFormatted = formatDateTime(new Date());
+      await updateCell(SESSIONS_SHEET, `G${rowIdx}:H${rowIdx}`, [nowFormatted, logoutReason]);
+      return { sessionId, logoutDateTime: nowFormatted, sessionStatus: logoutReason };
+    }
+  }
+  return null;
+}
+
+/**
+ * Revokes all other active sessions for a user (e.g. "Sign out of all other devices")
+ */
+async function revokeAllOtherSessions(email, currentSessionId = null) {
+  if (!email) return 0;
+  const rows = await readSheet(SESSIONS_SHEET);
+  if (rows.length <= 1) return 0;
+
+  const lowerEmail = email.toLowerCase();
+  let revokedCount = 0;
+  const nowFormatted = formatDateTime(new Date());
+
+  for (let i = 1; i < rows.length; i++) {
+    const sId = rows[i][0];
+    const sEmail = rows[i][3];
+    const status = rows[i][7];
+
+    if (sEmail && sEmail.toLowerCase() === lowerEmail && status === "Active" && sId !== currentSessionId) {
+      const rowIdx = i + 1;
+      await updateCell(SESSIONS_SHEET, `G${rowIdx}:H${rowIdx}`, [nowFormatted, "Revoked"]);
+      revokedCount++;
+    }
+  }
+  return revokedCount;
+}
+
+/**
+ * Retrieves session history for a specific user email
+ */
+async function getUserSessions(email) {
+  const rows = await readSheet(SESSIONS_SHEET);
+  if (rows.length <= 1) return [];
+
+  const lowerEmail = email.toLowerCase();
+  const sessions = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][3] && rows[i][3].toLowerCase() === lowerEmail) {
+      sessions.push({
+        sessionId: rows[i][0] || "",
+        userId: rows[i][1] || "",
+        fullName: rows[i][2] || "",
+        email: rows[i][3] || "",
+        loginMethod: rows[i][4] || "",
+        loginDateTime: rows[i][5] || "",
+        logoutDateTime: rows[i][6] || "",
+        sessionStatus: rows[i][7] || "",
+        ipAddress: rows[i][8] || "",
+        location: rows[i][9] || "",
+        browserName: rows[i][10] || "",
+        browserVersion: rows[i][11] || "",
+        osName: rows[i][12] || "",
+        deviceType: rows[i][13] || "",
+        userAgent: rows[i][14] || "",
+        language: rows[i][15] || "",
+        timeZone: rows[i][16] || "",
+        referrer: rows[i][17] || "",
+      });
+    }
+  }
+  return sessions;
+}
+
+/* =========================================================
    EXPORTS
    ========================================================= */
 module.exports = {
@@ -400,7 +583,12 @@ module.exports = {
   createOrder,
   updateUserSubscription,
   getOrdersByEmail,
+  createSession,
+  logoutSession,
+  revokeAllOtherSessions,
+  getUserSessions,
   ensureHeaders,
   USER_HEADERS,
   ORDER_HEADERS,
+  SESSION_HEADERS,
 };
