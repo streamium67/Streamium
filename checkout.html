@@ -246,8 +246,8 @@
   <!-- ===== Navbar ===== -->
   <header class="nav">
     <nav class="nav__inner container" aria-label="Checkout navigation">
-      <a href="index.html" class="nav__logo">Stream<span>ium</span></a>
-      <a href="index.html#plans" class="nav__back">← Back to Plans</a>
+      <a href="/" class="nav__logo">Stream<span>ium</span></a>
+      <a href="/#plans" class="nav__back">← Back to Plans</a>
     </nav>
   </header>
 
@@ -368,7 +368,7 @@
               <!-- filled by JS -->
             </ul>
             <div class="summary__row"><span>Duration</span><span>1 month</span></div>
-            <a href="index.html#plans" class="summary__change">Change plan</a>
+            <a href="/#plans" class="summary__change">Change plan</a>
           </div>
 
           <!-- Lower card: Price Details -->
@@ -427,7 +427,7 @@
         }
       } catch {
         const plan = new URLSearchParams(location.search).get("plan") || "premium";
-        window.location.href = `login.html?redirect=checkout.html&plan=${encodeURIComponent(plan)}`;
+        window.location.href = `/login?redirect=/checkout&plan=${encodeURIComponent(plan)}`;
       }
     })();
 
@@ -594,7 +594,7 @@
               if (verifyData.success) {
                 payStatus.style.color = "var(--accent)";
                 payStatus.textContent = `🎉 Payment successful, ${firstName}! Your ${plan.name} plan (₹${totalPrice.toFixed(2)}/month) is now active! Redirecting...`;
-                setTimeout(() => { window.location.href = "index.html"; }, 2500);
+                setTimeout(() => { window.location.href = "/"; }, 2500);
               } else {
                 throw new Error(verifyData.error || "Verification failed.");
               }

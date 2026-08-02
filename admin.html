@@ -983,8 +983,8 @@
     /* ============ Logout ============ */
     document.getElementById('logoutBtn').addEventListener('click', function () {
       fetch('/api/auth/logout', { method: 'POST' })
-        .then(function () { window.location.href = 'login.html'; })
-        .catch(function () { window.location.href = 'login.html'; });
+        .then(function () { window.location.href = '/login'; })
+        .catch(function () { window.location.href = '/login'; });
     });
 
     /* ============ Bell -> notifications ============ */

@@ -262,12 +262,12 @@
 
   <header class="nav" id="nav">
     <nav class="nav__inner container" aria-label="Main navigation">
-      <a href="index.html#home" class="nav__logo">Stream<span>ium</span></a>
+      <a href="/#home" class="nav__logo">Stream<span>ium</span></a>
       <ul class="nav__menu">
-        <li><a href="index.html#home" class="nav__link">Home</a></li>
-        <li><a href="index.html#plans" class="nav__link">Plans</a></li>
-        <li><a href="index.html#faq" class="nav__link">FAQ</a></li>
-        <li><a href="index.html#contact" class="nav__link">Contact</a></li>
+        <li><a href="/#home" class="nav__link">Home</a></li>
+        <li><a href="/#plans" class="nav__link">Plans</a></li>
+        <li><a href="/#faq" class="nav__link">FAQ</a></li>
+        <li><a href="/#contact" class="nav__link">Contact</a></li>
       </ul>
     </nav>
   </header>
@@ -310,14 +310,14 @@
         <span id="resendTimer"></span>
       </p>
 
-      <a href="login.html" class="auth__back" id="backLogin">← Use a different email</a>
+      <a href="/login" class="auth__back" id="backLogin">← Use a different email</a>
     </section>
   </main>
 
   <footer class="footer">
     <div class="container footer__grid">
       <div>
-        <a href="index.html#home" class="nav__logo">Stream<span>ium</span></a>
+        <a href="/#home" class="nav__logo">Stream<span>ium</span></a>
         <p class="footer__tagline">Your world of entertainment, anywhere.</p>
         <div class="footer__social" aria-label="Social media links">
           <a href="#" aria-label="Twitter / X">𝕏</a>
@@ -332,11 +332,11 @@
       </nav>
       <nav aria-label="Support links">
         <h3>Support</h3>
-        <ul><li><a href="index.html#faq">Help Center</a></li><li><a href="index.html#contact">Contact Us</a></li><li><a href="#">Devices</a></li></ul>
+        <ul><li><a href="/#faq">Help Center</a></li><li><a href="/#contact">Contact Us</a></li><li><a href="#">Devices</a></li></ul>
       </nav>
       <nav aria-label="Legal links">
         <h3>Legal</h3>
-        <ul><li><a href="terms.html">Terms of Use</a></li><li><a href="privacy.html">Privacy Policy</a></li><li><a href="#">Cookies</a></li></ul>
+        <ul><li><a href="/terms">Terms of Use</a></li><li><a href="/privacy">Privacy Policy</a></li><li><a href="#">Cookies</a></li></ul>
       </nav>
     </div>
     <p class="footer__copy">© 2026 Streamium. All rights reserved</p>
@@ -348,16 +348,16 @@
     /* ---------- Redirect + email context passed from login.html ---------- */
     const params = new URLSearchParams(window.location.search);
     const email = params.get("email") || "";
-    const rawRedirect = params.get("redirect") || "index.html";
+    const rawRedirect = params.get("redirect") || "/";
     const emailEl = document.getElementById("userEmail");
     if (email) emailEl.textContent = email;
 
     function buildRedirectUrl(user) {
-      if (user && user.isAdmin) return "admin.html";
-      let target = rawRedirect === "admin.html" ? "index.html" : rawRedirect;
+      if (user && user.isAdmin) return "/admin";
+      let target = (rawRedirect === "/admin" || rawRedirect === "admin.html") ? "/" : rawRedirect;
       const planParam = params.get("plan");
-      if (target === "checkout.html" && planParam) {
-        return `checkout.html?plan=${encodeURIComponent(planParam)}`;
+      if ((target === "/checkout" || target === "checkout.html") && planParam) {
+        return `/checkout?plan=${encodeURIComponent(planParam)}`;
       }
       return target;
     }
@@ -556,7 +556,7 @@
     /* ---------- 8. Back to login ---------- */
     document.getElementById("backLogin").addEventListener("click", (e) => {
       e.preventDefault();
-      navigateWithFade("login.html");
+      navigateWithFade("/login");
     });
 
     /* ---------- 9. Top progress bar ---------- */

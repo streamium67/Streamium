@@ -44,7 +44,7 @@
   </style>
 </head>
 <body>
-  <header class="nav"><div class="nav__inner container"><a href="index.html" class="nav__logo">Stream<span>ium</span></a><a href="index.html" class="nav__link">← Back to Home</a></div></header>
+  <header class="nav"><div class="nav__inner container"><a href="/" class="nav__logo">Stream<span>ium</span></a><a href="/" class="nav__link">← Back to Home</a></div></header>
   <main class="page">
     <div class="container">
       <h1 class="page__title">My <span>Profile</span></h1>
@@ -58,13 +58,13 @@
     const PLAN_INFO={basic:{name:"Basic",quality:"720p HD",price:50},standard:{name:"Standard",quality:"1080p Full HD",price:75},premium:{name:"Premium",quality:"4K Ultra HD",price:100}};
     function fmtDate(d){if(!d)return"—";const dt=new Date(d);return isNaN(dt)?"—":dt.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});}
     function initials(u){return(u.name||u.email||"U").charAt(0).toUpperCase();}
-    async function logout(){try{await fetch("/api/auth/logout",{method:"POST"});}catch(e){}window.location.href="index.html";}
+    async function logout(){try{await fetch("/api/auth/logout",{method:"POST"});}catch(e){}window.location.href="/";}
 
     (async function(){
       const root=document.getElementById("profileRoot");
       let user=null;
       try{const r=await fetch("/api/auth/me",{credentials:"same-origin"});if(r.ok){const d=await r.json();user=d&&d.user;}}catch(e){}
-      if(!user){root.innerHTML=`<div class="glass" style="padding:2rem;text-align:center;">You are not signed in. <a href="login.html" style="color:var(--accent);font-weight:700;">Log in</a> to view your profile.</div>`;return;}
+      if(!user){root.innerHTML=`<div class="glass" style="padding:2rem;text-align:center;">You are not signed in. <a href="/login" style="color:var(--accent);font-weight:700;">Log in</a> to view your profile.</div>`;return;}
 
       const sub=user.subscription||null;
       const photo=user.picture?`<img src="${user.picture}" alt="${user.name||'User'}">`:initials(user);
@@ -99,7 +99,7 @@
           <div class="glass info-item"><div class="label">Registered Devices (${deviceCount})</div><div class="value">${devices}</div></div>
         </div>
         <div class="actions">
-          <a href="subscription.html" class="btn btn--primary">Manage Subscription</a>
+          <a href="/subscription" class="btn btn--primary">Manage Subscription</a>
         </div>
         <button class="btn btn--danger" id="logoutBtn">🚪 Logout</button>`;
       document.getElementById("logoutBtn").addEventListener("click",logout);

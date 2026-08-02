@@ -282,12 +282,12 @@
   <!-- ===== Sticky Navigation (matches index.html) ===== -->
   <header class="nav" id="nav">
     <nav class="nav__inner container" aria-label="Main navigation">
-      <a href="index.html#home" class="nav__logo">Stream<span>ium</span></a>
+      <a href="/#home" class="nav__logo">Stream<span>ium</span></a>
       <ul class="nav__menu">
-        <li><a href="index.html#home" class="nav__link">Home</a></li>
-        <li><a href="index.html#plans" class="nav__link">Plans</a></li>
-        <li><a href="index.html#faq" class="nav__link">FAQ</a></li>
-        <li><a href="index.html#contact" class="nav__link">Contact</a></li>
+        <li><a href="/#home" class="nav__link">Home</a></li>
+        <li><a href="/#plans" class="nav__link">Plans</a></li>
+        <li><a href="/#faq" class="nav__link">FAQ</a></li>
+        <li><a href="/#contact" class="nav__link">Contact</a></li>
       </ul>
     </nav>
   </header>
@@ -335,7 +335,7 @@
       </div>
 
       <!-- Back to home -->
-      <a href="index.html" class="auth__back" id="backHome">← Back to Home</a>
+      <a href="/" class="auth__back" id="backHome">← Back to Home</a>
 
       <!-- Legal links -->
       <p class="auth__legal">
@@ -349,7 +349,7 @@
   <footer class="footer">
     <div class="container footer__grid">
       <div>
-        <a href="index.html#home" class="nav__logo">Stream<span>ium</span></a>
+        <a href="/#home" class="nav__logo">Stream<span>ium</span></a>
         <p class="footer__tagline">Your world of entertainment, anywhere.</p>
         <div class="footer__social" aria-label="Social media links">
           <a href="#" aria-label="Twitter / X">𝕏</a>
@@ -364,11 +364,11 @@
       </nav>
       <nav aria-label="Support links">
         <h3>Support</h3>
-        <ul><li><a href="index.html#faq">Help Center</a></li><li><a href="index.html#contact">Contact Us</a></li><li><a href="#">Devices</a></li></ul>
+        <ul><li><a href="/#faq">Help Center</a></li><li><a href="/#contact">Contact Us</a></li><li><a href="#">Devices</a></li></ul>
       </nav>
       <nav aria-label="Legal links">
         <h3>Legal</h3>
-        <ul><li><a href="terms.html">Terms of Use</a></li><li><a href="privacy.html">Privacy Policy</a></li><li><a href="#">Cookies</a></li></ul>
+        <ul><li><a href="/terms">Terms of Use</a></li><li><a href="/privacy">Privacy Policy</a></li><li><a href="#">Cookies</a></li></ul>
       </nav>
     </div>
     <p class="footer__copy">© 2026 Streamium. All rights reserved</p>
@@ -379,19 +379,19 @@
 
     /* ---------- Redirect logic ---------- */
     const urlParams = new URLSearchParams(window.location.search);
-    const rawRedirect = urlParams.get("redirect") || "index.html";
+    const rawRedirect = urlParams.get("redirect") || "/";
 
     function buildRedirectUrl(user) {
       if (user && user.isAdmin) {
-        return "admin.html";
+        return "/admin";
       }
 
-      // If user is not an admin, never redirect to admin.html to avoid loops
-      let target = rawRedirect === "admin.html" ? "index.html" : rawRedirect;
+      // If user is not an admin, never redirect to /admin to avoid loops
+      let target = (rawRedirect === "/admin" || rawRedirect === "admin.html") ? "/" : rawRedirect;
 
       const planParam = urlParams.get("plan");
-      if (target === "checkout.html" && planParam) {
-        return `checkout.html?plan=${encodeURIComponent(planParam)}`;
+      if ((target === "/checkout" || target === "checkout.html") && planParam) {
+        return `/checkout?plan=${encodeURIComponent(planParam)}`;
       }
       return target;
     }
@@ -479,7 +479,7 @@
           if (data.success) {
             const user = data.user;
             const targetUrl = buildRedirectUrl(user);
-            const isDashboard = targetUrl === "admin.html";
+            const isDashboard = targetUrl === "/admin";
             const roleBadge = user.role ? ` (${user.role})` : "";
             const welcomeMsg = isDashboard
               ? `Welcome back, ${user.name || "Admin"}${roleBadge}! Redirecting to Admin Dashboard…`
@@ -573,7 +573,7 @@
           if (data && data.success) {
             const redirectParam = rawRedirect ? `&redirect=${encodeURIComponent(rawRedirect)}` : "";
             const planParam = urlParams.get("plan") ? `&plan=${encodeURIComponent(urlParams.get("plan"))}` : "";
-            navigateWithFade(`verify.html?email=${encodeURIComponent(email)}${redirectParam}${planParam}`);
+            navigateWithFade(`/verify?email=${encodeURIComponent(email)}${redirectParam}${planParam}`);
           } else {
             showMessage((data && data.error) || "Couldn't send code. Please try again.", "error");
           }
@@ -582,7 +582,7 @@
           setLoading(continueBtn, false);
           const redirectParam = rawRedirect ? `&redirect=${encodeURIComponent(rawRedirect)}` : "";
           const planParam = urlParams.get("plan") ? `&plan=${encodeURIComponent(urlParams.get("plan"))}` : "";
-          navigateWithFade(`verify.html?email=${encodeURIComponent(email)}${redirectParam}${planParam}`);
+          navigateWithFade(`/verify?email=${encodeURIComponent(email)}${redirectParam}${planParam}`);
         });
     });
 
@@ -596,7 +596,7 @@
     /* ---------- 8. Smooth page transition for Back to Home ---------- */
     document.getElementById("backHome").addEventListener("click", (e) => {
       e.preventDefault();
-      navigateWithFade("index.html");
+      navigateWithFade("/");
     });
 
     /* --- Progress bar logic --- */

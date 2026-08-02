@@ -45,7 +45,7 @@
   </style>
 </head>
 <body>
-  <header class="nav"><div class="nav__inner container"><a href="index.html" class="nav__logo">Stream<span>ium</span></a><a href="index.html" class="nav__link">← Back to Home</a></div></header>
+  <header class="nav"><div class="nav__inner container"><a href="/" class="nav__logo">Stream<span>ium</span></a><a href="/" class="nav__link">← Back to Home</a></div></header>
   <main class="page">
     <div class="container">
       <h1 class="page__title">My <span>Subscription</span></h1>
@@ -64,14 +64,14 @@
       const root=document.getElementById("subRoot");
       let user=null;
       try{const r=await fetch("/api/auth/me",{credentials:"same-origin"});if(r.ok){const d=await r.json();user=d&&d.user;}}catch(e){}
-      if(!user){root.innerHTML=`<div class="glass empty">You are not signed in. <a href="login.html" style="color:var(--accent);font-weight:700;">Log in</a> to view your subscription.</div>`;return;}
+      if(!user){root.innerHTML=`<div class="glass empty">You are not signed in. <a href="/login" style="color:var(--accent);font-weight:700;">Log in</a> to view your subscription.</div>`;return;}
 
       const sub=user.subscription||null;
       if(!sub||!sub.plan||!PLAN_INFO[sub.plan]){
         root.innerHTML=`<div class="glass empty">
           <h2 style="margin-bottom:.6rem;">No active subscription</h2>
           <p style="color:var(--text-muted);margin-bottom:1.4rem;">Choose a plan to start streaming in HD or 4K.</p>
-          <a href="index.html#plans" class="btn btn--primary">View Plans</a></div>`;
+          <a href="/#plans" class="btn btn--primary">View Plans</a></div>`;
         return;
       }
 
@@ -80,8 +80,8 @@
       const dr=daysRemaining(sub.expiryDate);
       const statusPill=expired?`<span class="status-pill status-pill--expired">Expired</span>`:`<span class="status-pill status-pill--active">Active</span>`;
       const renewBtn=expired
-        ?`<a href="checkout.html?plan=${sub.plan}&renew=1" class="btn btn--danger">Renew Plan</a>`
-        :`<a href="checkout.html?plan=${sub.plan}&renew=1" class="btn btn--outline">Renew Early</a>`;
+        ?`<a href="/checkout?plan=${sub.plan}&renew=1" class="btn btn--danger">Renew Plan</a>`
+        :`<a href="/checkout?plan=${sub.plan}&renew=1" class="btn btn--outline">Renew Early</a>`;
 
       root.innerHTML=`
         <div class="glass sub-card ${expired?'sub-card--expired':'sub-card--current'}">
@@ -102,8 +102,8 @@
           </div>
           <div class="actions">
             ${renewBtn}
-            <a href="index.html#plans" class="btn btn--primary">Change / Upgrade Plan</a>
-            <a href="payments.html" class="btn btn--outline">Payment History</a>
+            <a href="/#plans" class="btn btn--primary">Change / Upgrade Plan</a>
+            <a href="/subscription#payment-history" class="btn btn--outline">Payment History</a>
           </div>
         </div>`;
     })();
