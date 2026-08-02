@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Contact Streamium — support, billing and partnership enquiries. We reply within 24 hours." />
+  <title>Contact — Streamium</title>
+
+  <style>
+    /* ---------- Design tokens (matched to Streamium home) ---------- */
+    :root {
+      --bg: #0f0f0f;
+      --bg-soft: #161616;
+      --accent: #14b8a6;
+      --accent-dark: #0f766e;
+      --accent-light: #5eead4;
+      --text: #f5f5f5;
+      --text-muted: #b3b3b3;
+      --glass: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --radius: 16px;
+      --transition: 0.35s cubic-bezier(0.25, 0.8, 0.35, 1);
+    }
+
+    /* ---------- Reset & base ---------- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.6; overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg-soft); }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(var(--accent), var(--accent-dark)); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* ---------- Layout helpers ---------- */
+    .container { width: min(1140px, 92%); margin-inline: auto; }
+    .section { padding: 4.5rem 0; position: relative; }
+    .section__title { font-size: clamp(1.8rem, 4vw, 2.6rem); text-align: center; }
+    .section__subtitle { text-align: center; color: var(--text-muted); margin: 0.75rem auto 0; max-width: 560px; }
+
+    /* ---------- Glass card ---------- */
+    .glass {
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    }
+
+    /* ---------- Buttons & ripple ---------- */
+    .btn {
+      display: inline-block; padding: 0.8rem 2rem;
+      border: none; border-radius: 999px;
+      font-weight: 600; font-size: 1rem; cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+    .btn--primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #062622; }
+    .btn--primary:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(20, 184, 166, 0.4); }
+    .btn--outline { background: transparent; color: var(--text); border: 1.5px solid var(--glass-border); }
+    .btn--outline:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-3px); }
+    .btn--sm { padding: 0.45rem 1.3rem; font-size: 0.9rem; }
+    .ripple-circle {
+      position: absolute; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.45);
+      transform: scale(0); animation: ripple 0.6s ease-out forwards; pointer-events: none;
+    }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+    /* ---------- Floating particles ---------- */
+    .particles { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+    .particle {
+      position: absolute; bottom: -10px; border-radius: 50%;
+      background: rgba(20, 184, 166, 0.35); animation: float linear infinite;
+    }
+    @keyframes float { to { transform: translateY(-110vh) translateX(6vw); opacity: 0; } }
+
+    /* ---------- Navigation ---------- */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15, 15, 15, 0.7);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid transparent;
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .nav.scrolled { border-bottom-color: var(--glass-border); background: rgba(15, 15, 15, 0.92); }
+    .nav__inner { display: flex; align-items: center; padding: 1rem 0; gap: 1rem; }
+    .nav__logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 0.5px; margin-right: auto; white-space: nowrap; }
+    .nav__logo span { color: var(--accent); }
+    .nav__menu { display: flex; align-items: center; gap: 1.6rem; margin-left: auto; }
+    .nav__link { color: var(--text-muted); font-weight: 500; position: relative; transition: color var(--transition); white-space: nowrap; }
+    .nav__link::after {
+      content: ""; position: absolute; left: 0; bottom: -4px;
+      width: 0; height: 2px; background: var(--accent); transition: width var(--transition);
+    }
+    .nav__link:hover, .nav__link:focus-visible { color: var(--text); }
+    .nav__link:hover::after, .nav__link:focus-visible::after { width: 100%; }
+    .nav__link.is-active { color: var(--text); }
+    .nav__link.is-active::after { width: 100%; }
+    @media (max-width: 640px) {
+      .nav__logo { font-size: 1.1rem; }
+      .nav__menu { gap: 0.9rem; }
+      .nav__link { font-size: 0.85rem; }
+      .btn--sm { padding: 0.35rem 0.9rem; font-size: 0.8rem; }
+    }
+    @media (max-width: 420px) {
+      .nav__menu { gap: 0.6rem; }
+      .nav__link { font-size: 0.78rem; }
+    }
+
+    /* ---------- Page hero ---------- */
+    .page-hero {
+      padding: 5rem 0 3.5rem; text-align: center;
+      background:
+        radial-gradient(ellipse 80% 55% at 50% -20%, rgba(20, 184, 166, 0.25), transparent),
+        linear-gradient(180deg, #101616 0%, var(--bg) 75%);
+    }
+    .page-hero__eyebrow {
+      display: inline-block; margin-bottom: 1rem;
+      padding: 0.35rem 1rem; border-radius: 999px;
+      background: rgba(20, 184, 166, 0.12); border: 1px solid rgba(20, 184, 166, 0.35);
+      color: var(--accent-light); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase;
+    }
+    .page-hero__title { font-size: clamp(2.1rem, 5.5vw, 3.4rem); line-height: 1.15; }
+    .page-hero__title span {
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .page-hero__subtitle { color: var(--text-muted); font-size: clamp(1rem, 2vw, 1.15rem); margin: 1.1rem auto 0; max-width: 560px; }
+
+    /* ---------- Contact layout ---------- */
+    .contact-layout { display: grid; gap: 1.5rem; align-items: start; }
+    @media (min-width: 960px) { .contact-layout { grid-template-columns: 1.15fr 0.85fr; gap: 2rem; } }
+
+    .contact { padding: 2.2rem; display: grid; gap: 1.2rem; }
+    .contact__heading { font-size: 1.3rem; }
+    .contact__hint { color: var(--text-muted); font-size: 0.92rem; margin-top: -0.6rem; }
+    .contact__row { display: grid; gap: 1.2rem; }
+    @media (min-width: 640px) { .contact__row { grid-template-columns: 1fr 1fr; } }
+    .contact label { display: grid; gap: 0.4rem; font-size: 0.9rem; color: var(--text-muted); }
+    .contact input, .contact textarea, .contact select {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px; padding: 0.8rem 1rem;
+      color: var(--text); font: inherit; resize: vertical;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .contact select { appearance: none; cursor: pointer; }
+    .contact select option { background: var(--bg-soft); color: var(--text); }
+    .contact input:focus, .contact textarea:focus, .contact select:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+    }
+    .contact input::placeholder, .contact textarea::placeholder { color: #8a8a8a; }
+    .contact__actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .contact__note { color: var(--text-muted); font-size: 0.82rem; }
+    .contact__status { color: var(--accent); font-weight: 600; min-height: 1.4em; }
+    .field-error { color: #ff8b7e; font-size: 0.8rem; min-height: 1em; }
+
+    /* ---------- Info cards ---------- */
+    .info-stack { display: grid; gap: 1.5rem; }
+    .info-card { padding: 1.6rem; display: grid; gap: 1.1rem; }
+    .info-item { display: flex; gap: 1rem; align-items: flex-start; }
+    .info-item__icon {
+      flex: none; width: 44px; height: 44px; border-radius: 12px;
+      display: grid; place-items: center; font-size: 1.2rem;
+      background: rgba(20, 184, 166, 0.12); border: 1px solid rgba(20, 184, 166, 0.3);
+    }
+    .info-item h3 { font-size: 1rem; margin-bottom: 0.15rem; }
+    .info-item p, .info-item a { color: var(--text-muted); font-size: 0.92rem; }
+    .info-item a { transition: color var(--transition); }
+    .info-item a:hover { color: var(--accent); }
+
+    .status-card { padding: 1.6rem; }
+    .status-card h3 { font-size: 1rem; margin-bottom: 0.9rem; }
+    .status-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 0.92rem; color: var(--text-muted); }
+    .status-row:last-of-type { border-bottom: none; }
+    .status-row strong { color: var(--text); font-weight: 600; }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      margin-top: 1rem; padding: 0.4rem 0.9rem; border-radius: 999px;
+      background: rgba(20, 184, 166, 0.12); border: 1px solid rgba(20, 184, 166, 0.3);
+      color: var(--accent-light); font-size: 0.82rem; font-weight: 600;
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(20,184,166,0.5); animation: pulse 2.4s infinite; }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.5); }
+      50%      { box-shadow: 0 0 0 8px rgba(20, 184, 166, 0); }
+    }
+
+    .social-row { display: flex; gap: 0.8rem; margin-top: 1.1rem; }
+    .social-row a {
+      display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      transition: transform var(--transition), border-color var(--transition), color var(--transition);
+    }
+    .social-row a:hover { transform: translateY(-4px); border-color: var(--accent); color: var(--accent); }
+
+    /* ---------- Quick help ---------- */
+    .help-grid { display: grid; gap: 1.5rem; margin-top: 2.5rem; }
+    @media (min-width: 640px) { .help-grid { grid-template-columns: repeat(3, 1fr); } }
+    .help-card {
+      padding: 1.8rem 1.5rem; text-align: center;
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+    }
+    .help-card:hover { transform: translateY(-8px); border-color: rgba(20, 184, 166, 0.5); box-shadow: 0 18px 40px rgba(20, 184, 166, 0.15); }
+    .help-card__icon { font-size: 2rem; margin-bottom: 0.8rem; }
+    .help-card h3 { margin-bottom: 0.4rem; font-size: 1.05rem; }
+    .help-card p { color: var(--text-muted); font-size: 0.92rem; }
+
+    /* ---------- Footer ---------- */
+    .footer { border-top: 1px solid var(--glass-border); background: var(--bg-soft); padding: 3.5rem 0 1.5rem; }
+    .footer__grid { display: grid; gap: 2rem; }
+    @media (min-width: 640px) { .footer__grid { grid-template-columns: 2fr 1fr 1fr 1fr; } }
+    .footer h3 { font-size: 1rem; margin-bottom: 0.8rem; }
+    .footer li { margin: 0.45rem 0; }
+    .footer li a { color: var(--text-muted); transition: color var(--transition); }
+    .footer li a:hover { color: var(--accent); }
+    .footer__tagline { color: var(--text-muted); margin: 0.8rem 0 1.2rem; }
+    .footer__social { display: flex; gap: 0.8rem; }
+    .footer__social a {
+      display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      transition: transform var(--transition), border-color var(--transition), color var(--transition);
+    }
+    .footer__social a:hover { transform: translateY(-4px); border-color: var(--accent); color: var(--accent); }
+    .footer__copy { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 2.5rem; }
+
+    /* ---------- Scroll reveal ---------- */
+    .reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      html { scroll-behavior: auto; }
+      .reveal { opacity: 1; transform: none; }
+    }
+
+    /* ---------- Top loading progress bar ---------- */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; width: 0; height: 3px; z-index: 9999;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      box-shadow: 0 0 10px rgba(20, 184, 166, 0.5), 0 0 5px rgba(20, 184, 166, 0.3);
+      transition: width 0.4s ease, opacity 0.4s ease; pointer-events: none;
+    }
+    .progress-bar.done { opacity: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="progress-bar" id="progressBar"></div>
+  <div class="particles" id="particles" aria-hidden="true"></div>
+
+  <!-- ===== Navigation ===== -->
+  <header class="nav" id="nav">
+    <nav class="nav__inner container" aria-label="Main navigation">
+      <a href="index.html#home" class="nav__logo">Stream<span>ium</span></a>
+      <ul class="nav__menu">
+        <li><a href="index.html#home" class="nav__link">Home</a></li>
+        <li><a href="index.html#plans" class="nav__link">Plans</a></li>
+        <li><a href="index.html#faq" class="nav__link">FAQ</a></li>
+        <li><a href="contact.html" class="nav__link is-active" aria-current="page">Contact</a></li>
+        <li><a href="/login" class="btn btn--outline btn--sm ripple">Login</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ===== Page hero ===== -->
+    <section class="page-hero">
+      <div class="container reveal">
+        <span class="page-hero__eyebrow">Support</span>
+        <h1 class="page-hero__title">We're here to help.<br /><span>Usually within 24 hours.</span></h1>
+        <p class="page-hero__subtitle">Questions about billing, streaming quality or your account? Send us a message and a real person will get back to you.</p>
+      </div>
+    </section>
+
+    <!-- ===== Form + info ===== -->
+    <section class="section" style="padding-top: 1rem;" id="contact">
+      <div class="container contact-layout">
+
+        <form class="contact glass reveal" id="contactForm" novalidate>
+          <h2 class="contact__heading">Send us a message</h2>
+          <p class="contact__hint">Fill in the details below — the more context, the faster we can help.</p>
+
+          <div class="contact__row">
+            <label>
+              <span>Name</span>
+              <input type="text" name="name" id="nameInput" placeholder="Your name" required />
+              <span class="field-error" data-error-for="name"></span>
+            </label>
+            <label>
+              <span>Email</span>
+              <input type="email" name="email" id="emailInput" placeholder="you@example.com" required />
+              <span class="field-error" data-error-for="email"></span>
+            </label>
+          </div>
+
+          <div class="contact__row">
+            <label>
+              <span>Topic</span>
+              <select name="topic" id="topicInput">
+                <option value="billing">Billing &amp; payments</option>
+                <option value="streaming">Streaming or playback</option>
+                <option value="account">Account &amp; login</option>
+                <option value="partnership">Partnership / press</option>
+              </select>
+            </label>
+            <label>
+              <span>Plan (optional)</span>
+              <select name="plan" id="planInput">
+                <option value="">Not a subscriber yet</option>
+                <option value="basic">Basic — 720p</option>
+                <option value="standard">Standard — 1080p</option>
+                <option value="premium">Premium — 4K</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            <span>Message</span>
+            <textarea name="message" id="messageInput" rows="5" placeholder="How can we help?" required></textarea>
+            <span class="field-error" data-error-for="message"></span>
+          </label>
+
+          <div class="contact__actions">
+            <button type="submit" class="btn btn--primary ripple">Send Message</button>
+            <span class="contact__note">We never share your email.</span>
+          </div>
+          <p class="contact__status" id="contactStatus" role="status" aria-live="polite"></p>
+        </form>
+
+        <div class="info-stack">
+          <div class="info-card glass reveal">
+            <div class="info-item">
+              <div class="info-item__icon" aria-hidden="true">✉️</div>
+              <div>
+                <h3>Email us</h3>
+                <p><a href="mailto:support@streamium.com">support@streamium.com</a></p>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="info-item__icon" aria-hidden="true">💬</div>
+              <div>
+                <h3>Live chat</h3>
+                <p>In-app chat, 9 AM – 11 PM IST daily.</p>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="info-item__icon" aria-hidden="true">📞</div>
+              <div>
+                <h3>Call support</h3>
+                <p><a href="tel:+911800123456">1800 123 456</a> · toll free</p>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="info-item__icon" aria-hidden="true">📍</div>
+              <div>
+                <h3>Office</h3>
+                <p>4th Floor, Prestige Tower, Bengaluru 560001</p>
+              </div>
+            </div>
+            <div class="social-row" aria-label="Social media links">
+              <a href="#" aria-label="Twitter / X">𝕏</a>
+              <a href="#" aria-label="Facebook">f</a>
+              <a href="#" aria-label="Instagram">◎</a>
+              <a href="#" aria-label="YouTube">▶</a>
+            </div>
+          </div>
+
+          <div class="status-card glass reveal">
+            <h3>Response times</h3>
+            <div class="status-row"><span>Live chat</span><strong>Under 5 min</strong></div>
+            <div class="status-row"><span>Email</span><strong>Within 24 hrs</strong></div>
+            <div class="status-row"><span>Billing disputes</span><strong>2 business days</strong></div>
+            <div class="status-pill"><span class="status-dot" aria-hidden="true"></span> All systems operational</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== Quick help ===== -->
+    <section class="section" style="padding-top: 2rem;">
+      <div class="container">
+        <h2 class="section__title reveal">Answers before you ask</h2>
+        <p class="section__subtitle reveal">Most questions are solved in under a minute with these.</p>
+        <div class="help-grid">
+          <article class="help-card glass reveal">
+            <div class="help-card__icon" aria-hidden="true">💳</div>
+            <h3>Billing &amp; refunds</h3>
+            <p>Change plan, update payment method or request a refund.</p>
+          </article>
+          <article class="help-card glass reveal">
+            <div class="help-card__icon" aria-hidden="true">🎬</div>
+            <h3>Playback issues</h3>
+            <p>Fix buffering, quality drops and audio sync in a few steps.</p>
+          </article>
+          <article class="help-card glass reveal">
+            <div class="help-card__icon" aria-hidden="true">🔐</div>
+            <h3>Account access</h3>
+            <p>Reset your password or recover a locked account safely.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <a href="index.html#home" class="nav__logo">Stream<span>ium</span></a>
+        <p class="footer__tagline">Your world of entertainment, anywhere.</p>
+        <div class="footer__social" aria-label="Social media links">
+          <a href="#" aria-label="Twitter / X">𝕏</a>
+          <a href="#" aria-label="Facebook">f</a>
+          <a href="#" aria-label="Instagram">◎</a>
+          <a href="#" aria-label="YouTube">▶</a>
+        </div>
+      </div>
+      <nav aria-label="Company links">
+        <h3>Company</h3>
+        <ul><li><a href="#">About</a></li><li><a href="#">Careers</a></li><li><a href="#">Press</a></li></ul>
+      </nav>
+      <nav aria-label="Support links">
+        <h3>Support</h3>
+        <ul><li><a href="index.html#faq">Help Center</a></li><li><a href="contact.html">Contact Us</a></li><li><a href="#">Devices</a></li></ul>
+      </nav>
+      <nav aria-label="Legal links">
+        <h3>Legal</h3>
+        <ul><li><a href="/terms">Terms of Use</a></li><li><a href="/privacy">Privacy Policy</a></li><li><a href="#">Cookies</a></li></ul>
+      </nav>
+    </div>
+    <p class="footer__copy">© <span id="year"></span> Streamium. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Year
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Progress bar
+    (function () {
+      var bar = document.getElementById("progressBar");
+      bar.style.width = "70%";
+      window.addEventListener("load", function () {
+        bar.style.width = "100%";
+        setTimeout(function () { bar.classList.add("done"); }, 400);
+      });
+    })();
+
+    // Sticky nav border
+    var nav = document.getElementById("nav");
+    window.addEventListener("scroll", function () {
+      nav.classList.toggle("scrolled", window.scrollY > 10);
+    });
+
+    // Floating particles
+    (function () {
+      var wrap = document.getElementById("particles");
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      for (var i = 0; i < 18; i++) {
+        var p = document.createElement("span");
+        var size = Math.random() * 6 + 3;
+        p.className = "particle";
+        p.style.width = size + "px";
+        p.style.height = size + "px";
+        p.style.left = Math.random() * 100 + "%";
+        p.style.animationDuration = (Math.random() * 16 + 14) + "s";
+        p.style.animationDelay = (-Math.random() * 20) + "s";
+        wrap.appendChild(p);
+      }
+    })();
+
+    // Scroll reveal
+    (function () {
+      var items = document.querySelectorAll(".reveal");
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add("visible"); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.12 });
+      items.forEach(function (el) { io.observe(el); });
+    })();
+
+    // Ripple effect
+    document.addEventListener("click", function (e) {
+      var target = e.target.closest(".ripple");
+      if (!target) return;
+      var rect = target.getBoundingClientRect();
+      var circle = document.createElement("span");
+      var size = Math.max(rect.width, rect.height);
+      circle.className = "ripple-circle";
+      circle.style.width = circle.style.height = size + "px";
+      circle.style.left = (e.clientX - rect.left - size / 2) + "px";
+      circle.style.top = (e.clientY - rect.top - size / 2) + "px";
+      target.appendChild(circle);
+      setTimeout(function () { circle.remove(); }, 600);
+    });
+
+    // Form validation
+    (function () {
+      var form = document.getElementById("contactForm");
+      var status = document.getElementById("contactStatus");
+      function setError(field, msg) {
+        var el = form.querySelector('[data-error-for="' + field + '"]');
+        if (el) el.textContent = msg || "";
+      }
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var name = form.name.value.trim();
+        var email = form.email.value.trim();
+        var message = form.message.value.trim();
+        var ok = true;
+        setError("name", ""); setError("email", ""); setError("message", "");
+        status.textContent = "";
+
+        if (!name) { setError("name", "Please enter your name."); ok = false; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError("email", "Enter a valid email address."); ok = false; }
+        if (message.length < 10) { setError("message", "Tell us a bit more (10+ characters)."); ok = false; }
+        if (!ok) return;
+
+        status.textContent = "Sending…";
+        setTimeout(function () {
+          status.textContent = "Thanks, " + name + "! We'll reply within 24 hours.";
+          form.reset();
+        }, 900);
+      });
+    })();
+  </script>
+</body>
+</html>
