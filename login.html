@@ -483,7 +483,15 @@
         credentials: "same-origin",
         body: JSON.stringify({ credential: response.credential }),
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            return res.json().then(
+              (d) => Promise.reject(new Error(d.error || "Sign-in failed.")),
+              () => Promise.reject(new Error(`Server error (${res.status}). Please try again.`))
+            );
+          }
+          return res.json();
+        })
         .then((data) => {
           if (data.success) {
             const user = data.user;
@@ -501,9 +509,9 @@
             showMessage(data.error || "Sign-in failed. Please try again.", "error");
           }
         })
-        .catch(() => {
+        .catch((err) => {
           setLoading(googleBtn, false);
-          showMessage("Network error. Check your connection and try again.", "error");
+          showMessage(err.message || "Network error. Check your connection and try again.", "error");
         });
     }
 
@@ -519,7 +527,10 @@
       fetch("https://www.googleapis.com/oauth2/0.3/userinfo", {
         headers: { Authorization: `Bearer ${accessToken}` },
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch Google profile.");
+          return res.json();
+        })
         .then((profile) => {
           return fetch("/api/auth/google", {
             method: "POST",
@@ -528,7 +539,15 @@
             body: JSON.stringify({ profile }),
           });
         })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            return res.json().then(
+              (d) => Promise.reject(new Error(d.error || "Sign-in failed.")),
+              () => Promise.reject(new Error(`Server error (${res.status}). Please try again.`))
+            );
+          }
+          return res.json();
+        })
         .then((data) => {
           if (data.success) {
             const user = data.user;
@@ -546,9 +565,9 @@
             showMessage(data.error || "Sign-in failed. Please try again.", "error");
           }
         })
-        .catch(() => {
+        .catch((err) => {
           setLoading(googleBtn, false);
-          showMessage("Network error. Check your connection and try again.", "error");
+          showMessage(err.message || "Network error. Check your connection and try again.", "error");
         });
     }
 
