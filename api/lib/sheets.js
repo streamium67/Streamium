@@ -8,7 +8,12 @@ const { google } = require("googleapis");
 
 const SHEET_ID = process.env.GOOGLE_SHEETS_ID;
 const SERVICE_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-const SERVICE_KEY = (process.env.GOOGLE_SERVICE_ACCOUNT_KEY || "").replace(/\\n/g, "\n");
+let SERVICE_KEY = (process.env.GOOGLE_SERVICE_ACCOUNT_KEY || "").trim();
+// Strip surrounding quotes if user added quotes in env vars
+if (SERVICE_KEY.startsWith('"') && SERVICE_KEY.endsWith('"')) {
+  SERVICE_KEY = SERVICE_KEY.substring(1, SERVICE_KEY.length - 1);
+}
+SERVICE_KEY = SERVICE_KEY.replace(/\\n/g, "\n");
 
 const USERS_SHEET = "Users";
 const ORDERS_SHEET = "Orders";
@@ -34,7 +39,11 @@ function getSheetsClient() {
   if (cachedSheets) return cachedSheets;
 
   if (!SERVICE_EMAIL || !SERVICE_KEY || !SHEET_ID) {
-    throw new Error("Google Sheets credentials are not configured.");
+    const missing = [];
+    if (!SHEET_ID) missing.push("GOOGLE_SHEETS_ID");
+    if (!SERVICE_EMAIL) missing.push("GOOGLE_SERVICE_ACCOUNT_EMAIL");
+    if (!SERVICE_KEY) missing.push("GOOGLE_SERVICE_ACCOUNT_KEY");
+    throw new Error(`Google Sheets credentials missing: ${missing.join(", ")}`);
   }
 
   const auth = new google.auth.JWT(
@@ -49,9 +58,42 @@ function getSheetsClient() {
 }
 
 /* =========================================================
+   HELPER: Auto-create tabs if they do not exist
+   ========================================================= */
+let tabsChecked = false;
+async function ensureTabsExist() {
+  if (tabsChecked) return;
+  try {
+    const sheets = getSheetsClient();
+    const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
+    const existingTitles = (spreadsheet.data.sheets || []).map(s => s.properties.title);
+
+    const requests = [];
+    if (!existingTitles.includes(USERS_SHEET)) {
+      requests.push({ addSheet: { properties: { title: USERS_SHEET } } });
+    }
+    if (!existingTitles.includes(ORDERS_SHEET)) {
+      requests.push({ addSheet: { properties: { title: ORDERS_SHEET } } });
+    }
+
+    if (requests.length > 0) {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: SHEET_ID,
+        requestBody: { requests },
+      });
+    }
+    tabsChecked = true;
+  } catch (err) {
+    console.error("Error checking/creating sheet tabs:", err.message);
+    // Continue anyway; range errors will be caught if tabs are missing
+  }
+}
+
+/* =========================================================
    HELPER: Read all rows from a sheet tab
    ========================================================= */
 async function readSheet(sheetName) {
+  await ensureTabsExist();
   const sheets = getSheetsClient();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
@@ -64,6 +106,7 @@ async function readSheet(sheetName) {
    HELPER: Append a row to a sheet tab
    ========================================================= */
 async function appendRow(sheetName, values) {
+  await ensureTabsExist();
   const sheets = getSheetsClient();
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,

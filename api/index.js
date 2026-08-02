@@ -54,6 +54,41 @@ app.get(["/test", "/api/test"], (req, res) => {
   });
 });
 
+// GET /api/test-sheets — Google Sheets diagnostic route
+app.get(["/test-sheets", "/api/test-sheets"], async (req, res) => {
+  const envCheck = {
+    GOOGLE_SHEETS_ID: Boolean(process.env.GOOGLE_SHEETS_ID),
+    sheetIdValue: process.env.GOOGLE_SHEETS_ID || "NOT_SET",
+    GOOGLE_SERVICE_ACCOUNT_EMAIL: Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL),
+    serviceEmailValue: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "NOT_SET",
+    GOOGLE_SERVICE_ACCOUNT_KEY: Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_KEY),
+    keyLength: process.env.GOOGLE_SERVICE_ACCOUNT_KEY ? process.env.GOOGLE_SERVICE_ACCOUNT_KEY.length : 0,
+  };
+
+  try {
+    const testResult = await getOrCreateUser({
+      email: "system_test@streamium.app",
+      name: "System Test",
+      picture: "",
+      loginMethod: "Test",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Google Sheets connection & write SUCCESSFUL!",
+      envCheck,
+      userCreated: testResult,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Google Sheets write FAILED!",
+      envCheck,
+      error: err.message,
+    });
+  }
+});
+
 /**
  * URL Prefix Normalization Middleware.
  * Strips leading "/api" so routes match whether Vercel passes "/api/config" or "/config".
