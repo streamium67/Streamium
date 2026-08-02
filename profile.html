@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile — Streamium</title>
+  <style>
+    :root{--bg:#0f0f0f;--bg-soft:#161616;--accent:#14b8a6;--accent-dark:#0f766e;--accent-light:#5eead4;--text:#f5f5f5;--text-muted:#b3b3b3;--glass:rgba(255,255,255,0.05);--glass-border:rgba(255,255,255,0.12);--radius:16px;--transition:0.35s cubic-bezier(0.25,0.8,0.35,1);--success:#22c55e;--danger:#f87171;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,-apple-system,sans-serif;line-height:1.6;}
+    a{color:inherit;text-decoration:none;}
+    .container{width:min(900px,92%);margin-inline:auto;}
+    .nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--glass-border);}
+    .nav__inner{display:flex;align-items:center;justify-content:space-between;padding:1rem 0;}
+    .nav__logo{font-size:1.4rem;font-weight:800;}.nav__logo span{color:var(--accent);}
+    .nav__link{color:var(--text-muted);font-weight:500;}.nav__link:hover{color:var(--text);}
+    .glass{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);backdrop-filter:blur(14px);}
+    .page{padding:3rem 0 4rem;min-height:80vh;background:radial-gradient(ellipse 80% 45% at 50% -10%,rgba(20,184,166,0.18),transparent);}
+    .page__title{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:800;margin-bottom:0.4rem;}
+    .page__title span{background:linear-gradient(90deg,var(--accent),var(--accent-light));-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .page__sub{color:var(--text-muted);margin-bottom:2rem;}
+    .profile-head{display:flex;align-items:center;gap:1.5rem;padding:2rem;flex-wrap:wrap;}
+    .profile-photo{width:96px;height:96px;border-radius:50%;overflow:hidden;flex-shrink:0;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#062622;font-size:2.4rem;font-weight:800;border:3px solid var(--glass-border);}
+    .profile-photo img{width:100%;height:100%;object-fit:cover;}
+    .profile-head__name{font-size:1.6rem;font-weight:800;}
+    .profile-head__email{color:var(--text-muted);}
+    .badge{display:inline-block;margin-top:0.5rem;padding:0.2rem 0.8rem;border-radius:999px;font-size:0.8rem;font-weight:700;background:rgba(20,184,166,0.12);border:1px solid rgba(20,184,166,0.35);color:var(--accent-light);}
+    .info-grid{display:grid;gap:1.2rem;margin-top:1.6rem;grid-template-columns:1fr;}
+    @media(min-width:640px){.info-grid{grid-template-columns:1fr 1fr;}}
+    .info-item{padding:1.2rem 1.3rem;transition:transform var(--transition),border-color var(--transition),box-shadow var(--transition);}
+    .info-item:hover{transform:translateY(-4px);border-color:rgba(20,184,166,0.4);box-shadow:0 12px 28px rgba(20,184,166,0.12);}
+    .info-item .label{font-size:0.72rem;letter-spacing:0.6px;text-transform:uppercase;color:var(--text-muted);}
+    .info-item .value{font-size:1.1rem;font-weight:700;margin-top:0.2rem;word-break:break-word;}
+    .status-pill{display:inline-block;padding:0.12rem 0.7rem;border-radius:999px;font-size:0.82rem;font-weight:700;}
+    .status-pill--active{background:rgba(34,197,94,0.15);color:var(--success);border:1px solid rgba(34,197,94,0.4);}
+    .status-pill--expired{background:rgba(248,113,113,0.15);color:var(--danger);border:1px solid rgba(248,113,113,0.4);}
+    .btn{display:inline-block;padding:0.8rem 2rem;border:none;border-radius:999px;font-weight:600;font-size:1rem;cursor:pointer;font-family:inherit;transition:transform var(--transition),box-shadow var(--transition);}
+    .btn--primary{background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#062622;}
+    .btn--primary:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(20,184,166,0.4);}
+    .btn--danger{background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;margin-top:1.8rem;}
+    .btn--danger:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(239,68,68,0.35);}
+    .actions{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.8rem;}
+    .loading{color:var(--text-muted);padding:3rem 0;text-align:center;}
+  </style>
+</head>
+<body>
+  <header class="nav"><div class="nav__inner container"><a href="index.html" class="nav__logo">Stream<span>ium</span></a><a href="index.html" class="nav__link">← Back to Home</a></div></header>
+  <main class="page">
+    <div class="container">
+      <h1 class="page__title">My <span>Profile</span></h1>
+      <p class="page__sub">Manage your account details and membership.</p>
+      <div id="profileRoot"><p class="loading">Loading your profile…</p></div>
+    </div>
+  </main>
+
+  <script>
+    "use strict";
+    const PLAN_INFO={basic:{name:"Basic",quality:"720p HD",price:50},standard:{name:"Standard",quality:"1080p Full HD",price:75},premium:{name:"Premium",quality:"4K Ultra HD",price:100}};
+    function fmtDate(d){if(!d)return"—";const dt=new Date(d);return isNaN(dt)?"—":dt.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});}
+    function initials(u){return(u.name||u.email||"U").charAt(0).toUpperCase();}
+    async function logout(){try{await fetch("/api/auth/logout",{method:"POST"});}catch(e){}window.location.href="index.html";}
+
+    (async function(){
+      const root=document.getElementById("profileRoot");
+      let user=null;
+      try{const r=await fetch("/api/auth/me",{credentials:"same-origin"});if(r.ok){const d=await r.json();user=d&&d.user;}}catch(e){}
+      if(!user){root.innerHTML=`<div class="glass" style="padding:2rem;text-align:center;">You are not signed in. <a href="login.html" style="color:var(--accent);font-weight:700;">Log in</a> to view your profile.</div>`;return;}
+
+      const sub=user.subscription||null;
+      const photo=user.picture?`<img src="${user.picture}" alt="${user.name||'User'}">`:initials(user);
+      const method=user.loginMethod||(user.picture?"Google":"Email OTP");
+      let currentSub="No active plan",statusPill=`<span class="status-pill status-pill--expired">Inactive</span>`,expiry="—";
+      if(sub&&sub.plan&&PLAN_INFO[sub.plan]){
+        const info=PLAN_INFO[sub.plan];
+        currentSub=`${info.name} · ${info.quality}`;
+        statusPill=sub.status==="expired"?`<span class="status-pill status-pill--expired">Expired</span>`:`<span class="status-pill status-pill--active">Active</span>`;
+        expiry=fmtDate(sub.expiryDate);
+      }
+      const devices=(user.devices&&user.devices.length)?user.devices.map(d=>d.name||d).join(", "):"No devices registered";
+      const deviceCount=(user.devices&&user.devices.length)?user.devices.length:0;
+
+      root.innerHTML=`
+        <div class="glass profile-head">
+          <div class="profile-photo">${photo}</div>
+          <div>
+            <div class="profile-head__name">${user.name||"Member"}</div>
+            <div class="profile-head__email">${user.email||""}</div>
+            <span class="badge">Streamium Member</span>
+          </div>
+        </div>
+        <div class="info-grid">
+          <div class="glass info-item"><div class="label">Full Name</div><div class="value">${user.name||"—"}</div></div>
+          <div class="glass info-item"><div class="label">Email</div><div class="value">${user.email||"—"}</div></div>
+          <div class="glass info-item"><div class="label">Login Method</div><div class="value">${method}</div></div>
+          <div class="glass info-item"><div class="label">Member Since</div><div class="value">${fmtDate(user.memberSince||user.createdAt)}</div></div>
+          <div class="glass info-item"><div class="label">Current Subscription</div><div class="value">${currentSub}</div></div>
+          <div class="glass info-item"><div class="label">Membership Status</div><div class="value">${statusPill}</div></div>
+          <div class="glass info-item"><div class="label">Expiry Date</div><div class="value">${expiry}</div></div>
+          <div class="glass info-item"><div class="label">Registered Devices (${deviceCount})</div><div class="value">${devices}</div></div>
+        </div>
+        <div class="actions">
+          <a href="subscription.html" class="btn btn--primary">Manage Subscription</a>
+        </div>
+        <button class="btn btn--danger" id="logoutBtn">🚪 Logout</button>`;
+      document.getElementById("logoutBtn").addEventListener("click",logout);
+    })();
+  </script>
+</body>
+</html>

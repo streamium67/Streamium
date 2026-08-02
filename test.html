@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Streamium checkout — complete your subscription securely." />
+  <title>Checkout — Streamium</title>
+
+  <style>
+    /* ---------- Design tokens (same as main site) ---------- */
+    :root {
+      --bg: #0f0f0f;
+      --bg-soft: #161616;
+      --accent: #14b8a6;
+      --accent-dark: #0f766e;
+      --accent-light: #5eead4;
+      --text: #f5f5f5;
+      --text-muted: #b3b3b3;
+      --glass: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --radius: 16px;
+      --transition: 0.35s cubic-bezier(0.25, 0.8, 0.35, 1);
+    }
+
+    /* ---------- Reset & base ---------- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.6; min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+
+    /* ---------- Custom scrollbar ---------- */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg-soft); }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(var(--accent), var(--accent-dark)); border-radius: 8px; }
+
+    .container { width: min(1140px, 92%); margin-inline: auto; }
+
+    /* ---------- Glass ---------- */
+    .glass {
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    }
+
+    /* ---------- Buttons & ripple ---------- */
+    .btn {
+      display: inline-block; padding: 0.8rem 2rem;
+      border: none; border-radius: 999px;
+      font-weight: 600; font-size: 1rem; cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+      font-family: inherit;
+    }
+    .btn--primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #062622; }
+    .btn--primary:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(20, 184, 166, 0.4); }
+    .btn--outline { background: transparent; color: var(--text); border: 1.5px solid var(--glass-border); }
+    .btn--outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    .ripple-circle {
+      position: absolute; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.45);
+      transform: scale(0);
+      animation: ripple 0.6s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+    /* ---------- Navbar ---------- */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15, 15, 15, 0.85);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .nav__inner { display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; }
+    .nav__logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 0.5px; }
+    .nav__logo span { color: var(--accent); }
+    .nav__back { color: var(--text-muted); font-size: 0.9rem; transition: color var(--transition); }
+    .nav__back:hover { color: var(--accent); }
+
+    /* ---------- Checkout layout ---------- */
+    .checkout { padding: 3rem 0 5rem; flex: 1; }
+    .checkout__title { font-size: clamp(1.8rem, 4vw, 2.4rem); text-align: center; }
+    .checkout__subtitle { text-align: center; color: var(--text-muted); margin: 0.5rem 0 2.5rem; }
+
+    .checkout__grid {
+      display: grid; gap: 2rem;
+      align-items: start;
+    }
+    @media (min-width: 860px) {
+      .checkout__grid { grid-template-columns: 1fr 380px; }
+    }
+
+    /* ---------- Left column: Form ---------- */
+    .form-card { padding: 2.2rem; }
+    .form-card h2 {
+      font-size: 1.15rem; margin-bottom: 1.4rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .step-dot {
+      display: inline-grid; place-items: center;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: rgba(20, 184, 166, 0.15); color: var(--accent);
+      font-size: 0.8rem; font-weight: 800;
+    }
+
+    .form-grid { display: grid; gap: 1.2rem; }
+    .form-row { display: grid; gap: 1.2rem; }
+    @media (min-width: 520px) { .form-row { grid-template-columns: 1fr 1fr; } }
+
+    label { display: grid; gap: 0.4rem; font-size: 0.88rem; color: var(--text-muted); }
+    label .req { color: var(--accent); }
+
+    input, select, textarea {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px; padding: 0.85rem 1rem;
+      color: var(--text); font: inherit; width: 100%; resize: vertical;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+    }
+    select { appearance: none; cursor: not-allowed; opacity: 0.85; }
+
+    /* Phone input with +91 prefix */
+    .phone-wrap { display: flex; }
+    .phone-wrap .prefix {
+      display: grid; place-items: center;
+      padding: 0 0.9rem;
+      background: rgba(255, 255, 255, 0.09);
+      border: 1px solid var(--glass-border); border-right: none;
+      border-radius: 10px 0 0 10px;
+      color: var(--text-muted); font-weight: 600;
+    }
+    .phone-wrap input { border-radius: 0 10px 10px 0; }
+
+    .hint { font-size: 0.75rem; color: var(--text-muted); }
+
+    .section-gap { border-top: 1px solid var(--glass-border); margin: 1.8rem 0; }
+
+    .error-msg { color: #f87171; font-size: 0.8rem; min-height: 1.1em; margin-top: 1rem; }
+
+    /* Payment Method options */
+    .payment-methods { display: grid; gap: 0.8rem; margin-top: 0.8rem; }
+    .pay-option {
+      display: flex; align-items: center; gap: 1rem; padding: 0.9rem 1.1rem;
+      border-radius: 12px; background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--glass-border); cursor: pointer;
+      transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+    }
+    .pay-option:hover { border-color: var(--accent); background: rgba(20, 184, 166, 0.06); }
+    .pay-option.active { border-color: var(--accent); background: rgba(20, 184, 166, 0.12); box-shadow: 0 4px 18px rgba(20, 184, 166, 0.15); }
+    .pay-option input[type="radio"] { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; }
+    .pay-icon { font-size: 1.4rem; }
+    .pay-sub { display: block; font-size: 0.76rem; color: var(--text-muted); }
+
+    /* ---------- Right column: Plan Details + Price Details ---------- */
+    .summary-col {
+      display: grid;
+      gap: 1.4rem;
+      position: sticky;
+      top: 90px;
+    }
+    .summary { padding: 1.8rem; }
+    .summary h2 {
+      font-size: 1.05rem; margin-bottom: 1.2rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    /* Plan Details card */
+    .summary__plan {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 0.8rem; margin-bottom: 1rem;
+    }
+    .summary__plan-name { font-weight: 700; font-size: 1.1rem; }
+    .summary__quality {
+      display: inline-block;
+      background: rgba(20, 184, 166, 0.12);
+      border: 1px solid rgba(20, 184, 166, 0.35);
+      color: var(--accent-light);
+      font-weight: 700; font-size: 0.7rem; letter-spacing: 1.5px;
+      padding: 0.2rem 0.7rem; border-radius: 999px;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .summary__features { display: grid; gap: 0.45rem; margin-bottom: 1rem; }
+    .summary__features li {
+      color: var(--text-muted); font-size: 0.88rem;
+      display: flex; gap: 0.5rem; align-items: center;
+    }
+    .summary__features li::before {
+      content: "✓";
+      color: var(--accent); font-weight: 800; font-size: 0.8rem;
+    }
+    .summary__change {
+      display: inline-block; margin-top: 0.8rem;
+      color: var(--accent); font-size: 0.85rem; font-weight: 600;
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+    .summary__change:hover { color: var(--accent-light); }
+
+    /* Shared rows */
+    .summary__row {
+      display: flex; justify-content: space-between;
+      color: var(--text-muted); font-size: 0.92rem;
+      padding: 0.45rem 0;
+    }
+    .summary__row.total {
+      border-top: 1px solid var(--glass-border);
+      margin-top: 0.6rem; padding-top: 0.9rem;
+      color: var(--text); font-weight: 800; font-size: 1.15rem;
+    }
+    .summary__row.total .amount { color: var(--accent); }
+
+    /* Payment Details card */
+    .summary .btn { width: 100%; margin-top: 1.4rem; text-align: center; }
+    .summary__secure {
+      text-align: center; color: var(--text-muted);
+      font-size: 0.78rem; margin-top: 1rem;
+    }
+    .summary__status {
+      color: var(--accent); font-weight: 600; text-align: center;
+      min-height: 1.4em; margin-top: 0.8rem;
+    }
+
+    /* ---------- Footer ---------- */
+    .footer {
+      border-top: 1px solid var(--glass-border); background: var(--bg-soft);
+      padding: 1.2rem 0; text-align: center;
+      color: var(--text-muted); font-size: 0.85rem;
+    }
+
+    /* ---------- Top loading progress bar ---------- */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; width: 0; height: 3px; z-index: 9999;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      box-shadow: 0 0 10px rgba(20, 184, 166, 0.5), 0 0 5px rgba(20, 184, 166, 0.3);
+      transition: width 0.4s ease, opacity 0.4s ease;
+      pointer-events: none;
+    }
+    .progress-bar.done { opacity: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Top Loading Progress Bar ===== -->
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- ===== Navbar ===== -->
+  <header class="nav">
+    <nav class="nav__inner container" aria-label="Checkout navigation">
+      <a href="index.html" class="nav__logo">Stream<span>ium</span></a>
+      <a href="index.html#plans" class="nav__back">← Back to Plans</a>
+    </nav>
+  </header>
+
+  <!-- ===== Checkout ===== -->
+  <main class="checkout">
+    <div class="container">
+      <h1 class="checkout__title">Checkout</h1>
+      <p class="checkout__subtitle">You're one step away from unlimited streaming.</p>
+
+      <div class="checkout__grid">
+
+        <!-- ===== LEFT: Customer & profile details ===== -->
+        <form class="form-card glass" id="checkoutForm" novalidate>
+
+          <!-- Personal details -->
+          <h2><span class="step-dot">1</span> Your Details</h2>
+          <div class="form-grid">
+            <div class="form-row">
+              <label>
+                <span>First Name <span class="req">*</span></span>
+                <input type="text" name="firstName" placeholder="First name" required autocomplete="given-name" />
+              </label>
+              <label>
+                <span>Last Name <span class="req">*</span></span>
+                <input type="text" name="lastName" placeholder="Last name" required autocomplete="family-name" />
+              </label>
+            </div>
+            <label>
+              <span>Phone Number <span class="req">*</span></span>
+              <div class="phone-wrap">
+                <span class="prefix">+91</span>
+                <input type="tel" name="phone" placeholder="10-digit mobile number"
+                       required inputmode="numeric" pattern="[6-9][0-9]{9}" maxlength="10"
+                       autocomplete="tel-national" />
+              </div>
+              <span class="hint">Indian mobile numbers only (starts with 6–9).</span>
+            </label>
+          </div>
+
+          <div class="section-gap"></div>
+
+          <!-- Streaming profile -->
+          <h2><span class="step-dot">2</span> Streaming Profile</h2>
+          <div class="form-grid">
+            <div class="form-row">
+              <label>
+                <span>Profile Name <span class="req">*</span></span>
+                <input type="text" name="profileName" placeholder="e.g. Rahul's TV" required maxlength="30" />
+                <span class="hint">Shown on your watch screen.</span>
+              </label>
+              <label>
+                <span>Profile Lock (PIN) <span class="req">*</span></span>
+                <input type="password" name="profilePin" placeholder="4-digit PIN"
+                       required inputmode="numeric" pattern="[0-9]{4}" maxlength="4" />
+                <span class="hint">Locks your profile with a 4-digit PIN.</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="section-gap"></div>
+
+          <!-- Billing address -->
+          <h2><span class="step-dot">3</span> Billing Address</h2>
+          <div class="form-grid">
+            <label>
+              <span>Country <span class="req">*</span></span>
+              <select name="country" disabled aria-label="Country (India only)">
+                <option value="IN" selected>🇮🇳 India</option>
+              </select>
+              <span class="hint">Streamium is currently available in India only.</span>
+            </label>
+            <label>
+              <span>Address Line <span class="req">*</span></span>
+              <input type="text" name="address1" placeholder="House / flat, street, area" required autocomplete="address-line1" />
+            </label>
+            <div class="form-row">
+              <label>
+                <span>City <span class="req">*</span></span>
+                <input type="text" name="city" placeholder="City" required autocomplete="address-level2" />
+              </label>
+              <label>
+                <span>State <span class="req">*</span></span>
+                <input type="text" name="state" placeholder="State" required autocomplete="address-level1" />
+              </label>
+            </div>
+            <div class="form-row">
+              <label>
+                <span>PIN Code <span class="req">*</span></span>
+                <input type="text" name="pincode" placeholder="6-digit PIN code"
+                       required inputmode="numeric" pattern="[1-9][0-9]{5}" maxlength="6"
+                       autocomplete="postal-code" />
+              </label>
+            </div>
+          </div>
+
+          <div class="section-gap"></div>
+
+          <!-- Payment Method -->
+          <h2><span class="step-dot">4</span> Payment Method</h2>
+          <div class="payment-methods">
+            <label class="pay-option active">
+              <input type="radio" name="payMethod" value="upi" checked />
+              <span class="pay-icon">📱</span>
+              <div>
+                <strong>UPI / QR Code</strong>
+                <span class="pay-sub">Google Pay, PhonePe, Paytm, BHIM</span>
+              </div>
+            </label>
+            <label class="pay-option">
+              <input type="radio" name="payMethod" value="card" />
+              <span class="pay-icon">💳</span>
+              <div>
+                <strong>Credit / Debit Card</strong>
+                <span class="pay-sub">Visa, Mastercard, RuPay, Maestro</span>
+              </div>
+            </label>
+            <label class="pay-option">
+              <input type="radio" name="payMethod" value="netbanking" />
+              <span class="pay-icon">🏦</span>
+              <div>
+                <strong>Net Banking</strong>
+                <span class="pay-sub">SBI, HDFC, ICICI, Axis & 50+ banks</span>
+              </div>
+            </label>
+            <label class="pay-option">
+              <input type="radio" name="payMethod" value="wallet" />
+              <span class="pay-icon">👛</span>
+              <div>
+                <strong>Mobile Wallets</strong>
+                <span class="pay-sub">Paytm Wallet, Mobikwik, Amazon Pay</span>
+              </div>
+            </label>
+          </div>
+
+          <p class="error-msg" id="formError" role="alert"></p>
+        </form>
+
+        <!-- ===== RIGHT: Plan Details (top) + Price Details (below) ===== -->
+        <aside class="summary-col" aria-label="Order summary">
+
+          <!-- Upper card: Plan Details -->
+          <div class="summary glass">
+            <h2>Plan Details</h2>
+            <div class="summary__plan">
+              <span class="summary__plan-name" id="planName">Premium</span>
+              <span class="summary__quality" id="planQuality">4K Ultra HD</span>
+            </div>
+            <ul class="summary__features" id="planFeatures">
+              <!-- filled by JS -->
+            </ul>
+            <div class="summary__row"><span>Duration</span><span>1 month</span></div>
+            <div class="summary__row"><span>Free trial</span><span>7 days included</span></div>
+            <a href="index.html#plans" class="summary__change">Change plan</a>
+          </div>
+
+          <!-- Lower card: Price Details -->
+          <div class="summary glass">
+            <h2>Price Details</h2>
+            <div class="summary__row"><span>Plan price</span><span id="planPrice">₹100</span></div>
+            <div class="summary__row"><span>Discount</span><span>₹0</span></div>
+            <div class="summary__row"><span>Taxes (GST)</span><span>Included</span></div>
+            <div class="summary__row total"><span>Total Payable</span><span class="amount" id="planTotal">₹100</span></div>
+
+            <button type="submit" form="checkoutForm" class="btn btn--primary ripple" id="payBtn">Pay ₹100</button>
+            <p class="summary__secure">🔒 Secure checkout · Cancel anytime</p>
+            <p class="summary__status" id="payStatus" role="status" aria-live="polite"></p>
+          </div>
+
+        </aside>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer class="footer">© 2026 Streamium. All rights reserved. Demo checkout with placeholder content.</footer>
+
+  <script>
+    "use strict";
+
+    /* =========================================================
+       AUTH GATE — check session, pre-fill user info, redirect to login if needed
+       ========================================================= */
+    (async function checkAuth() {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "same-origin" });
+        if (!res.ok) throw new Error("Not authenticated");
+        const data = await res.json();
+        if (data.user) {
+          const user = data.user;
+          const nameParts = (user.name || "").trim().split(" ");
+          const firstNameInput = document.querySelector('[name="firstName"]');
+          const lastNameInput = document.querySelector('[name="lastName"]');
+          const profileNameInput = document.querySelector('[name="profileName"]');
+
+          if (firstNameInput && nameParts[0]) firstNameInput.value = nameParts[0];
+          if (lastNameInput && nameParts.length > 1) lastNameInput.value = nameParts.slice(1).join(" ");
+          if (profileNameInput && (user.name || user.email)) {
+            profileNameInput.value = user.name ? `${user.name.split(" ")[0]}'s Device` : user.email.split("@")[0];
+          }
+        }
+      } catch {
+        const plan = new URLSearchParams(location.search).get("plan") || "premium";
+        window.location.href = `login.html?redirect=checkout.html&plan=${encodeURIComponent(plan)}`;
+      }
+    })();
+
+    /* ---------- Plan catalog ---------- */
+    const PLANS = {
+      basic: {
+        name: "Basic", quality: "720p HD", price: 50,
+        features: ["720p HD streaming", "Watch on any device", "Offline downloads"],
+      },
+      standard: {
+        name: "Standard", quality: "1080p Full HD", price: 75,
+        features: ["1080p Full HD streaming", "Watch on any device", "Offline downloads", "HDR & spatial audio"],
+      },
+      premium: {
+        name: "Premium", quality: "4K Ultra HD", price: 100,
+        features: ["4K Ultra HD streaming", "Watch on any device", "Offline downloads", "HDR & spatial audio", "Priority support"],
+      },
+    };
+
+    /* ---------- Load selected plan from URL (?plan=basic|standard|premium) ---------- */
+    const params = new URLSearchParams(location.search);
+    const plan = PLANS[params.get("plan")] || PLANS.premium; // default: Premium
+
+    document.getElementById("planName").textContent = plan.name;
+    document.getElementById("planQuality").textContent = plan.quality;
+    document.getElementById("planPrice").textContent = `₹${plan.price}`;
+    document.getElementById("planTotal").textContent = `₹${plan.price}`;
+    document.getElementById("payBtn").textContent = `Pay ₹${plan.price}`;
+    document.title = `Checkout — ${plan.name} (₹${plan.price}) — Streamium`;
+
+    /* Fill plan features list */
+    const featuresList = document.getElementById("planFeatures");
+    plan.features.forEach((f) => {
+      const li = document.createElement("li");
+      li.textContent = f;
+      featuresList.appendChild(li);
+    });
+
+    /* ---------- Payment option selection highlight ---------- */
+    document.querySelectorAll('.pay-option input[type="radio"]').forEach((radio) => {
+      radio.addEventListener('change', () => {
+        document.querySelectorAll('.pay-option').forEach(el => el.classList.remove('active'));
+        radio.closest('.pay-option').classList.add('active');
+      });
+    });
+
+    /* ---------- Ripple effect ---------- */
+    document.querySelectorAll(".ripple").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const circle = document.createElement("span");
+        circle.className = "ripple-circle";
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        circle.style.width = circle.style.height = `${size}px`;
+        circle.style.left = `${e.clientX - rect.left - size / 2}px`;
+        circle.style.top = `${e.clientY - rect.top - size / 2}px`;
+        btn.appendChild(circle);
+        circle.addEventListener("animationend", () => circle.remove());
+      });
+    });
+
+    /* ---------- Digits-only enforcement for phone, PIN inputs ---------- */
+    ["phone", "profilePin", "pincode"].forEach((name) => {
+      const input = document.querySelector(`[name="${name}"]`);
+      if (input) {
+        input.addEventListener("input", () => {
+          input.value = input.value.replace(/\D/g, "");
+        });
+      }
+    });
+
+    /* ---------- Form submit (demo payment activation) ---------- */
+    const form = document.getElementById("checkoutForm");
+    const formError = document.getElementById("formError");
+    const payStatus = document.getElementById("payStatus");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      formError.textContent = "";
+      payStatus.textContent = "";
+
+      if (!form.checkValidity()) {
+        const firstInvalid = form.querySelector(":invalid");
+        if (firstInvalid) firstInvalid.focus();
+        formError.textContent = "Please fill in all required fields correctly.";
+        return;
+      }
+
+      const firstName = form.firstName.value.trim();
+      const selectedPay = (document.querySelector('input[name="payMethod"]:checked')?.value || "UPI").toUpperCase();
+      payStatus.style.color = "var(--accent)";
+      payStatus.textContent = `🎉 Success, ${firstName}! Your ${plan.name} plan (₹${plan.price}/month) has been activated via ${selectedPay}! Redirecting to home…`;
+
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 2500);
+    });
+
+    /* --- Progress bar logic --- */
+    (function() {
+      var bar = document.getElementById('progressBar');
+      if (!bar) return;
+      var w = 0;
+      var iv = setInterval(function() {
+        w += Math.random() * 15 + 5;
+        if (w > 90) w = 90;
+        bar.style.width = w + '%';
+      }, 200);
+      window.addEventListener('load', function() {
+        clearInterval(iv);
+        bar.style.width = '100%';
+        setTimeout(function() { bar.classList.add('done'); }, 400);
+      });
+    })();
+  </script>
+</body>
+</html>

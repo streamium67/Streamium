@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Subscription — Streamium</title>
+  <style>
+    :root{--bg:#0f0f0f;--bg-soft:#161616;--accent:#14b8a6;--accent-dark:#0f766e;--accent-light:#5eead4;--text:#f5f5f5;--text-muted:#b3b3b3;--glass:rgba(255,255,255,0.05);--glass-border:rgba(255,255,255,0.12);--radius:16px;--transition:0.35s cubic-bezier(0.25,0.8,0.35,1);--success:#22c55e;--danger:#f87171;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,-apple-system,sans-serif;line-height:1.6;}
+    a{color:inherit;text-decoration:none;}
+    .container{width:min(820px,92%);margin-inline:auto;}
+    .nav{position:sticky;top:0;z-index:100;background:rgba(15,15,15,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--glass-border);}
+    .nav__inner{display:flex;align-items:center;justify-content:space-between;padding:1rem 0;}
+    .nav__logo{font-size:1.4rem;font-weight:800;}.nav__logo span{color:var(--accent);}
+    .nav__link{color:var(--text-muted);font-weight:500;}.nav__link:hover{color:var(--text);}
+    .glass{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);backdrop-filter:blur(14px);}
+    .page{padding:3rem 0 4rem;min-height:80vh;background:radial-gradient(ellipse 80% 45% at 50% -10%,rgba(20,184,166,0.18),transparent);}
+    .page__title{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:800;margin-bottom:0.4rem;}
+    .page__title span{background:linear-gradient(90deg,var(--accent),var(--accent-light));-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .page__sub{color:var(--text-muted);margin-bottom:2rem;}
+    .sub-card{padding:2rem;position:relative;overflow:hidden;}
+    .sub-card--current{border-color:var(--success);box-shadow:0 0 0 1px var(--success),0 0 34px rgba(34,197,94,0.25);}
+    .sub-card--expired{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger),0 0 34px rgba(248,113,113,0.22);}
+    .sub-card__head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;}
+    .sub-card__plan{font-size:1.5rem;font-weight:800;}
+    .quality-tag{display:inline-block;background:rgba(20,184,166,0.12);border:1px solid rgba(20,184,166,0.35);color:var(--accent-light);font-weight:700;font-size:0.75rem;letter-spacing:1.5px;padding:0.25rem 0.8rem;border-radius:999px;text-transform:uppercase;margin-top:0.4rem;}
+    .status-pill{display:inline-block;padding:0.2rem 0.9rem;border-radius:999px;font-size:0.85rem;font-weight:700;}
+    .status-pill--active{background:rgba(34,197,94,0.15);color:var(--success);border:1px solid rgba(34,197,94,0.4);}
+    .status-pill--expired{background:rgba(248,113,113,0.15);color:var(--danger);border:1px solid rgba(248,113,113,0.4);}
+    .detail-grid{display:grid;gap:1rem;grid-template-columns:1fr;border-top:1px solid var(--glass-border);padding-top:1.5rem;}
+    @media(min-width:560px){.detail-grid{grid-template-columns:1fr 1fr;}}
+    .detail .label{font-size:0.72rem;letter-spacing:0.6px;text-transform:uppercase;color:var(--text-muted);}
+    .detail .value{font-size:1.15rem;font-weight:700;margin-top:0.15rem;}
+    .btn{display:inline-block;padding:0.8rem 2rem;border:none;border-radius:999px;font-weight:600;font-size:1rem;cursor:pointer;font-family:inherit;transition:transform var(--transition),box-shadow var(--transition);}
+    .btn--primary{background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#062622;}
+    .btn--primary:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(20,184,166,0.4);}
+    .btn--danger{background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;}
+    .btn--danger:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(239,68,68,0.35);}
+    .btn--outline{background:transparent;color:var(--text);border:1.5px solid var(--glass-border);}
+    .btn--outline:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-3px);}
+    .actions{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.8rem;}
+    .loading{color:var(--text-muted);padding:3rem 0;text-align:center;}
+    .empty{padding:2.5rem;text-align:center;}
+  </style>
+</head>
+<body>
+  <header class="nav"><div class="nav__inner container"><a href="index.html" class="nav__logo">Stream<span>ium</span></a><a href="index.html" class="nav__link">← Back to Home</a></div></header>
+  <main class="page">
+    <div class="container">
+      <h1 class="page__title">My <span>Subscription</span></h1>
+      <p class="page__sub">Your current plan and billing details.</p>
+      <div id="subRoot"><p class="loading">Loading your subscription…</p></div>
+    </div>
+  </main>
+
+  <script>
+    "use strict";
+    const PLAN_INFO={basic:{name:"Basic",quality:"720p HD",price:50},standard:{name:"Standard",quality:"1080p Full HD",price:75},premium:{name:"Premium",quality:"4K Ultra HD",price:100}};
+    function fmtDate(d){if(!d)return"—";const dt=new Date(d);return isNaN(dt)?"—":dt.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});}
+    function daysRemaining(e){if(!e)return null;return Math.ceil((new Date(e)-new Date())/(1000*60*60*24));}
+
+    (async function(){
+      const root=document.getElementById("subRoot");
+      let user=null;
+      try{const r=await fetch("/api/auth/me",{credentials:"same-origin"});if(r.ok){const d=await r.json();user=d&&d.user;}}catch(e){}
+      if(!user){root.innerHTML=`<div class="glass empty">You are not signed in. <a href="login.html" style="color:var(--accent);font-weight:700;">Log in</a> to view your subscription.</div>`;return;}
+
+      const sub=user.subscription||null;
+      if(!sub||!sub.plan||!PLAN_INFO[sub.plan]){
+        root.innerHTML=`<div class="glass empty">
+          <h2 style="margin-bottom:.6rem;">No active subscription</h2>
+          <p style="color:var(--text-muted);margin-bottom:1.4rem;">Choose a plan to start streaming in HD or 4K.</p>
+          <a href="index.html#plans" class="btn btn--primary">View Plans</a></div>`;
+        return;
+      }
+
+      const info=PLAN_INFO[sub.plan];
+      const expired=sub.status==="expired";
+      const dr=daysRemaining(sub.expiryDate);
+      const statusPill=expired?`<span class="status-pill status-pill--expired">Expired</span>`:`<span class="status-pill status-pill--active">Active</span>`;
+      const renewBtn=expired
+        ?`<a href="checkout.html?plan=${sub.plan}&renew=1" class="btn btn--danger">Renew Plan</a>`
+        :`<a href="checkout.html?plan=${sub.plan}&renew=1" class="btn btn--outline">Renew Early</a>`;
+
+      root.innerHTML=`
+        <div class="glass sub-card ${expired?'sub-card--expired':'sub-card--current'}">
+          <div class="sub-card__head">
+            <div>
+              <div class="sub-card__plan">${info.name} Plan</div>
+              <span class="quality-tag">${info.quality}</span>
+            </div>
+            ${statusPill}
+          </div>
+          <div class="detail-grid">
+            <div class="detail"><div class="label">Plan Name</div><div class="value">${info.name}</div></div>
+            <div class="detail"><div class="label">Resolution</div><div class="value">${info.quality}</div></div>
+            <div class="detail"><div class="label">Price</div><div class="value">₹${info.price} / month</div></div>
+            <div class="detail"><div class="label">Purchase Date</div><div class="value">${fmtDate(sub.purchaseDate)}</div></div>
+            <div class="detail"><div class="label">Expiry Date</div><div class="value">${fmtDate(sub.expiryDate)}</div></div>
+            <div class="detail"><div class="label">Status</div><div class="value">${expired?'Expired':(dr!=null?Math.max(dr,0)+' days remaining':'Active')}</div></div>
+          </div>
+          <div class="actions">
+            ${renewBtn}
+            <a href="index.html#plans" class="btn btn--primary">Change / Upgrade Plan</a>
+            <a href="payments.html" class="btn btn--outline">Payment History</a>
+          </div>
+        </div>`;
+    })();
+  </script>
+</body>
+</html>

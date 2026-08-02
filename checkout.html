@@ -148,20 +148,6 @@
 
     .error-msg { color: #f87171; font-size: 0.8rem; min-height: 1.1em; margin-top: 1rem; }
 
-    /* Payment Method options */
-    .payment-methods { display: grid; gap: 0.8rem; margin-top: 0.8rem; }
-    .pay-option {
-      display: flex; align-items: center; gap: 1rem; padding: 0.9rem 1.1rem;
-      border-radius: 12px; background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--glass-border); cursor: pointer;
-      transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
-    }
-    .pay-option:hover { border-color: var(--accent); background: rgba(20, 184, 166, 0.06); }
-    .pay-option.active { border-color: var(--accent); background: rgba(20, 184, 166, 0.12); box-shadow: 0 4px 18px rgba(20, 184, 166, 0.15); }
-    .pay-option input[type="radio"] { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; }
-    .pay-icon { font-size: 1.4rem; }
-    .pay-sub { display: block; font-size: 0.76rem; color: var(--text-muted); }
-
     /* ---------- Right column: Plan Details + Price Details ---------- */
     .summary-col {
       display: grid;
@@ -354,45 +340,6 @@
             </div>
           </div>
 
-          <div class="section-gap"></div>
-
-          <!-- Payment Method -->
-          <h2><span class="step-dot">4</span> Payment Method</h2>
-          <div class="payment-methods">
-            <label class="pay-option active">
-              <input type="radio" name="payMethod" value="upi" checked />
-              <span class="pay-icon">📱</span>
-              <div>
-                <strong>UPI / QR Code</strong>
-                <span class="pay-sub">Google Pay, PhonePe, Paytm, BHIM</span>
-              </div>
-            </label>
-            <label class="pay-option">
-              <input type="radio" name="payMethod" value="card" />
-              <span class="pay-icon">💳</span>
-              <div>
-                <strong>Credit / Debit Card</strong>
-                <span class="pay-sub">Visa, Mastercard, RuPay, Maestro</span>
-              </div>
-            </label>
-            <label class="pay-option">
-              <input type="radio" name="payMethod" value="netbanking" />
-              <span class="pay-icon">🏦</span>
-              <div>
-                <strong>Net Banking</strong>
-                <span class="pay-sub">SBI, HDFC, ICICI, Axis & 50+ banks</span>
-              </div>
-            </label>
-            <label class="pay-option">
-              <input type="radio" name="payMethod" value="wallet" />
-              <span class="pay-icon">👛</span>
-              <div>
-                <strong>Mobile Wallets</strong>
-                <span class="pay-sub">Paytm Wallet, Mobikwik, Amazon Pay</span>
-              </div>
-            </label>
-          </div>
-
           <p class="error-msg" id="formError" role="alert"></p>
         </form>
 
@@ -410,7 +357,6 @@
               <!-- filled by JS -->
             </ul>
             <div class="summary__row"><span>Duration</span><span>1 month</span></div>
-            <div class="summary__row"><span>Free trial</span><span>7 days included</span></div>
             <a href="index.html#plans" class="summary__change">Change plan</a>
           </div>
 
@@ -501,14 +447,6 @@
       featuresList.appendChild(li);
     });
 
-    /* ---------- Payment option selection highlight ---------- */
-    document.querySelectorAll('.pay-option input[type="radio"]').forEach((radio) => {
-      radio.addEventListener('change', () => {
-        document.querySelectorAll('.pay-option').forEach(el => el.classList.remove('active'));
-        radio.closest('.pay-option').classList.add('active');
-      });
-    });
-
     /* ---------- Ripple effect ---------- */
     document.querySelectorAll(".ripple").forEach((btn) => {
       btn.addEventListener("click", (e) => {
@@ -552,9 +490,8 @@
       }
 
       const firstName = form.firstName.value.trim();
-      const selectedPay = (document.querySelector('input[name="payMethod"]:checked')?.value || "UPI").toUpperCase();
       payStatus.style.color = "var(--accent)";
-      payStatus.textContent = `🎉 Success, ${firstName}! Your ${plan.name} plan (₹${plan.price}/month) has been activated via ${selectedPay}! Redirecting to home…`;
+      payStatus.textContent = `🎉 Success, ${firstName}! Your ${plan.name} plan (₹${plan.price}/month) has been activated! Redirecting to home…`;
 
       setTimeout(() => {
         window.location.href = "index.html";
