@@ -149,86 +149,107 @@
       .nav__link { font-size: 0.78rem; }
     }
 
-    /* User chip shown after login */
+    /* User avatar shown after login */
     .nav__user { display: none; align-items: center; white-space: nowrap; position: relative; }
     .nav__user.visible { display: flex; }
-    
-    .profile-chip-btn {
-      display: flex; align-items: center; gap: 0.55rem;
-      padding: 0.3rem 0.85rem 0.3rem 0.3rem; border-radius: 999px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--glass-border);
-      color: var(--text); font-weight: 600; font-size: 0.9rem; cursor: pointer;
-      font-family: inherit; transition: transform var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition);
-    }
-    .profile-chip-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(20, 184, 166, 0.4);
-      box-shadow: 0 0 16px rgba(20, 184, 166, 0.25);
-      transform: translateY(-1px);
-    }
-    .profile-avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-      color: #062622; font-weight: 700; font-size: 0.88rem;
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden; flex-shrink: 0; border: 1.5px solid var(--accent-light);
-    }
-    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-    .profile-chip-name { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .profile-chip-arrow { color: var(--text-muted); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-    .profile-chip-btn.active .profile-chip-arrow { transform: rotate(180deg); color: var(--accent-light); }
 
+    .profile-avatar-btn {
+      width: 40px; height: 40px; border-radius: 50%; padding: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #062622; font-weight: 800; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; border: 2.5px solid transparent; cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      position: relative;
+    }
+    .profile-avatar-btn::before {
+      content: ''; position: absolute; inset: -3px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-light), var(--accent-dark));
+      z-index: -1; opacity: 0; transition: opacity 0.3s ease;
+    }
+    .profile-avatar-btn:hover::before, .profile-avatar-btn.active::before { opacity: 1; }
+    .profile-avatar-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 20px rgba(20, 184, 166, 0.45), 0 0 40px rgba(20, 184, 166, 0.15);
+    }
+    .profile-avatar-btn.active {
+      transform: scale(1.05);
+      box-shadow: 0 0 24px rgba(20, 184, 166, 0.5), 0 0 48px rgba(20, 184, 166, 0.2);
+    }
+    .profile-avatar-btn img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .profile-avatar-btn span { pointer-events: none; }
+
+    /* Profile dropdown panel */
     .profile-dropdown {
-      position: absolute; top: calc(100% + 12px); right: 0;
-      width: 250px; background: rgba(18, 18, 18, 0.96);
-      border: 1px solid var(--glass-border); border-radius: 18px;
-      padding: 1.1rem; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 20px rgba(20, 184, 166, 0.15);
-      opacity: 0; visibility: hidden; transform: translateY(-10px) scale(0.96);
-      transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), visibility 0.25s ease;
-      z-index: 250; pointer-events: none;
+      position: absolute; top: calc(100% + 14px); right: -8px;
+      width: 280px;
+      background: linear-gradient(165deg, rgba(22, 26, 28, 0.97), rgba(12, 14, 15, 0.98));
+      border: 1px solid rgba(20, 184, 166, 0.18);
+      border-radius: 20px; padding: 0;
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(20, 184, 166, 0.1), inset 0 1px 0 rgba(255,255,255,0.04);
+      opacity: 0; visibility: hidden; transform: translateY(-12px) scale(0.95);
+      transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s ease;
+      z-index: 250; pointer-events: none; overflow: hidden;
     }
     .profile-dropdown.show {
       opacity: 1; visibility: visible; transform: translateY(0) scale(1); pointer-events: auto;
     }
 
-    .dropdown-header { display: flex; align-items: center; gap: 0.75rem; padding-bottom: 0.8rem; }
+    /* Dropdown header */
+    .dropdown-header {
+      display: flex; align-items: center; gap: 0.9rem;
+      padding: 1.3rem 1.3rem 1rem;
+      background: linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(20, 184, 166, 0.02));
+      border-bottom: 1px solid rgba(20, 184, 166, 0.12);
+    }
     .dropdown-avatar-lg {
-      width: 42px; height: 42px; border-radius: 50%;
+      width: 48px; height: 48px; border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-      color: #062622; font-weight: 800; font-size: 1.1rem;
+      color: #062622; font-weight: 800; font-size: 1.25rem;
       display: flex; align-items: center; justify-content: center;
-      overflow: hidden; flex-shrink: 0; border: 2px solid var(--accent-light);
+      overflow: hidden; flex-shrink: 0;
+      border: 2.5px solid var(--accent-light);
+      box-shadow: 0 0 16px rgba(20, 184, 166, 0.3);
     }
     .dropdown-avatar-lg img { width: 100%; height: 100%; object-fit: cover; }
     .dropdown-user-info { min-width: 0; flex: 1; }
-    .dropdown-name { font-weight: 700; font-size: 0.95rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .dropdown-email { font-size: 0.76rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 0.1rem; }
+    .dropdown-name { font-weight: 700; font-size: 1rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dropdown-email { font-size: 0.78rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 0.15rem; }
     .dropdown-badge {
-      display: inline-block; margin-top: 0.3rem; padding: 0.1rem 0.6rem; border-radius: 999px;
-      font-size: 0.68rem; font-weight: 700; background: rgba(20, 184, 166, 0.15);
-      border: 1px solid rgba(20, 184, 166, 0.35); color: var(--accent-light); text-transform: uppercase; letter-spacing: 0.5px;
+      display: inline-block; margin-top: 0.35rem; padding: 0.15rem 0.65rem; border-radius: 999px;
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+      background: linear-gradient(135deg, rgba(20, 184, 166, 0.2), rgba(20, 184, 166, 0.08));
+      border: 1px solid rgba(20, 184, 166, 0.35); color: var(--accent-light);
     }
 
-    .dropdown-divider { height: 1px; background: var(--glass-border); margin: 0.7rem 0; }
-    .dropdown-menu { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+    /* Dropdown menu */
+    .dropdown-body { padding: 0.6rem; }
+    .dropdown-menu { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
     .dropdown-item {
-      display: flex; align-items: center; gap: 0.7rem;
-      padding: 0.6rem 0.85rem; border-radius: 10px;
-      color: var(--text); font-weight: 500; font-size: 0.88rem;
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.65rem 0.9rem; border-radius: 12px;
+      color: var(--text-muted); font-weight: 500; font-size: 0.88rem;
       text-decoration: none; border: none; background: transparent; width: 100%;
-      cursor: pointer; transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+      cursor: pointer; transition: all 0.2s ease;
       font-family: inherit; text-align: left;
     }
     .dropdown-item:hover {
-      background: rgba(20, 184, 166, 0.12); color: var(--accent-light); transform: translateX(3px);
+      background: rgba(20, 184, 166, 0.1); color: var(--text);
+      transform: translateX(2px);
     }
-    .dropdown-icon { font-size: 1rem; width: 20px; display: inline-flex; justify-content: center; }
+    .dropdown-icon {
+      font-size: 0.95rem; width: 22px; height: 22px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 6px; background: rgba(255,255,255,0.04);
+    }
+    .dropdown-item:hover .dropdown-icon { background: rgba(20, 184, 166, 0.15); }
+    .dropdown-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 0.15rem 0.9rem; }
     .dropdown-item--admin { color: var(--accent-light); font-weight: 600; }
-    .dropdown-item--admin:hover { background: rgba(20, 184, 166, 0.2); }
-    .dropdown-item--logout { color: #f87171; margin-top: 0.2rem; }
-    .dropdown-item--logout:hover { background: rgba(248, 113, 113, 0.18); color: #fca5a5; transform: translateX(3px); }
+    .dropdown-item--admin:hover { background: rgba(20, 184, 166, 0.15); }
+    .dropdown-item--logout { color: #f87171; }
+    .dropdown-item--logout:hover { background: rgba(248, 113, 113, 0.12); color: #fca5a5; }
+    .dropdown-item--logout .dropdown-icon { background: rgba(248,113,113,0.08); }
 
     /* ---------- Hero ---------- */
     .hero {
@@ -957,15 +978,11 @@
             : "";
 
           navUser.innerHTML = `
-            <button class="profile-chip-btn" id="avatarBtn" aria-label="User Account Menu" aria-expanded="false">
-              <div class="profile-avatar">${avatarHtml}</div>
-              <span class="profile-chip-name">${displayName}</span>
-              <svg class="profile-chip-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 9l6 6 6-6"/>
-              </svg>
+            <button class="profile-avatar-btn" id="avatarBtn" aria-label="User Account Menu" aria-expanded="false">
+              ${avatarHtml}
             </button>
             
-            <div class="profile-dropdown glass" id="profileDropdown" aria-hidden="true">
+            <div class="profile-dropdown" id="profileDropdown" aria-hidden="true">
               <div class="dropdown-header">
                 <div class="dropdown-avatar-lg">${avatarHtml}</div>
                 <div class="dropdown-user-info">
@@ -975,54 +992,54 @@
                 </div>
               </div>
 
-              <div class="dropdown-divider"></div>
+              <div class="dropdown-body">
+                <ul class="dropdown-menu">
+                  <li>
+                    <a href="profile.html" class="dropdown-item">
+                      <span class="dropdown-icon">👤</span>
+                      <span>My Profile</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="subscription.html" class="dropdown-item">
+                      <span class="dropdown-icon">📦</span>
+                      <span>My Subscription</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="profile.html#devices" class="dropdown-item">
+                      <span class="dropdown-icon">📱</span>
+                      <span>My Devices</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="subscription.html#payment-history" class="dropdown-item">
+                      <span class="dropdown-icon">💳</span>
+                      <span>Payment History</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="profile.html#settings" class="dropdown-item">
+                      <span class="dropdown-icon">⚙️</span>
+                      <span>Settings</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#faq" class="dropdown-item" id="dropdownHelpLink">
+                      <span class="dropdown-icon">❓</span>
+                      <span>Help & Support</span>
+                    </a>
+                  </li>
+                  ${adminItem}
+                </ul>
 
-              <ul class="dropdown-menu">
-                <li>
-                  <a href="profile.html" class="dropdown-item">
-                    <span class="dropdown-icon">👤</span>
-                    <span class="dropdown-text">My Profile</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="subscription.html" class="dropdown-item">
-                    <span class="dropdown-icon">📦</span>
-                    <span class="dropdown-text">My Subscription</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="profile.html#devices" class="dropdown-item">
-                    <span class="dropdown-icon">📱</span>
-                    <span class="dropdown-text">My Devices</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="subscription.html#payment-history" class="dropdown-item">
-                    <span class="dropdown-icon">💳</span>
-                    <span class="dropdown-text">Payment History</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="profile.html#settings" class="dropdown-item">
-                    <span class="dropdown-icon">⚙️</span>
-                    <span class="dropdown-text">Settings</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="#faq" class="dropdown-item" id="dropdownHelpLink">
-                    <span class="dropdown-icon">❓</span>
-                    <span class="dropdown-text">Help &amp; Support</span>
-                  </a>
-                </li>
-                ${adminItem}
-              </ul>
+                <div class="dropdown-divider"></div>
 
-              <div class="dropdown-divider"></div>
-
-              <button class="dropdown-item dropdown-item--logout" id="logoutBtn">
-                <span class="dropdown-icon">🚪</span>
-                <span class="dropdown-text">Logout</span>
-              </button>
+                <button class="dropdown-item dropdown-item--logout" id="logoutBtn">
+                  <span class="dropdown-icon">🚪</span>
+                  <span>Logout</span>
+                </button>
+              </div>
             </div>
           `;
 
