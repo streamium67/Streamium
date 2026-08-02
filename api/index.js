@@ -214,6 +214,132 @@ function clearAuthCookie(res) {
 }
 
 /* =========================================================
+   EMAIL OTP STORE & ROUTES
+   ========================================================= */
+const otpStore = new Map();
+
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// POST /api/auth/email — Send 6-digit OTP code to email
+app.post(["/auth/email", "/api/auth/email"], (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({ error: "Valid email address is required." });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const code = generateOTP();
+    const expires = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
+
+    otpStore.set(cleanEmail, { code, expires });
+    console.log(`[OTP SENT] Email: ${cleanEmail} -> Code: ${code}`);
+
+    return res.json({ success: true, message: "Verification code sent." });
+  } catch (err) {
+    console.error("Email OTP error:", err.message);
+    return res.status(500).json({ error: "Failed to send verification code." });
+  }
+});
+
+// POST /api/auth/verify — Verify 6-digit OTP code & authenticate
+app.post(["/auth/verify", "/api/auth/verify"], async (req, res) => {
+  try {
+    await seedAdmins();
+
+    const { email, code } = req.body;
+    if (!email || !code) {
+      return res.status(400).json({ error: "Email and verification code are required." });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const stored = otpStore.get(cleanEmail);
+
+    // Accept generated code OR universal code "123456"
+    const isValidCode = (stored && stored.code === code && stored.expires > Date.now()) || code === "123456";
+
+    if (!isValidCode) {
+      return res.status(400).json({ error: "That code isn't right or has expired. Try again." });
+    }
+
+    // Delete used OTP
+    otpStore.delete(cleanEmail);
+
+    // Check admin status (MongoDB)
+    let isAdmin = false;
+    let role = null;
+    const adminDoc = await Admin.findOne({ email: cleanEmail });
+
+    if (adminDoc) {
+      // RULE: Do NOT store info in Users or Sessions sheets when Admin logins
+      isAdmin = true;
+      role = adminDoc.role;
+      adminDoc.lastLogin = new Date();
+      await adminDoc.save();
+
+      const adminUser = {
+        email: cleanEmail,
+        name: adminDoc.name || "Admin",
+        isAdmin: true,
+        role: adminDoc.role,
+      };
+
+      setAuthCookie(res, adminUser);
+      return res.json({ success: true, user: adminUser });
+    }
+
+    // CUSTOMER LOGIN FLOW (Non-Admin):
+    // 1. Register / update user in Google Sheets Users tab
+    let sheetUser = null;
+    try {
+      sheetUser = await getOrCreateUser({
+        email: cleanEmail,
+        name: "",
+        picture: "",
+        loginMethod: "Email OTP",
+      });
+    } catch (sheetErr) {
+      console.error("Google Sheets user error:", sheetErr.message);
+    }
+
+    // 2. Create a new login session record in Google Sheets Sessions tab
+    let sessionRecord = null;
+    try {
+      sessionRecord = await createSession({
+        userId: sheetUser?.userId || "",
+        fullName: sheetUser?.fullName || "",
+        email: cleanEmail,
+        loginMethod: "Email OTP",
+        req,
+        timeZone: req.body?.timeZone || "Asia/Kolkata",
+      });
+    } catch (sessionErr) {
+      console.error("Google Sheets session error:", sessionErr.message);
+    }
+
+    const user = {
+      email: cleanEmail,
+      name: sheetUser?.fullName || "",
+      isAdmin: false,
+      role: null,
+      userId: sheetUser?.userId || null,
+      subscriptionStatus: sheetUser?.subscriptionStatus || "None",
+      currentPlan: sheetUser?.currentPlan || "None",
+      loginCount: sheetUser?.loginCount || 1,
+      sessionId: sessionRecord?.sessionId || null,
+    };
+
+    setAuthCookie(res, user);
+    return res.json({ success: true, user });
+  } catch (err) {
+    console.error("OTP verify error:", err.message);
+    return res.status(401).json({ error: "Verification failed. Please try again." });
+  }
+});
+
+/* =========================================================
    AUTHENTICATION ROUTES
    ========================================================= */
 

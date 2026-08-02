@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Enter the 6-digit code we emailed you to finish signing in to Streamium." />
+  <title>Enter your code — Streamium</title>
+
+  <style>
+    /* ---------- Design tokens (identical to login.html / index.html) ---------- */
+    :root {
+      --bg: #0f0f0f;
+      --bg-soft: #161616;
+      --accent: #14b8a6;
+      --accent-dark: #0f766e;
+      --accent-light: #5eead4;
+      --text: #f5f5f5;
+      --text-muted: #b3b3b3;
+      --glass: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --radius: 16px;
+      --transition: 0.35s cubic-bezier(0.25, 0.8, 0.35, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.6; overflow-x: hidden;
+      display: flex; flex-direction: column; min-height: 100vh;
+    }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg-soft); }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(var(--accent), var(--accent-dark)); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    .container { width: min(1140px, 92%); margin-inline: auto; }
+
+    .glass {
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    }
+
+    .btn {
+      display: inline-block; padding: 0.8rem 2rem;
+      border: none; border-radius: 999px;
+      font-weight: 600; font-size: 1rem; cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+    .btn--primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #062622; }
+    .btn--primary:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(20, 184, 166, 0.4); }
+    .btn--lg { padding: 1rem 2.8rem; font-size: 1.1rem; }
+    .btn--block { width: 100%; text-align: center; }
+    .btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn.loading .btn__label { visibility: hidden; }
+    .btn.loading::after {
+      content: ""; position: absolute; top: 50%; left: 50%;
+      width: 20px; height: 20px; margin: -10px 0 0 -10px;
+      border: 2px solid rgba(6, 38, 34, 0.35); border-top-color: #062622;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .ripple-circle {
+      position: absolute; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.45);
+      transform: scale(0);
+      animation: ripple 0.6s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+    .particles { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+    .particle {
+      position: absolute; bottom: -10px; border-radius: 50%;
+      background: rgba(20, 184, 166, 0.35);
+      animation: float linear infinite;
+    }
+    @keyframes float { to { transform: translateY(-110vh) translateX(6vw); opacity: 0; } }
+
+    .progress-bar {
+      position: fixed; top: 0; left: 0; height: 3px; width: 0;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      z-index: 200; transition: width 0.2s ease;
+    }
+    .progress-bar.done { opacity: 0; transition: opacity 0.4s ease; }
+
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15, 15, 15, 0.7);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid transparent;
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .nav.scrolled { border-bottom-color: var(--glass-border); background: rgba(15, 15, 15, 0.92); }
+    .nav__inner { display: flex; align-items: center; padding: 1rem 0; gap: 1rem; }
+    .nav__logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 0.5px; margin-right: auto; white-space: nowrap; }
+    .nav__logo span { color: var(--accent); }
+    .nav__menu { display: flex; align-items: center; gap: 1.6rem; margin-left: auto; }
+    .nav__link { color: var(--text-muted); font-weight: 500; position: relative; transition: color var(--transition); white-space: nowrap; }
+    .nav__link::after {
+      content: ""; position: absolute; left: 0; bottom: -4px;
+      width: 0; height: 2px; background: var(--accent);
+      transition: width var(--transition);
+    }
+    .nav__link:hover, .nav__link:focus-visible { color: var(--text); }
+    .nav__link:hover::after, .nav__link:focus-visible::after { width: 100%; }
+
+    @media (max-width: 640px) {
+      .nav__logo { font-size: 1.1rem; }
+      .nav__menu { gap: 0.9rem; }
+      .nav__link { font-size: 0.85rem; }
+    }
+    @media (max-width: 420px) {
+      .nav__menu { gap: 0.6rem; }
+      .nav__link { font-size: 0.78rem; }
+    }
+
+    .auth {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 2.5rem 0; position: relative;
+      background:
+        radial-gradient(ellipse 80% 55% at 50% -10%, rgba(20, 184, 166, 0.25), transparent);
+    }
+    .auth__card {
+      width: min(440px, 92%);
+      padding: 2rem 1.9rem 1.6rem;
+      text-align: center;
+      position: relative;
+      opacity: 0; transform: translateY(28px);
+      animation: cardIn 0.6s var(--transition) forwards;
+    }
+    @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
+
+    .auth__badge {
+      display: inline-block; padding: 0.35rem 0.9rem;
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.4px;
+      color: var(--accent-light);
+      background: rgba(20, 184, 166, 0.12);
+      border: 1px solid rgba(20, 184, 166, 0.3);
+      border-radius: 999px; margin-bottom: 1.1rem;
+    }
+    .auth__title { font-size: 1.7rem; font-weight: 800; line-height: 1.25; margin-bottom: 0.6rem; }
+    .auth__title span { color: var(--accent); }
+    .auth__subtitle { color: var(--text-muted); font-size: 0.98rem; margin-bottom: 0.4rem; }
+    .auth__email {
+      display: inline-block; margin: 0 0 1.4rem;
+      padding: 0.5rem 0.95rem; font-weight: 600; color: var(--text); font-size: 0.92rem;
+      background: var(--bg-soft); border: 1px solid var(--glass-border);
+      border-radius: 10px; word-break: break-all;
+    }
+
+    .mail-icon {
+      width: 78px; height: 78px; margin: 0 auto 1.2rem;
+      display: grid; place-items: center; border-radius: 50%;
+      background: rgba(20, 184, 166, 0.12);
+      border: 1px solid rgba(20, 184, 166, 0.3);
+      position: relative;
+    }
+    .mail-icon::after {
+      content: ""; position: absolute; inset: -6px; border-radius: 50%;
+      border: 2px solid rgba(20, 184, 166, 0.35);
+      animation: pulse 2.2s ease-out infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.7; }
+      100% { transform: scale(1.35); opacity: 0; }
+    }
+    .mail-icon svg { width: 36px; height: 36px; stroke: var(--accent-light); }
+
+    /* ---------- OTP inputs ---------- */
+    .otp {
+      display: flex; justify-content: center; gap: 0.6rem;
+      margin: 1.5rem 0 0.4rem;
+    }
+    .otp__input {
+      width: 3rem; height: 3.6rem;
+      text-align: center; font-size: 1.5rem; font-weight: 700;
+      color: var(--text); caret-color: var(--accent);
+      background: var(--bg-soft);
+      border: 1.5px solid var(--glass-border); border-radius: 12px;
+      transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+    }
+    .otp__input::-webkit-outer-spin-button,
+    .otp__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .otp__input:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.22);
+    }
+    .otp__input.filled { border-color: var(--accent-dark); }
+    .otp.error .otp__input { border-color: #f87171; animation: shake 0.4s ease; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-5px); }
+      40%, 80% { transform: translateX(5px); }
+    }
+    @media (max-width: 420px) {
+      .otp { gap: 0.4rem; }
+      .otp__input { width: 2.5rem; height: 3.1rem; font-size: 1.25rem; }
+    }
+
+    .auth__message {
+      min-height: 1.2rem; font-size: 0.88rem; margin: 0.6rem 0 1rem;
+      opacity: 0; transition: opacity var(--transition);
+    }
+    .auth__message.show { opacity: 1; }
+    .auth__message.success { color: var(--accent-light); }
+    .auth__message.error { color: #f87171; }
+
+    .auth__resend {
+      margin-top: 1.2rem; font-size: 0.9rem; color: var(--text-muted);
+    }
+    .auth__resend button {
+      background: none; border: none; cursor: pointer;
+      color: var(--accent); font-weight: 600; font-size: 0.9rem;
+      padding: 0; font-family: inherit;
+    }
+    .auth__resend button:disabled { color: var(--text-muted); cursor: not-allowed; }
+    .auth__resend button:not(:disabled):hover { color: var(--accent-light); text-decoration: underline; }
+
+    .auth__back {
+      display: inline-block; margin-top: 1.3rem;
+      color: var(--text-muted); font-size: 0.9rem; font-weight: 500;
+      transition: color var(--transition);
+    }
+    .auth__back:hover { color: var(--accent); }
+
+    .footer { background: var(--bg-soft); border-top: 1px solid var(--glass-border); padding: 2.4rem 0 1.4rem; }
+    .footer__grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2rem; }
+    .footer__tagline { color: var(--text-muted); margin: 0.6rem 0 1rem; font-size: 0.9rem; }
+    .footer__social { display: flex; gap: 0.8rem; }
+    .footer__social a {
+      width: 34px; height: 34px; display: grid; place-items: center;
+      border-radius: 50%; background: var(--glass); border: 1px solid var(--glass-border);
+      transition: background var(--transition), color var(--transition);
+    }
+    .footer__social a:hover { background: var(--accent); color: #062622; }
+    .footer h3 { font-size: 0.95rem; margin-bottom: 0.9rem; }
+    .footer ul li { margin-bottom: 0.5rem; }
+    .footer ul li a { color: var(--text-muted); font-size: 0.9rem; transition: color var(--transition); }
+    .footer ul li a:hover { color: var(--accent); }
+    .footer__copy { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 2rem; }
+
+    @media (max-width: 720px) {
+      .footer__grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    body.leaving { opacity: 0; transition: opacity 0.4s ease; }
+  </style>
+</head>
+<body>
+
+  <div class="progress-bar" id="progressBar"></div>
+  <div class="particles" id="particles" aria-hidden="true"></div>
+
+  <header class="nav" id="nav">
+    <nav class="nav__inner container" aria-label="Main navigation">
+      <a href="index.html#home" class="nav__logo">Stream<span>ium</span></a>
+      <ul class="nav__menu">
+        <li><a href="index.html#home" class="nav__link">Home</a></li>
+        <li><a href="index.html#plans" class="nav__link">Plans</a></li>
+        <li><a href="index.html#faq" class="nav__link">FAQ</a></li>
+        <li><a href="index.html#contact" class="nav__link">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="auth">
+    <section class="auth__card glass" aria-labelledby="verifyTitle">
+      <span class="auth__badge">Streamium Account</span>
+
+      <div class="mail-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2" />
+          <path d="m2 6 10 7L22 6" />
+        </svg>
+      </div>
+
+      <h1 class="auth__title" id="verifyTitle">Enter your <span>code</span></h1>
+      <p class="auth__subtitle">We sent a 6-digit verification code to</p>
+      <span class="auth__email" id="userEmail">you@example.com</span>
+
+      <form id="otpForm" novalidate>
+        <div class="otp" id="otp">
+          <input class="otp__input" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="Digit 1" />
+          <input class="otp__input" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 2" />
+          <input class="otp__input" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 3" />
+          <input class="otp__input" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 4" />
+          <input class="otp__input" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 5" />
+          <input class="otp__input" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 6" />
+        </div>
+
+        <p class="auth__message" id="verifyMessage" role="status" aria-live="polite"></p>
+
+        <button type="submit" class="btn btn--primary btn--lg btn--block ripple" id="verifyBtn">
+          <span class="btn__label">Verify &amp; continue</span>
+        </button>
+      </form>
+
+      <p class="auth__resend">
+        Didn't get a code?
+        <button type="button" id="resendBtn">Resend</button>
+        <span id="resendTimer"></span>
+      </p>
+
+      <a href="login.html" class="auth__back" id="backLogin">← Use a different email</a>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div>
+        <a href="index.html#home" class="nav__logo">Stream<span>ium</span></a>
+        <p class="footer__tagline">Your world of entertainment, anywhere.</p>
+        <div class="footer__social" aria-label="Social media links">
+          <a href="#" aria-label="Twitter / X">𝕏</a>
+          <a href="#" aria-label="Facebook">f</a>
+          <a href="#" aria-label="Instagram">◎</a>
+          <a href="#" aria-label="YouTube">▶</a>
+        </div>
+      </div>
+      <nav aria-label="Company links">
+        <h3>Company</h3>
+        <ul><li><a href="#">About</a></li><li><a href="#">Careers</a></li><li><a href="#">Press</a></li></ul>
+      </nav>
+      <nav aria-label="Support links">
+        <h3>Support</h3>
+        <ul><li><a href="index.html#faq">Help Center</a></li><li><a href="index.html#contact">Contact Us</a></li><li><a href="#">Devices</a></li></ul>
+      </nav>
+      <nav aria-label="Legal links">
+        <h3>Legal</h3>
+        <ul><li><a href="terms.html">Terms of Use</a></li><li><a href="privacy.html">Privacy Policy</a></li><li><a href="#">Cookies</a></li></ul>
+      </nav>
+    </div>
+    <p class="footer__copy">© 2026 Streamium. All rights reserved</p>
+  </footer>
+
+  <script>
+    "use strict";
+
+    /* ---------- Redirect + email context passed from login.html ---------- */
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get("email") || "";
+    const rawRedirect = params.get("redirect") || "index.html";
+    const emailEl = document.getElementById("userEmail");
+    if (email) emailEl.textContent = email;
+
+    function buildRedirectUrl(user) {
+      if (user && user.isAdmin) return "admin.html";
+      let target = rawRedirect === "admin.html" ? "index.html" : rawRedirect;
+      const planParam = params.get("plan");
+      if (target === "checkout.html" && planParam) {
+        return `checkout.html?plan=${encodeURIComponent(planParam)}`;
+      }
+      return target;
+    }
+
+    /* ---------- 1. Floating particles ---------- */
+    (function createParticles() {
+      const container = document.getElementById("particles");
+      for (let i = 0; i < 28; i++) {
+        const p = document.createElement("span");
+        p.className = "particle";
+        const size = Math.random() * 5 + 2;
+        p.style.width = p.style.height = `${size}px`;
+        p.style.left = `${Math.random() * 100}%`;
+        p.style.animationDuration = `${Math.random() * 14 + 10}s`;
+        p.style.animationDelay = `${Math.random() * -20}s`;
+        p.style.opacity = Math.random() * 0.5 + 0.15;
+        container.appendChild(p);
+      }
+    })();
+
+    /* ---------- 2. Sticky nav scrolled style ---------- */
+    const nav = document.getElementById("nav");
+    window.addEventListener("scroll", () => {
+      nav.classList.toggle("scrolled", window.scrollY > 30);
+    }, { passive: true });
+
+    /* ---------- 3. Ripple effect ---------- */
+    document.querySelectorAll(".ripple").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const circle = document.createElement("span");
+        circle.className = "ripple-circle";
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        circle.style.width = circle.style.height = `${size}px`;
+        circle.style.left = `${e.clientX - rect.left - size / 2}px`;
+        circle.style.top = `${e.clientY - rect.top - size / 2}px`;
+        btn.appendChild(circle);
+        circle.addEventListener("animationend", () => circle.remove());
+      });
+    });
+
+    /* ---------- 4. Helpers ---------- */
+    const otpWrap = document.getElementById("otp");
+    const inputs = Array.from(otpWrap.querySelectorAll(".otp__input"));
+    const otpForm = document.getElementById("otpForm");
+    const verifyBtn = document.getElementById("verifyBtn");
+    const verifyMessage = document.getElementById("verifyMessage");
+
+    function showMessage(text, type) {
+      verifyMessage.textContent = text;
+      verifyMessage.classList.remove("error", "success", "show");
+      void verifyMessage.offsetWidth;
+      verifyMessage.classList.add(type, "show");
+    }
+    function clearMessage() {
+      verifyMessage.classList.remove("show", "error", "success");
+      verifyMessage.textContent = "";
+    }
+    function setLoading(btn, isLoading) {
+      btn.classList.toggle("loading", isLoading);
+      btn.disabled = isLoading;
+    }
+    function navigateWithFade(url) {
+      document.body.classList.add("leaving");
+      setTimeout(() => { window.location.href = url; }, 400);
+    }
+    function getCode() {
+      return inputs.map((i) => i.value).join("");
+    }
+
+    /* ---------- 5. OTP box behavior (type, paste, backspace, arrows) ---------- */
+    inputs[0].focus();
+
+    inputs.forEach((input, idx) => {
+      input.addEventListener("input", () => {
+        // keep digits only
+        input.value = input.value.replace(/\D/g, "").slice(0, 1);
+        input.classList.toggle("filled", input.value !== "");
+        otpWrap.classList.remove("error");
+        clearMessage();
+        if (input.value && idx < inputs.length - 1) {
+          inputs[idx + 1].focus();
+        }
+        // auto-submit when all six are filled
+        if (getCode().length === 6) otpForm.requestSubmit();
+      });
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Backspace" && !input.value && idx > 0) {
+          inputs[idx - 1].focus();
+          inputs[idx - 1].value = "";
+          inputs[idx - 1].classList.remove("filled");
+        } else if (e.key === "ArrowLeft" && idx > 0) {
+          inputs[idx - 1].focus();
+        } else if (e.key === "ArrowRight" && idx < inputs.length - 1) {
+          inputs[idx + 1].focus();
+        }
+      });
+
+      input.addEventListener("paste", (e) => {
+        e.preventDefault();
+        const digits = (e.clipboardData.getData("text") || "").replace(/\D/g, "").slice(0, 6);
+        if (!digits) return;
+        digits.split("").forEach((d, i) => {
+          if (inputs[i]) {
+            inputs[i].value = d;
+            inputs[i].classList.add("filled");
+          }
+        });
+        const next = Math.min(digits.length, inputs.length - 1);
+        inputs[next].focus();
+        if (getCode().length === 6) otpForm.requestSubmit();
+      });
+    });
+
+    /* ---------- 6. Verify submit ---------- */
+    otpForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const code = getCode();
+
+      if (code.length !== 6) {
+        otpWrap.classList.add("error");
+        showMessage("Please enter all 6 digits.", "error");
+        return;
+      }
+
+      setLoading(verifyBtn, true);
+      clearMessage();
+
+      fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ email, code }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.success) {
+            const user = data.user || {};
+            const targetUrl = buildRedirectUrl(user);
+            showMessage(`Verified! Welcome back${user.name ? ", " + user.name : ""} — redirecting…`, "success");
+            setTimeout(() => navigateWithFade(targetUrl), 700);
+          } else {
+            setLoading(verifyBtn, false);
+            otpWrap.classList.add("error");
+            showMessage((data && data.error) || "That code isn't right or has expired. Try again.", "error");
+            inputs.forEach((i) => { i.value = ""; i.classList.remove("filled"); });
+            inputs[0].focus();
+          }
+        })
+        .catch(() => {
+          setLoading(verifyBtn, false);
+          showMessage("Network error. Make sure the server is running, then try again.", "error");
+        });
+    });
+
+    /* ---------- 7. Resend code (30s cooldown) ---------- */
+    const resendBtn = document.getElementById("resendBtn");
+    const resendTimer = document.getElementById("resendTimer");
+    let cooldown = 0, timerId = null;
+
+    function startCooldown(seconds) {
+      cooldown = seconds;
+      resendBtn.disabled = true;
+      tick();
+      timerId = setInterval(tick, 1000);
+    }
+    function tick() {
+      if (cooldown <= 0) {
+        clearInterval(timerId);
+        resendBtn.disabled = false;
+        resendTimer.textContent = "";
+        return;
+      }
+      resendTimer.textContent = ` (${cooldown}s)`;
+      cooldown--;
+    }
+
+    resendBtn.addEventListener("click", () => {
+      if (resendBtn.disabled) return;
+      fetch("/api/auth/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ email }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.success) showMessage("A new 6-digit code is on its way ✉", "success");
+          else showMessage((data && data.error) || "Couldn't resend right now. Try again shortly.", "error");
+        })
+        .catch(() => showMessage("A new 6-digit code is on its way ✉", "success"));
+      startCooldown(30);
+    });
+
+    /* ---------- 8. Back to login ---------- */
+    document.getElementById("backLogin").addEventListener("click", (e) => {
+      e.preventDefault();
+      navigateWithFade("login.html");
+    });
+
+    /* ---------- 9. Top progress bar ---------- */
+    (function () {
+      var bar = document.getElementById("progressBar");
+      if (!bar) return;
+      var w = 0;
+      var iv = setInterval(function () {
+        w += Math.random() * 15 + 5;
+        if (w > 90) w = 90;
+        bar.style.width = w + "%";
+      }, 200);
+      window.addEventListener("load", function () {
+        clearInterval(iv);
+        bar.style.width = "100%";
+        setTimeout(function () { bar.classList.add("done"); }, 400);
+      });
+    })();
+  </script>
+</body>
+</html>

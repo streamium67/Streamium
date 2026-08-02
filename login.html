@@ -539,7 +539,7 @@
       }
     });
 
-    /* ---------- 7. Email form submit (placeholder — Google only for now) ---------- */
+    /* ---------- 7. Email form submit (requests OTP & redirects to verify.html) ---------- */
     emailForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const email = emailInput.value.trim();
@@ -561,10 +561,29 @@
       clearMessage();
       setLoading(continueBtn, true);
 
-      setTimeout(() => {
-        setLoading(continueBtn, false);
-        showMessage("Email sign-in coming soon! Please use Google sign-in for now.", "success");
-      }, 800);
+      fetch("/api/auth/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ email }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setLoading(continueBtn, false);
+          if (data && data.success) {
+            const redirectParam = rawRedirect ? `&redirect=${encodeURIComponent(rawRedirect)}` : "";
+            const planParam = urlParams.get("plan") ? `&plan=${encodeURIComponent(urlParams.get("plan"))}` : "";
+            navigateWithFade(`verify.html?email=${encodeURIComponent(email)}${redirectParam}${planParam}`);
+          } else {
+            showMessage((data && data.error) || "Couldn't send code. Please try again.", "error");
+          }
+        })
+        .catch(() => {
+          setLoading(continueBtn, false);
+          const redirectParam = rawRedirect ? `&redirect=${encodeURIComponent(rawRedirect)}` : "";
+          const planParam = urlParams.get("plan") ? `&plan=${encodeURIComponent(urlParams.get("plan"))}` : "";
+          navigateWithFade(`verify.html?email=${encodeURIComponent(email)}${redirectParam}${planParam}`);
+        });
     });
 
     emailInput.addEventListener("input", () => {
