@@ -37,7 +37,7 @@ const SESSION_HEADERS = [
   "Session ID", "User ID", "Full Name", "Email", "Login Method",
   "Login Date & Time", "Logout Date & Time", "Session Status",
   "IP Address", "Location", "Browser", "Browser Version", "OS",
-  "Device Type", "User Agent", "Language", "Time Zone", "Referrer"
+  "Device Type", "Language", "Time Zone", "Referrer"
 ];
 
 /* =========================================================
@@ -462,7 +462,6 @@ async function createSession({ userId, fullName, email, loginMethod, req, timeZo
     browserVersion,
     osName,
     deviceType,
-    uaString,
     language,
     timeZone || "Asia/Kolkata",
     referrer
@@ -485,7 +484,6 @@ async function createSession({ userId, fullName, email, loginMethod, req, timeZo
     browserVersion,
     osName,
     deviceType,
-    userAgent: uaString,
     language,
     timeZone: timeZone || "Asia/Kolkata",
     referrer
@@ -564,10 +562,9 @@ async function getUserSessions(email) {
         browserVersion: rows[i][11] || "",
         osName: rows[i][12] || "",
         deviceType: rows[i][13] || "",
-        userAgent: rows[i][14] || "",
-        language: rows[i][15] || "",
-        timeZone: rows[i][16] || "",
-        referrer: rows[i][17] || "",
+        language: rows[i][14] || "",
+        timeZone: rows[i][15] || "",
+        referrer: rows[i][16] || "",
       });
     }
   }
