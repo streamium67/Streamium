@@ -210,7 +210,21 @@
       border: 1px solid rgba(20, 184, 166, 0.3);
       font-size: 1.3rem;
     }
-    .legal-section__num { color: var(--accent); font-weight: 800; }
+    /* Neon-glow section numbers */
+    .legal-section__num {
+      color: var(--accent-light);
+      font-weight: 800;
+      text-shadow:
+        0 0 4px rgba(94, 234, 212, 0.95),
+        0 0 10px rgba(20, 184, 166, 0.85),
+        0 0 20px rgba(20, 184, 166, 0.55),
+        0 0 38px rgba(20, 184, 166, 0.32);
+      animation: neonPulse 2.8s ease-in-out infinite;
+    }
+    @keyframes neonPulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.82; }
+    }
     .legal-section h2 { font-size: clamp(1.2rem, 3vw, 1.5rem); font-weight: 700; }
     .legal-section p { color: var(--text-muted); margin-bottom: 0.9rem; }
     .legal-section p:last-child { margin-bottom: 0; }
@@ -277,6 +291,9 @@
 
     /* ---------- Reduced motion (accessibility) ---------- */
     @media (prefers-reduced-motion: reduce) {
+      .legal-section__num { animation: none !important; }
+    }
+    @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
       html { scroll-behavior: auto; }
       .reveal { opacity: 1; transform: none; }
@@ -315,10 +332,10 @@
         <h1 class="legal-hero__title">Terms &amp; Conditions</h1>
         <p class="legal-hero__intro">
           Welcome to Streamium. These Terms &amp; Conditions govern your access to and use of our
-          streaming service, including all plans, features, and content. Please read them carefully —
+          independent subscription platform, including all plans, features, and billing. Please read them carefully —
           by using Streamium, you agree to everything below.
         </p>
-        <span class="legal-hero__updated">🗓️ Last Updated: July 30, 2026</span>
+        <span class="legal-hero__updated">🗓️ Last Updated: August 1, 2026</span>
       </div>
     </section>
 
@@ -332,8 +349,12 @@
             <span class="legal-section__icon" aria-hidden="true">📜</span>
             <h2><span class="legal-section__num">1.</span> Acceptance of Terms</h2>
           </div>
-          <p>By creating an account, subscribing to a plan, or otherwise accessing Streamium, you confirm that you have read, understood, and agreed to be bound by these Terms &amp; Conditions and any policies referenced within them. If you do not agree, you must not use the service.</p>
+          <ul class="legal-list">
+            <li>By accessing, registering for, or using Streamium, you acknowledge that you have read and understood these Terms &amp; Conditions.</li>
+            <li>You agree to be bound by these Terms &amp; Conditions, our Privacy Policy, and all applicable policies published by Streamium.</li>
+          </ul>
         </section>
+
         <hr class="legal-divider" />
 
         <!-- 2. Eligibility -->
@@ -342,204 +363,303 @@
             <span class="legal-section__icon" aria-hidden="true">✅</span>
             <h2><span class="legal-section__num">2.</span> Eligibility</h2>
           </div>
-          <p>You must be at least 18 years old, or the age of majority in your jurisdiction, to create an account and make payments. Minors may use Streamium only under the supervision and consent of a parent or legal guardian who accepts these Terms on their behalf.</p>
+          <ul class="legal-list">
+            <li>You must be at least 18 years of age to use Streamium and purchase a subscription.</li>
+            <li>If you are under 18, you must have the consent of a parent or legal guardian.</li>
+          </ul>
         </section>
+
         <hr class="legal-divider" />
 
-        <!-- 3. User Accounts -->
+        <!-- 3. Independent Service Disclaimer -->
+        <section class="legal-section reveal">
+          <div class="legal-section__head">
+            <span class="legal-section__icon" aria-hidden="true">⚖️</span>
+            <h2><span class="legal-section__num">3.</span> Independent Service Disclaimer</h2>
+          </div>
+          <ul class="legal-list">
+            <li>Streamium is an independent platform.</li>
+            <li>Streamium is not affiliated with, endorsed by, sponsored by, or operated by Netflix or any other third-party streaming service.</li>
+            <li>All trademarks, logos, and brand names belong to their respective owners.</li>
+          </ul>
+        </section>
+
+        <hr class="legal-divider" />
+
+        <!-- 4. User Account -->
         <section class="legal-section reveal">
           <div class="legal-section__head">
             <span class="legal-section__icon" aria-hidden="true">👤</span>
-            <h2><span class="legal-section__num">3.</span> User Accounts</h2>
+            <h2><span class="legal-section__num">4.</span> User Account</h2>
           </div>
-          <p>You are responsible for maintaining the confidentiality of your account and for all activity that occurs under it. You agree to provide accurate information and to keep it up to date. Streamium is not liable for any loss arising from unauthorized use of your account resulting from your failure to safeguard your credentials.</p>
+          <ul class="legal-list">
+            <li>You are responsible for maintaining the security of your account and login credentials.</li>
+            <li>You agree to provide accurate information when creating your account.</li>
+            <li>You agree to keep your account details up to date.</li>
+          </ul>
         </section>
+
         <hr class="legal-divider" />
 
-        <!-- 4. Subscription Plans -->
+        <!-- 5. Subscription Plans -->
         <section class="legal-section reveal">
           <div class="legal-section__head">
             <span class="legal-section__icon" aria-hidden="true">🎬</span>
-            <h2><span class="legal-section__num">4.</span> Subscription Plans</h2>
+            <h2><span class="legal-section__num">5.</span> Subscription Plans</h2>
           </div>
-          <p>Streamium offers tiered monthly plans based on streaming quality:</p>
           <ul class="legal-list">
-            <li><strong>Basic</strong> — 720p HD at ₹50/month.</li>
-            <li><strong>Standard</strong> — 1080p Full HD at ₹75/month.</li>
-            <li><strong>Premium</strong> — 4K Ultra HD with HDR at ₹100/month.</li>
+            <li>Streamium offers subscription plans with different features, pricing, and device limits.</li>
+            <li>Plans, pricing, and features may change without prior notice.</li>
           </ul>
-          <p>All plans are billed monthly with no long-term lock-in. Features and pricing may be updated from time to time, and any changes will apply to your next billing cycle.</p>
         </section>
+
         <hr class="legal-divider" />
 
-        <!-- 5. Payment Policy -->
+        <!-- 6. Payment Policy -->
         <section class="legal-section reveal">
           <div class="legal-section__head">
             <span class="legal-section__icon" aria-hidden="true">💳</span>
-            <h2><span class="legal-section__num">5.</span> Payment Policy</h2>
+            <h2><span class="legal-section__num">6.</span> Payment Policy</h2>
           </div>
-          <p>Payments are processed securely through our authorized payment partners. By subscribing, you authorize Streamium to charge the applicable fees for your chosen plan.</p>
           <ul class="legal-list">
-            <li>All payments are final once successfully completed.</li>
+            <li>All payments must be completed using Streamium&rsquo;s authorized payment methods.</li>
+            <li>Access is generally activated after successful payment verification.</li>
           </ul>
         </section>
+
         <hr class="legal-divider" />
 
-        <!-- 6. Refund Policy -->
+        <!-- 7. Payment & Access Policy -->
+        <section class="legal-section reveal">
+          <div class="legal-section__head">
+            <span class="legal-section__icon" aria-hidden="true">🔓</span>
+            <h2><span class="legal-section__num">7.</span> Payment &amp; Access Policy</h2>
+          </div>
+          <ul class="legal-list">
+            <li>If your payment is successful but access is not activated due to a technical or verification issue, please contact Streamium Support.</li>
+            <li>After successful payment verification, access will be provided manually without requiring another payment.</li>
+          </ul>
+        </section>
+
+        <hr class="legal-divider" />
+
+        <!-- 8. Payment Verification -->
+        <section class="legal-section reveal">
+          <div class="legal-section__head">
+            <span class="legal-section__icon" aria-hidden="true">🔍</span>
+            <h2><span class="legal-section__num">8.</span> Payment Verification</h2>
+          </div>
+          <ul class="legal-list">
+            <li>Streamium reserves the right to verify any payment before activating, restoring, or continuing subscription access.</li>
+          </ul>
+        </section>
+
+        <hr class="legal-divider" />
+
+        <!-- 9. Refund Policy -->
         <section class="legal-section reveal">
           <div class="legal-section__head">
             <span class="legal-section__icon" aria-hidden="true">💰</span>
-            <h2><span class="legal-section__num">6.</span> Refund Policy</h2>
+            <h2><span class="legal-section__num">9.</span> Refund Policy</h2>
           </div>
           <ul class="legal-list">
-            <li>No refund will be issued after payment unless required by applicable law.</li>
+            <li>All subscription payments are non-refundable.</li>
+            <li>Refunds will be issued only where a refund is required under applicable law.</li>
           </ul>
-          <p>Because access is granted immediately upon successful payment, subscription fees are non-refundable except where a refund is mandated by the laws of your jurisdiction.</p>
         </section>
+
         <hr class="legal-divider" />
 
-        <!-- 7. Cancellation Policy -->
+        <!-- 10. Cancellation Policy -->
         <section class="legal-section reveal">
           <div class="legal-section__head">
             <span class="legal-section__icon" aria-hidden="true">🚫</span>
-            <h2><span class="legal-section__num">7.</span> Cancellation Policy</h2>
+            <h2><span class="legal-section__num">10.</span> Cancellation Policy</h2>
           </div>
           <ul class="legal-list">
-            <li>Orders cannot be cancelled after activation.</li>
+            <li>Once a subscription has been activated, it cannot be cancelled or reversed for the current subscription period.</li>
           </ul>
-          <p>You may choose not to renew your subscription for the next billing cycle at any time. Once a subscription has been activated for the current period, it cannot be cancelled or reversed for that period.</p>
         </section>
+
         <hr class="legal-divider" />
 
-        <!-- 8. Device Policy -->
+        <!-- 11. Subscription Renewal -->
+        <section class="legal-section reveal">
+          <div class="legal-section__head">
+            <span class="legal-section__icon" aria-hidden="true">🔁</span>
+            <h2><span class="legal-section__num">11.</span> Subscription Renewal</h2>
+          </div>
+          <ul class="legal-list">
+            <li>Unless otherwise stated, subscriptions expire at the end of their validity period.</li>
+            <li>Subscriptions must be renewed by purchasing a new subscription.</li>
+          </ul>
+        </section>
+
+        <hr class="legal-divider" />
+
+        <!-- 12. Device Policy -->
         <section class="legal-section reveal">
           <div class="legal-section__head">
             <span class="legal-section__icon" aria-hidden="true">📱</span>
-            <h2><span class="legal-section__num">8.</span> Device Policy</h2>
+            <h2><span class="legal-section__num">12.</span> Device Policy</h2>
           </div>
           <ul class="legal-list">
-            <li>One subscription is valid for only one device unless otherwise specified.</li>
-            <li>Extra devices require purchasing an additional device slot or an eligible plan.</li>
+            <li>Each subscription may only be used on the number of devices permitted by the selected plan.</li>
+            <li>Additional devices may require an additional purchase.</li>
           </ul>
-          <p>Streaming on more devices than permitted by your plan may result in playback being restricted until your account is brought into compliance.</p>
         </section>
+
         <hr class="legal-divider" />
 
-        <!-- 9. Account Sharing -->
+        <!-- 13. Account Sharing -->
         <section class="legal-section reveal">
           <div class="legal-section__head">
             <span class="legal-section__icon" aria-hidden="true">🔗</span>
-            <h2><span class="legal-section__num">9.</span> Account Sharing</h2>
+            <h2><span class="legal-section__num">13.</span> Account Sharing</h2>
           </div>
           <ul class="legal-list">
-            <li>Sharing, reselling, lending, or transferring subscriptions without permission is strictly prohibited.</li>
+            <li>Sharing, selling, transferring, or providing access to your subscription to unauthorized persons is prohibited.</li>
           </ul>
-          <p>Your subscription is for your personal, non-commercial use only. Distributing your account access to others outside the limits of your plan is a violation of these Terms.</p>
         </section>
+
         <hr class="legal-divider" />
 
-        <!-- 10. User Responsibilities -->
+        <!-- 14. User Responsibilities -->
         <section class="legal-section reveal">
           <div class="legal-section__head">
             <span class="legal-section__icon" aria-hidden="true">🤝</span>
-            <h2><span class="legal-section__num">10.</span> User Responsibilities</h2>
+            <h2><span class="legal-section__num">14.</span> User Responsibilities</h2>
           </div>
-          <p>You agree to use Streamium lawfully and respectfully. You are responsible for keeping your devices secure, ensuring your payment details are valid, and complying with all applicable laws while accessing our content.</p>
+          <ul class="legal-list">
+            <li>Users agree to use Streamium responsibly.</li>
+            <li>Users agree to comply with all applicable laws.</li>
+            <li>Users agree to avoid any activity that may disrupt or misuse the Service.</li>
+          </ul>
         </section>
+
         <hr class="legal-divider" />
 
-        <!-- 11. Prohibited Activities -->
+        <!-- 15. Prohibited Activities -->
         <section class="legal-section reveal">
           <div class="legal-section__head">
             <span class="legal-section__icon" aria-hidden="true">⛔</span>
-            <h2><span class="legal-section__num">11.</span> Prohibited Activities</h2>
+            <h2><span class="legal-section__num">15.</span> Prohibited Activities</h2>
           </div>
-          <p>You must not:</p>
           <ul class="legal-list">
-            <li>Copy, record, download (outside official offline features), or redistribute our content.</li>
-            <li>Circumvent, disable, or interfere with security or content-protection features.</li>
-            <li>Use bots, scrapers, or automated tools to access the service.</li>
-            <li>Attempt unauthorized access to any part of Streamium or its systems.</li>
+            <li>Attempting unauthorized access to the platform, systems, or other user accounts.</li>
+            <li>Misusing the platform or interfering with its security features.</li>
+            <li>Distributing malicious software.</li>
+            <li>Engaging in fraudulent activities.</li>
           </ul>
         </section>
+
         <hr class="legal-divider" />
 
-        <!-- 12. Intellectual Property -->
-        <section class="legal-section reveal">
-          <div class="legal-section__head">
-            <span class="legal-section__icon" aria-hidden="true">©️</span>
-            <h2><span class="legal-section__num">12.</span> Intellectual Property</h2>
-          </div>
-          <p>All content, trademarks, logos, software, and materials available on Streamium are owned by or licensed to Streamium and are protected by intellectual-property laws. Your subscription grants a limited, non-exclusive, non-transferable right to stream content for personal use only.</p>
-        </section>
-        <hr class="legal-divider" />
-
-        <!-- 13. Privacy -->
+        <!-- 16. Privacy -->
         <section class="legal-section reveal">
           <div class="legal-section__head">
             <span class="legal-section__icon" aria-hidden="true">🔒</span>
-            <h2><span class="legal-section__num">13.</span> Privacy</h2>
-          </div>
-          <p>We respect your privacy and handle your personal data responsibly. The information we collect is used to provide, personalize, and improve the service. For full details, please review our <a href="#" class="inline-link">Privacy Policy</a>.</p>
-        </section>
-        <hr class="legal-divider" />
-
-        <!-- 14. Service Availability -->
-        <section class="legal-section reveal">
-          <div class="legal-section__head">
-            <span class="legal-section__icon" aria-hidden="true">🌐</span>
-            <h2><span class="legal-section__num">14.</span> Service Availability</h2>
-          </div>
-          <p>We strive to keep Streamium available at all times, but we do not guarantee uninterrupted or error-free access. The service may be temporarily unavailable due to maintenance, updates, network issues, or events beyond our control. Content libraries may also vary by region and change over time.</p>
-        </section>
-        <hr class="legal-divider" />
-
-        <!-- 15. Account Suspension -->
-        <section class="legal-section reveal">
-          <div class="legal-section__head">
-            <span class="legal-section__icon" aria-hidden="true">⚠️</span>
-            <h2><span class="legal-section__num">15.</span> Account Suspension</h2>
+            <h2><span class="legal-section__num">16.</span> Privacy</h2>
           </div>
           <ul class="legal-list">
-            <li>Any misuse, fraud, abuse, unauthorized access, or violation of these Terms may result in immediate account suspension or termination without refund.</li>
+            <li>Your use of Streamium is also governed by our Privacy Policy.</li>
+            <li>The Privacy Policy explains how we collect, use, and protect your personal information.</li>
           </ul>
-          <p>We reserve the right to investigate suspected violations and take appropriate action to protect the service and our users.</p>
         </section>
+
         <hr class="legal-divider" />
 
-        <!-- 16. Limitation of Liability -->
+        <!-- 17. User Data & Security -->
         <section class="legal-section reveal">
           <div class="legal-section__head">
             <span class="legal-section__icon" aria-hidden="true">🛡️</span>
-            <h2><span class="legal-section__num">16.</span> Limitation of Liability</h2>
+            <h2><span class="legal-section__num">17.</span> User Data &amp; Security</h2>
           </div>
-          <p>To the maximum extent permitted by law, Streamium shall not be liable for any indirect, incidental, or consequential damages arising from your use of, or inability to use, the service. The service is provided on an "as is" and "as available" basis without warranties of any kind.</p>
+          <ul class="legal-list">
+            <li>Streamium may collect account information, login records, IP address, browser information, device information, and other security-related data.</li>
+            <li>This data is used to protect accounts, improve the Service, and comply with applicable laws.</li>
+          </ul>
         </section>
+
         <hr class="legal-divider" />
 
-        <!-- 17. Changes to Terms -->
+        <!-- 18. Service Availability -->
+        <section class="legal-section reveal">
+          <div class="legal-section__head">
+            <span class="legal-section__icon" aria-hidden="true">🌐</span>
+            <h2><span class="legal-section__num">18.</span> Service Availability</h2>
+          </div>
+          <ul class="legal-list">
+            <li>While we strive to provide uninterrupted service, Streamium does not guarantee continuous availability.</li>
+            <li>Services may be temporarily suspended for maintenance or technical reasons.</li>
+          </ul>
+        </section>
+
+        <hr class="legal-divider" />
+
+        <!-- 19. Account Suspension & Termination -->
+        <section class="legal-section reveal">
+          <div class="legal-section__head">
+            <span class="legal-section__icon" aria-hidden="true">⚠️</span>
+            <h2><span class="legal-section__num">19.</span> Account Suspension &amp; Termination</h2>
+          </div>
+          <ul class="legal-list">
+            <li>Streamium reserves the right to suspend, restrict, or terminate accounts involved in fraud, misuse, policy violations, unauthorized access, or any activity that may harm the Service.</li>
+          </ul>
+        </section>
+
+        <hr class="legal-divider" />
+
+        <!-- 20. Chargebacks & Fraud -->
+        <section class="legal-section reveal">
+          <div class="legal-section__head">
+            <span class="legal-section__icon" aria-hidden="true">🚨</span>
+            <h2><span class="legal-section__num">20.</span> Chargebacks &amp; Fraud</h2>
+          </div>
+          <ul class="legal-list">
+            <li>Fraudulent transactions, payment disputes, chargebacks, or unauthorized payment activity may result in immediate suspension or permanent termination of your account.</li>
+          </ul>
+        </section>
+
+        <hr class="legal-divider" />
+
+        <!-- 21. Changes to Terms -->
         <section class="legal-section reveal">
           <div class="legal-section__head">
             <span class="legal-section__icon" aria-hidden="true">🔄</span>
-            <h2><span class="legal-section__num">17.</span> Changes to Terms</h2>
+            <h2><span class="legal-section__num">21.</span> Changes to Terms</h2>
           </div>
           <ul class="legal-list">
-            <li>Streamium reserves the right to modify these Terms &amp; Conditions at any time without prior notice.</li>
+            <li>Streamium may update these Terms &amp; Conditions at any time.</li>
+            <li>Continued use of the Service after any changes constitutes acceptance of the revised Terms.</li>
           </ul>
-          <p>Continued use of the service after any changes constitutes acceptance of the updated terms. We encourage you to review this page periodically.</p>
         </section>
+
         <hr class="legal-divider" />
 
-        <!-- 18. Contact Information -->
+        <!-- 22. Entire Agreement -->
+        <section class="legal-section reveal">
+          <div class="legal-section__head">
+            <span class="legal-section__icon" aria-hidden="true">📑</span>
+            <h2><span class="legal-section__num">22.</span> Entire Agreement</h2>
+          </div>
+          <ul class="legal-list">
+            <li>These Terms &amp; Conditions, together with the Privacy Policy and any other published policies, constitute the complete agreement between you and Streamium regarding the use of the Service.</li>
+          </ul>
+        </section>
+
+        <hr class="legal-divider" />
+
+        <!-- 23. Contact Information -->
         <section class="legal-section reveal">
           <div class="legal-section__head">
             <span class="legal-section__icon" aria-hidden="true">✉️</span>
-            <h2><span class="legal-section__num">18.</span> Contact Information</h2>
+            <h2><span class="legal-section__num">23.</span> Contact Information</h2>
           </div>
-          <p>If you have questions about these Terms &amp; Conditions, please reach out to us:</p>
           <ul class="legal-list">
-            <li>Email: <a href="mailto:support@streamium.com" class="inline-link">support@streamium.com</a></li>
-            <li>Or use the <a href="index.html#contact" class="inline-link">contact form</a> on our homepage.</li>
+            <li>For questions, concerns, or support regarding these Terms &amp; Conditions, please contact Streamium through the official support channels provided on our website.</li>
+            <li>Email: <a href="mailto:support@streamium.com" class="inline-link">streamium67@gmail.com</a></li>
+            <li>You can also use the <a href="index.html#contact" class="inline-link">contact form</a> on our homepage.</li>
           </ul>
         </section>
 
@@ -573,10 +693,10 @@
       </nav>
       <nav aria-label="Legal links">
         <h3>Legal</h3>
-        <ul><li><a href="#">Terms of Use</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Cookies</a></li></ul>
+        <ul><li><a href="terms.html">Terms of Use</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Cookies</a></li></ul>
       </nav>
     </div>
-    <p class="footer__copy">© 2026 Streamium. All rights reserved. Demo site with placeholder content.</p>
+    <p class="footer__copy">© 2026 Streamium. All rights reserved. Streamium is an independent subscription platform and is not affiliated with Netflix or any other streaming service.</p>
   </footer>
 
   <script>

@@ -217,6 +217,22 @@
       box-shadow: 0 6px 18px rgba(20, 184, 166, 0.25);
     }
 
+    /* Black number badge (replaces the section icons) */
+    .privacy__num {
+      display: inline-grid; place-items: center;
+      width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+      background: #000000;
+      border: 1px solid rgba(20, 184, 166, 0.25);
+      color: var(--accent-light);
+      font-size: 0.95rem; font-weight: 800; line-height: 1;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6);
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .privacy__heading:hover .privacy__num {
+      transform: scale(1.1);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+    }
+
     /* Divider between sections */
     .privacy__divider {
       height: 1px; border: none; margin: 2.8rem 0 0;
@@ -355,7 +371,7 @@
         <h1 class="page-hero__title" id="pageTitle">Privacy Policy</h1>
         <p class="page-hero__subtitle">Your privacy is important to us. This policy explains how Streamium collects, uses, and safeguards your personal information.</p>
         <div class="page-hero__updated">
-          <span aria-hidden="true">📅</span> Last Updated: July 31, 2026
+          <span aria-hidden="true">📅</span> Last Updated: August 2, 2026
         </div>
       </div>
     </section>
@@ -367,207 +383,157 @@
 
           <!-- 1. Introduction -->
           <h2 class="privacy__heading" id="introduction">
-            <span class="privacy__heading-icon" aria-hidden="true">👋</span>
+            <span class="privacy__num" aria-hidden="true">1</span>
             1. Introduction
           </h2>
-          <p>Welcome to <strong>Streamium</strong>. This Privacy Policy describes how we collect, use, disclose, and protect your personal information when you access or use our website, applications, and streaming services (collectively, the "Services"). By using Streamium, you agree to the practices described in this policy.</p>
-          <p>We are committed to protecting your privacy and ensuring transparency about how your data is handled. We collect only the information necessary to provide and improve Streamium services.</p>
+          <ul>
+            <li>Welcome to Streamium. We value your privacy and are committed to protecting your personal information.</li>
+            <li>This Privacy Policy explains how we collect, use, store, disclose, and protect your information when you access or use our website and services.</li>
+            <li>By using Streamium, you agree to the practices described in this Privacy Policy.</li>
+          </ul>
 
           <hr class="privacy__divider" />
 
           <!-- 2. Information We Collect -->
           <h2 class="privacy__heading" id="info-collect">
-            <span class="privacy__heading-icon" aria-hidden="true">📋</span>
+            <span class="privacy__num" aria-hidden="true">2</span>
             2. Information We Collect
           </h2>
-          <p>We may collect the following types of information when you interact with our Services:</p>
           <ul>
-            <li><strong>Personal Information:</strong> Your name, email address, and profile details you provide during registration.</li>
-            <li><strong>Google Account Details:</strong> When signing in with Google, we receive your name, email address, and profile picture as authorized by your Google account settings.</li>
-            <li><strong>Device Information:</strong> Device type, operating system, browser type and version, screen resolution, and unique device identifiers.</li>
-            <li><strong>Network Information:</strong> Your IP address, general geographic location, internet service provider, and connection type.</li>
-            <li><strong>Usage Data:</strong> Pages visited, features used, content viewed, viewing duration, search queries, and interaction patterns.</li>
-            <li><strong>Cookies & Tracking Data:</strong> Information collected through cookies, web beacons, and similar technologies to enhance your experience.</li>
+            <li>Your name and email address.</li>
+            <li>Your login method (Google Sign-In or Email OTP).</li>
+            <li>Your profile picture, when provided through Google Sign-In.</li>
+            <li>Your IP address, browser type, operating system, and device type.</li>
+            <li>Your approximate location based on your IP address.</li>
+            <li>Your login history.</li>
+            <li>Payment transaction details and subscription information.</li>
+            <li>Other information necessary to provide and secure our services.</li>
           </ul>
 
           <hr class="privacy__divider" />
 
           <!-- 3. How We Use Your Information -->
           <h2 class="privacy__heading" id="info-use">
-            <span class="privacy__heading-icon" aria-hidden="true">⚙️</span>
+            <span class="privacy__num" aria-hidden="true">3</span>
             3. How We Use Your Information
           </h2>
-          <p>We use the information we collect for the following purposes:</p>
           <ul>
-            <li>To provide, operate, maintain, and improve the Streamium streaming platform.</li>
-            <li>To create and manage your user account and authenticate your identity.</li>
-            <li>To personalize your viewing experience and deliver content recommendations.</li>
-            <li>To process subscription payments and manage billing.</li>
-            <li>To send important service notifications, security alerts, and account updates.</li>
-            <li>To respond to customer support inquiries and resolve technical issues.</li>
-            <li>To analyze usage trends, monitor platform performance, and improve service quality.</li>
-            <li>To detect, investigate, and prevent fraudulent or unauthorized activity.</li>
-            <li>To comply with applicable legal obligations and enforce our terms.</li>
+            <li>To create and manage your account.</li>
+            <li>To verify your identity.</li>
+            <li>To process payments and activate subscriptions.</li>
+            <li>To provide customer support.</li>
+            <li>To improve our services.</li>
+            <li>To maintain platform security and prevent fraud.</li>
+            <li>To communicate important service updates.</li>
+            <li>To comply with applicable legal obligations.</li>
           </ul>
 
           <hr class="privacy__divider" />
 
-          <!-- 4. Account Information -->
-          <h2 class="privacy__heading" id="account-info">
-            <span class="privacy__heading-icon" aria-hidden="true">👤</span>
-            4. Account Information
+          <!-- 4. How We Protect Your Data -->
+          <h2 class="privacy__heading" id="data-security">
+            <span class="privacy__num" aria-hidden="true">4</span>
+            4. How We Protect Your Data
           </h2>
-          <p>When you create a Streamium account, we collect your name and email address to set up and manage your profile. You are responsible for keeping your account credentials secure and for all activity that occurs under your account.</p>
-          <p>Streamium reserves the right to suspend or terminate accounts involved in fraud, abuse, unauthorized access, or violations of our Terms &amp; Conditions. If you suspect unauthorized use of your account, please contact us immediately.</p>
+          <ul>
+            <li>We implement reasonable technical, administrative, and organizational security measures to protect your information from unauthorized access, disclosure, alteration, or misuse.</li>
+            <li>While we strive to safeguard your information, no method of internet transmission or electronic storage can be guaranteed to be completely secure.</li>
+          </ul>
 
           <hr class="privacy__divider" />
 
-          <!-- 5. Google Sign-In & Authentication -->
-          <h2 class="privacy__heading" id="google-signin">
-            <span class="privacy__heading-icon" aria-hidden="true">🔐</span>
-            5. Google Sign-In &amp; Authentication
+          <!-- 5. Sharing Your Information -->
+          <h2 class="privacy__heading" id="third-party">
+            <span class="privacy__num" aria-hidden="true">5</span>
+            5. Sharing Your Information
           </h2>
-          <p>Streamium offers <strong>Google Sign-In</strong> as a convenient and secure authentication method. When you choose to sign in with Google, we receive basic profile information (name, email, and profile picture) as authorized by your Google account settings.</p>
-          <p>Google Sign-In is used only for secure authentication and account creation. We do not access your Google Drive, Gmail, contacts, or any other Google services beyond what is required for authentication. You can revoke Streamium's access at any time through your <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">Google Account permissions</a>.</p>
+          <ul>
+            <li>We do not sell, rent, or trade your personal information.</li>
+            <li>We may share limited information with trusted service providers only when necessary to process payments.</li>
+            <li>We may share limited information when necessary to authenticate users or provide technical services.</li>
+            <li>We may share limited information when necessary to comply with legal obligations.</li>
+            <li>We may share limited information when necessary to protect the rights, safety, and security of Streamium and its users.</li>
+          </ul>
 
           <hr class="privacy__divider" />
 
-          <!-- 6. Email Verification & OTP -->
-          <h2 class="privacy__heading" id="email-otp">
-            <span class="privacy__heading-icon" aria-hidden="true">✉️</span>
-            6. Email Verification &amp; OTP
+          <!-- 6. Children's Privacy -->
+          <h2 class="privacy__heading" id="children">
+            <span class="privacy__num" aria-hidden="true">6</span>
+            6. Children&rsquo;s Privacy
           </h2>
-          <p>Email addresses are used for account verification, login authentication, important service notifications, and customer support. We may send one-time passwords (OTPs) to your registered email address for secure identity verification during login or sensitive account actions.</p>
-          <p>We will never ask for your password or OTP through unsolicited emails, phone calls, or messages. Always verify that communications come from official Streamium channels.</p>
+          <ul>
+            <li>Streamium is not intended for children under the age of 18 without the consent of a parent or legal guardian.</li>
+            <li>We do not knowingly collect personal information from children without appropriate consent.</li>
+            <li>If we become aware that such information has been collected unintentionally, we will take reasonable steps to remove it.</li>
+          </ul>
 
           <hr class="privacy__divider" />
 
           <!-- 7. Payment Information -->
           <h2 class="privacy__heading" id="payments">
-            <span class="privacy__heading-icon" aria-hidden="true">💳</span>
+            <span class="privacy__num" aria-hidden="true">7</span>
             7. Payment Information
           </h2>
-          <p>Payment transactions are securely processed through trusted third-party payment gateways. <strong>Streamium does not store your complete card or banking details.</strong> We may retain limited transaction records (such as transaction IDs, payment status, and subscription plan details) for billing, accounting, and dispute resolution purposes.</p>
-          <p>All payment processing complies with industry-standard security protocols, including PCI-DSS compliance, to safeguard your financial information.</p>
+          <ul>
+            <li>Payments are processed securely through our authorized third-party payment providers.</li>
+            <li>Streamium does not store your complete debit card, credit card, UPI PIN, bank account password, or other sensitive payment credentials.</li>
+            <li>We may retain limited payment information such as transaction ID, payment status, subscription plan, payment amount, and payment date.</li>
+            <li>This limited information is retained for payment verification, subscription activation, customer support, billing records, and fraud prevention.</li>
+          </ul>
 
           <hr class="privacy__divider" />
 
-          <!-- 8. Cookies & Similar Technologies -->
+          <!-- 8. Cookies and Tracking -->
           <h2 class="privacy__heading" id="cookies">
-            <span class="privacy__heading-icon" aria-hidden="true">🍪</span>
-            8. Cookies &amp; Similar Technologies
+            <span class="privacy__num" aria-hidden="true">8</span>
+            8. Cookies and Tracking
           </h2>
-          <p>We may use cookies and similar technologies to improve user experience, remember your preferences, maintain login sessions, and enhance website performance. The types of cookies we use include:</p>
           <ul>
-            <li><strong>Essential Cookies:</strong> Required for basic platform functionality, authentication, and security.</li>
-            <li><strong>Preference Cookies:</strong> Remember your settings, language, and viewing preferences.</li>
-            <li><strong>Analytics Cookies:</strong> Help us understand how users interact with our platform to improve performance and content.</li>
-            <li><strong>Performance Cookies:</strong> Monitor and optimize page load times, streaming quality, and overall platform reliability.</li>
+            <li>Streamium may use cookies and similar technologies to maintain login sessions and remember your preferences.</li>
+            <li>Cookies also help us improve website performance, analyze website usage, and enhance your overall experience.</li>
+            <li>You may manage or disable cookies through your browser settings.</li>
+            <li>Disabling cookies may affect certain website features.</li>
           </ul>
-          <p>You can manage cookie preferences through your browser settings. Please note that disabling certain cookies may affect the functionality of our Services.</p>
 
           <hr class="privacy__divider" />
 
-          <!-- 9. Device Information -->
-          <h2 class="privacy__heading" id="device-info">
-            <span class="privacy__heading-icon" aria-hidden="true">📱</span>
-            9. Device Information
-          </h2>
-          <p>We collect device-related information to optimize streaming quality, ensure compatibility, and provide a seamless viewing experience across all your devices. This includes your device type, operating system, browser version, screen resolution, and network connection details.</p>
-          <p>This information helps us deliver the appropriate streaming quality (720p, 1080p, or 4K Ultra HD) based on your device capabilities and network conditions.</p>
-
-          <hr class="privacy__divider" />
-
-          <!-- 10. Data Security -->
-          <h2 class="privacy__heading" id="data-security">
-            <span class="privacy__heading-icon" aria-hidden="true">🛡️</span>
-            10. Data Security
-          </h2>
-          <p>We implement reasonable administrative, technical, and organizational security measures to protect user information against unauthorized access, disclosure, alteration, or destruction. Our security practices include:</p>
-          <ul>
-            <li>Encryption of data in transit using TLS/SSL protocols.</li>
-            <li>Secure storage with access controls and authentication requirements.</li>
-            <li>Regular security assessments and monitoring for vulnerabilities.</li>
-            <li>Employee access restrictions on a need-to-know basis.</li>
-          </ul>
-          <p>While we strive to protect your personal information, no method of electronic transmission or storage is completely secure. We encourage you to use strong passwords and take precautions to protect your account.</p>
-
-          <hr class="privacy__divider" />
-
-          <!-- 11. Data Retention -->
-          <h2 class="privacy__heading" id="data-retention">
-            <span class="privacy__heading-icon" aria-hidden="true">🗄️</span>
-            11. Data Retention
-          </h2>
-          <p>Personal information is retained only as long as necessary to provide services, comply with legal obligations, resolve disputes, or enforce our agreements. When your data is no longer needed for these purposes, we will securely delete or anonymize it.</p>
-          <p>If you request account deletion, we will remove your personal information within a reasonable timeframe, except where retention is required by law or for legitimate business purposes such as fraud prevention.</p>
-
-          <hr class="privacy__divider" />
-
-          <!-- 12. Third-Party Services -->
-          <h2 class="privacy__heading" id="third-party">
-            <span class="privacy__heading-icon" aria-hidden="true">🔗</span>
-            12. Third-Party Services
-          </h2>
-          <p><strong>We do not sell, rent, or trade your personal information to third parties.</strong> We may share limited information with trusted service providers only when necessary to:</p>
-          <ul>
-            <li>Operate and maintain the Streamium platform.</li>
-            <li>Process payments securely through authorized payment gateways.</li>
-            <li>Authenticate users via Google Sign-In and other identity providers.</li>
-            <li>Comply with legal obligations, court orders, or government requests.</li>
-            <li>Protect our legal rights, safety, and property, or those of our users.</li>
-          </ul>
-          <p>These service providers are contractually obligated to protect your data and use it only for the specific purposes we authorize.</p>
-
-          <hr class="privacy__divider" />
-
-          <!-- 13. Children's Privacy -->
-          <h2 class="privacy__heading" id="children">
-            <span class="privacy__heading-icon" aria-hidden="true">👶</span>
-            13. Children's Privacy
-          </h2>
-          <p>Our services are not intended for children under the age required by applicable law without parental or guardian consent. We do not knowingly collect personal information from children under the applicable minimum age in their jurisdiction.</p>
-          <p>If we become aware that we have inadvertently collected personal information from a child without appropriate consent, we will take prompt steps to delete that information. If you believe a child has provided us with personal data, please contact us immediately.</p>
-
-          <hr class="privacy__divider" />
-
-          <!-- 14. Your Rights -->
+          <!-- 9. Your Rights -->
           <h2 class="privacy__heading" id="your-rights">
-            <span class="privacy__heading-icon" aria-hidden="true">⚖️</span>
-            14. Your Rights
+            <span class="privacy__num" aria-hidden="true">9</span>
+            9. Your Rights
           </h2>
-          <p>Depending on your jurisdiction, you may have the following rights regarding your personal information:</p>
           <ul>
-            <li><strong>Access:</strong> Request a copy of the personal data we hold about you.</li>
-            <li><strong>Correction:</strong> Request updates or corrections to inaccurate or incomplete data.</li>
-            <li><strong>Deletion:</strong> Request deletion of your personal information, subject to applicable legal requirements.</li>
-            <li><strong>Portability:</strong> Request your data in a structured, commonly used, machine-readable format.</li>
-            <li><strong>Objection:</strong> Object to certain types of data processing where applicable.</li>
-            <li><strong>Withdrawal of Consent:</strong> Withdraw previously granted consent at any time.</li>
+            <li>You may request access to your personal information.</li>
+            <li>You may request corrections to inaccurate information.</li>
+            <li>You may request deletion of your account where applicable.</li>
+            <li>You may contact us regarding the processing of your personal data.</li>
+            <li>We will respond to valid requests within a reasonable time and in accordance with applicable laws.</li>
           </ul>
-          <p>Users may request to update or delete their personal information by contacting our support team. We will respond to valid requests within the timeframe required by applicable law.</p>
 
           <hr class="privacy__divider" />
 
-          <!-- 15. Changes to This Privacy Policy -->
+          <!-- 10. Changes to This Privacy Policy -->
           <h2 class="privacy__heading" id="changes">
-            <span class="privacy__heading-icon" aria-hidden="true">📝</span>
-            15. Changes to This Privacy Policy
+            <span class="privacy__num" aria-hidden="true">10</span>
+            10. Changes to This Privacy Policy
           </h2>
-          <p>Streamium may update this Privacy Policy at any time to reflect changes in our practices, legal requirements, or services. When we make significant changes, we will update the "Last Updated" date at the top of this page and, where appropriate, provide additional notice through our platform or via email.</p>
-          <p>Continued use of the website after changes constitutes acceptance of the updated policy. We encourage you to review this page periodically to stay informed about how we protect your information.</p>
+          <ul>
+            <li>Streamium may update this Privacy Policy from time to time.</li>
+            <li>Any changes will become effective when the updated version is published on this page.</li>
+            <li>Continued use of the Service after such changes constitutes your acceptance of the revised Privacy Policy.</li>
+          </ul>
 
           <hr class="privacy__divider" />
 
-          <!-- 16. Contact Information -->
+          <!-- 11. Contact Information -->
           <h2 class="privacy__heading" id="contact-info">
-            <span class="privacy__heading-icon" aria-hidden="true">📧</span>
-            16. Contact Information
+            <span class="privacy__num" aria-hidden="true">11</span>
+            11. Contact Information
           </h2>
           <p>If you have questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact us:</p>
           <div class="privacy__contact">
-            <p><span class="label">Support Email:</span> <a href="mailto:support@streamium.com">support@streamium.com</a></p>
-            <p><span class="label">Business Email:</span> <a href="mailto:business@streamium.com">business@streamium.com</a></p>
+            <p><span class="label">Support Email:</span> <a href="mailto:streamium67@gmail.com">streamium67@gmail.com</a></p>
             <p><span class="label">Website:</span> <a href="index.html">Streamium</a></p>
             <p><span class="label">Business Hours:</span> Monday – Friday, 9:00 AM – 6:00 PM IST</p>
           </div>
