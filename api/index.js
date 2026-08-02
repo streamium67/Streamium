@@ -6,6 +6,13 @@ const { OAuth2Client } = require("google-auth-library");
 const Razorpay = require("razorpay");
 const connectDB = require("./lib/db");
 const Admin = require("./models/Admin");
+const {
+  getOrCreateUser,
+  getUserByEmail,
+  createOrder,
+  updateUserSubscription,
+  getOrdersByEmail,
+} = require("./lib/sheets");
 
 /* =========================================================
    ENV & CONFIG
@@ -31,7 +38,7 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 /* =========================================================
-   DEBUG ROUTE (as requested)
+   DEBUG ROUTE
    ========================================================= */
 app.get(["/test", "/api/test"], (req, res) => {
   res.status(200).json({
@@ -108,7 +115,7 @@ app.get(["/config", "/api/config"], (req, res) => {
 });
 
 /* =========================================================
-   DATABASE MIDDLEWARE (for Auth & Admin routes)
+   DATABASE MIDDLEWARE (MongoDB — for Admin routes only)
    ========================================================= */
 app.use(async (req, res, next) => {
   try {
@@ -170,7 +177,7 @@ function clearAuthCookie(res) {
    AUTHENTICATION ROUTES
    ========================================================= */
 
-// POST /api/auth/google or /auth/google
+// POST /api/auth/google — Google Sign-In + Google Sheets user registration
 app.post(["/auth/google", "/api/auth/google"], async (req, res) => {
   try {
     await seedAdmins();
@@ -187,6 +194,7 @@ app.post(["/auth/google", "/api/auth/google"], async (req, res) => {
     const payload = ticket.getPayload();
     const { sub: googleId, email, name, picture } = payload;
 
+    // Check admin status (MongoDB)
     let isAdmin = false;
     let role = null;
     const adminDoc = await Admin.findOne({ email: email.toLowerCase() });
@@ -201,7 +209,33 @@ app.post(["/auth/google", "/api/auth/google"], async (req, res) => {
       await adminDoc.save();
     }
 
-    const user = { googleId, email, name, picture, isAdmin, role };
+    // Register / update user in Google Sheets
+    let sheetUser = null;
+    try {
+      sheetUser = await getOrCreateUser({
+        email: email.toLowerCase(),
+        name: name || "",
+        picture: picture || "",
+        loginMethod: "Google",
+      });
+    } catch (sheetErr) {
+      console.error("Google Sheets user error:", sheetErr.message);
+      // Don't block login if Sheets fails — user can still access the site
+    }
+
+    const user = {
+      googleId,
+      email: email.toLowerCase(),
+      name,
+      picture,
+      isAdmin,
+      role,
+      userId: sheetUser?.userId || null,
+      subscriptionStatus: sheetUser?.subscriptionStatus || "None",
+      currentPlan: sheetUser?.currentPlan || "None",
+      loginCount: sheetUser?.loginCount || 1,
+    };
+
     setAuthCookie(res, user);
     return res.json({ success: true, user });
   } catch (err) {
@@ -210,18 +244,57 @@ app.post(["/auth/google", "/api/auth/google"], async (req, res) => {
   }
 });
 
-// GET /api/auth/me or /auth/me
-app.get(["/auth/me", "/api/auth/me"], (req, res) => {
-  if (req.user) {
-    return res.json({ user: req.user });
+// GET /api/auth/me — returns current user info
+app.get(["/auth/me", "/api/auth/me"], async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Not authenticated." });
   }
-  return res.status(401).json({ error: "Not authenticated." });
+
+  // Optionally refresh subscription data from Google Sheets
+  try {
+    const sheetUser = await getUserByEmail(req.user.email);
+    if (sheetUser) {
+      return res.json({
+        user: {
+          ...req.user,
+          userId: sheetUser.userId,
+          subscriptionStatus: sheetUser.subscriptionStatus,
+          currentPlan: sheetUser.currentPlan,
+          loginCount: sheetUser.loginCount,
+          memberSince: sheetUser.firstLogin,
+        },
+      });
+    }
+  } catch (sheetErr) {
+    console.error("Sheets lookup error:", sheetErr.message);
+  }
+
+  // Fallback: return JWT data as-is
+  return res.json({ user: req.user });
 });
 
-// POST /api/auth/logout or /auth/logout
+// POST /api/auth/logout
 app.post(["/auth/logout", "/api/auth/logout"], (req, res) => {
   clearAuthCookie(res);
   return res.json({ success: true });
+});
+
+/* =========================================================
+   USER DATA ROUTES
+   ========================================================= */
+
+// GET /api/user/orders — get current user's order history
+app.get(["/user/orders", "/api/user/orders"], async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Not authenticated." });
+  }
+  try {
+    const orders = await getOrdersByEmail(req.user.email);
+    return res.json({ success: true, orders });
+  } catch (err) {
+    console.error("Fetch orders error:", err.message);
+    return res.status(500).json({ error: "Failed to fetch orders." });
+  }
 });
 
 /* =========================================================
@@ -241,7 +314,7 @@ function requireOwner(req, res, next) {
   next();
 }
 
-// GET /api/admin/list or /admin/list
+// GET /api/admin/list
 app.get(["/admin/list", "/api/admin/list"], requireAdmin, async (req, res) => {
   try {
     await seedAdmins();
@@ -252,7 +325,7 @@ app.get(["/admin/list", "/api/admin/list"], requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/add or /admin/add
+// POST /api/admin/add
 app.post(["/admin/add", "/api/admin/add"], requireOwner, async (req, res) => {
   try {
     const { email, role } = req.body;
@@ -271,7 +344,7 @@ app.post(["/admin/add", "/api/admin/add"], requireOwner, async (req, res) => {
   }
 });
 
-// DELETE /api/admin/remove/:email or /admin/remove/:email
+// DELETE /api/admin/remove/:email
 app.delete(["/admin/remove/:email", "/api/admin/remove/:email"], requireOwner, async (req, res) => {
   try {
     const email = req.params.email.toLowerCase();
@@ -343,10 +416,13 @@ app.post(["/payment/create-order", "/api/payment/create-order"], async (req, res
   }
 });
 
-// POST /api/payment/verify
-app.post(["/payment/verify", "/api/payment/verify"], (req, res) => {
+// POST /api/payment/verify — verify + record order in Google Sheets
+app.post(["/payment/verify", "/api/payment/verify"], async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const {
+      razorpay_order_id, razorpay_payment_id, razorpay_signature,
+      planName, amountPaid,
+    } = req.body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({ error: "Missing payment verification fields." });
@@ -357,17 +433,60 @@ app.post(["/payment/verify", "/api/payment/verify"], (req, res) => {
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest("hex");
 
-    if (expectedSignature === razorpay_signature) {
-      // Payment verified successfully
-      res.json({
-        success: true,
-        message: "Payment verified successfully.",
-        paymentId: razorpay_payment_id,
-        orderId: razorpay_order_id,
-      });
-    } else {
-      res.status(400).json({ error: "Payment verification failed. Invalid signature." });
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ error: "Payment verification failed. Invalid signature." });
     }
+
+    // Payment verified — record order in Google Sheets
+    const userEmail = req.user?.email || "";
+    let userId = req.user?.userId || "";
+
+    // Calculate expiry (30 days from now)
+    const purchaseDate = new Date().toISOString();
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + 30);
+    const expiryDate = expiry.toISOString();
+
+    try {
+      // Look up userId if not in JWT
+      if (!userId && userEmail) {
+        const sheetUser = await getUserByEmail(userEmail);
+        if (sheetUser) userId = sheetUser.userId;
+      }
+
+      // Create order record
+      await createOrder({
+        orderId: razorpay_order_id,
+        userId: userId,
+        paymentId: razorpay_payment_id,
+        email: userEmail,
+        plan: planName || "Unknown",
+        amountPaid: amountPaid || 0,
+        purchaseDate: purchaseDate,
+        expiryDate: expiryDate,
+        paymentStatus: "Paid",
+        accessStatus: "Granted",
+      });
+
+      // Update user's subscription status
+      if (userEmail) {
+        await updateUserSubscription(userEmail, {
+          subscriptionStatus: "Active",
+          currentPlan: planName || "Unknown",
+        });
+      }
+    } catch (sheetErr) {
+      console.error("Sheets order recording error:", sheetErr.message);
+      // Don't fail the payment verification if Sheets has issues
+    }
+
+    res.json({
+      success: true,
+      message: "Payment verified and subscription activated.",
+      paymentId: razorpay_payment_id,
+      orderId: razorpay_order_id,
+      expiryDate: expiryDate,
+    });
   } catch (err) {
     console.error("Razorpay verify error:", err.message);
     res.status(500).json({ error: "Payment verification error." });
