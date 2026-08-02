@@ -37,6 +37,19 @@ const app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
+/**
+ * URL Prefix Normalization Middleware.
+ * Strips leading "/api" so routes match whether Vercel passes "/api/config" or "/config".
+ */
+app.use((req, res, next) => {
+  if (req.url.startsWith("/api/")) {
+    req.url = req.url.substring(4);
+  } else if (req.url === "/api") {
+    req.url = "/";
+  }
+  next();
+});
+
 /* =========================================================
    DEBUG ROUTE
    ========================================================= */
@@ -87,19 +100,6 @@ app.get(["/test-sheets", "/api/test-sheets"], async (req, res) => {
       error: err.message,
     });
   }
-});
-
-/**
- * URL Prefix Normalization Middleware.
- * Strips leading "/api" so routes match whether Vercel passes "/api/config" or "/config".
- */
-app.use((req, res, next) => {
-  if (req.url.startsWith("/api/")) {
-    req.url = req.url.substring(4);
-  } else if (req.url === "/api") {
-    req.url = "/";
-  }
-  next();
 });
 
 /**
