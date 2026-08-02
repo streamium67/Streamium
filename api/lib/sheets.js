@@ -46,12 +46,11 @@ function getSheetsClient() {
     throw new Error(`Google Sheets credentials missing: ${missing.join(", ")}`);
   }
 
-  const auth = new google.auth.JWT(
-    SERVICE_EMAIL,
-    null,
-    SERVICE_KEY,
-    ["https://www.googleapis.com/auth/spreadsheets"]
-  );
+  const auth = new google.auth.JWT({
+    email: SERVICE_EMAIL,
+    key: SERVICE_KEY,
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  });
 
   cachedSheets = google.sheets({ version: "v4", auth });
   return cachedSheets;
