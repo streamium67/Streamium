@@ -32,8 +32,9 @@ const adminSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // adds createdAt & updatedAt
+    timestamps: true,
   }
 );
 
+// Prevent model recompilation in serverless (hot module reloading)
 module.exports = mongoose.models.Admin || mongoose.model("Admin", adminSchema);
