@@ -31,6 +31,50 @@ const ORDER_HEADERS = [
 ];
 
 /* =========================================================
+   FORMATTERS & HELPERS
+   ========================================================= */
+
+/**
+ * Extracts a clean, human-readable full name from an email address
+ * if a name is not provided. e.g. "rupayan.das@gmail.com" -> "Rupayan Das"
+ */
+function extractFullName(name, email) {
+  if (name && name.trim()) {
+    return name.trim();
+  }
+  if (!email) return "Customer";
+
+  const handle = email.split("@")[0] || "Customer";
+  let clean = handle.replace(/[._-]/g, " ").replace(/\d+$/g, "").trim();
+  if (!clean) clean = handle;
+
+  return clean
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
+/**
+ * Formats a Date object or timestamp string to a clean, human-readable format:
+ * e.g. "02 Aug 2026, 01:23 PM" (Indian Standard Time / IST)
+ */
+function formatDateTime(d) {
+  const dt = d ? new Date(d) : new Date();
+  if (isNaN(dt.getTime())) return "—";
+
+  return dt.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+/* =========================================================
    AUTH & CLIENT (cached for serverless)
    ========================================================= */
 let cachedSheets = null;
@@ -202,7 +246,8 @@ async function getOrCreateUser({ email, name, picture, loginMethod }) {
   await ensureHeaders(USERS_SHEET, USER_HEADERS);
 
   const existing = await findUserByEmail(email);
-  const now = new Date().toISOString();
+  const nowFormatted = formatDateTime(new Date());
+  const fullName = extractFullName(name, email);
 
   if (existing) {
     // UPDATE existing user: Last Login (col F) + Login Count (col G)
@@ -210,20 +255,18 @@ async function getOrCreateUser({ email, name, picture, loginMethod }) {
     const rowIdx = existing.rowIndex;
 
     // Update Last Login (F) and Login Count (G) — columns 5 and 6 (0-indexed)
-    await updateCell(USERS_SHEET, `F${rowIdx}:G${rowIdx}`, [now, newCount]);
+    await updateCell(USERS_SHEET, `F${rowIdx}:G${rowIdx}`, [nowFormatted, newCount]);
 
-    // Also update name if provided
-    if (name) {
-      const updatedName = name || existing.data.fullName;
-      await updateCell(USERS_SHEET, `B${rowIdx}:D${rowIdx}`, [
-        updatedName, existing.data.email, existing.data.loginMethod
-      ]);
-    }
+    // Also update name if it changed or was previously generic
+    const updatedName = (name && name.trim()) ? name.trim() : (existing.data.fullName || fullName);
+    await updateCell(USERS_SHEET, `B${rowIdx}:D${rowIdx}`, [
+      updatedName, existing.data.email, existing.data.loginMethod
+    ]);
 
     return {
       ...existing.data,
-      fullName: name || existing.data.fullName,
-      lastLogin: now,
+      fullName: updatedName,
+      lastLogin: nowFormatted,
       loginCount: newCount,
     };
   }
@@ -232,11 +275,11 @@ async function getOrCreateUser({ email, name, picture, loginMethod }) {
   const userId = await generateUserId();
   const newUser = [
     userId,                           // User ID
-    name || "",                       // Full Name
+    fullName,                         // Full Name (extracted if missing)
     email.toLowerCase(),              // Email
     loginMethod || "Google",          // Login Method
-    now,                              // First Login
-    now,                              // Last Login
+    nowFormatted,                     // First Login (formatted date)
+    nowFormatted,                     // Last Login (formatted date)
     1,                                // Login Count
     "Active",                         // Account Status
     "None",                           // Subscription Status
@@ -247,11 +290,11 @@ async function getOrCreateUser({ email, name, picture, loginMethod }) {
 
   return {
     userId,
-    fullName: name || "",
+    fullName: fullName,
     email: email.toLowerCase(),
     loginMethod: loginMethod || "Google",
-    firstLogin: now,
-    lastLogin: now,
+    firstLogin: nowFormatted,
+    lastLogin: nowFormatted,
     loginCount: 1,
     accountStatus: "Active",
     subscriptionStatus: "None",
@@ -269,13 +312,16 @@ async function getUserByEmail(email) {
 
 /* =========================================================
    CREATE ORDER
-   Adds a row to the Orders sheet
+   Adds a row to the Orders sheet with formatted dates
    ========================================================= */
 async function createOrder({
   orderId, userId, paymentId, email, plan,
   amountPaid, purchaseDate, expiryDate, paymentStatus, accessStatus
 }) {
   await ensureHeaders(ORDERS_SHEET, ORDER_HEADERS);
+
+  const formattedPurchaseDate = formatDateTime(purchaseDate || new Date());
+  const formattedExpiryDate = expiryDate ? formatDateTime(expiryDate) : "—";
 
   const row = [
     orderId,
@@ -284,8 +330,8 @@ async function createOrder({
     email,
     plan,
     amountPaid,
-    purchaseDate || new Date().toISOString(),
-    expiryDate || "",
+    formattedPurchaseDate,
+    formattedExpiryDate,
     paymentStatus || "Paid",
     accessStatus || "Granted",
   ];
