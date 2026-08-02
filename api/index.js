@@ -26,9 +26,26 @@ const app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
+/* =========================================================
+   DEBUG ROUTE (as requested)
+   ========================================================= */
+app.get(["/test", "/api/test"], (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Streamium API is working",
+    originalUrl: req.originalUrl,
+    url: req.url,
+    path: req.path,
+    method: req.method,
+    vercel: process.env.VERCEL || false,
+    nodeEnv: process.env.NODE_ENV || "development",
+    timestamp: new Date().toISOString()
+  });
+});
+
 /**
  * URL Prefix Normalization Middleware.
- * Strip leading "/api" so routes match whether Vercel passes "/api/config" or "/config".
+ * Strips leading "/api" so routes match whether Vercel passes "/api/config" or "/config".
  */
 app.use((req, res, next) => {
   if (req.url.startsWith("/api/")) {
@@ -77,12 +94,12 @@ app.use((req, res, next) => {
    ========================================================= */
 
 // Healthcheck: GET /api or /
-app.get("/", (req, res) => {
+app.get(["/", "/api"], (req, res) => {
   res.json({ status: "ok", message: "Streamium API is running" });
 });
 
 // GET /api/config or /config — returns Google Client ID
-app.get("/config", (req, res) => {
+app.get(["/config", "/api/config"], (req, res) => {
   res.json({ googleClientId: GOOGLE_CLIENT_ID || "" });
 });
 
@@ -149,8 +166,8 @@ function clearAuthCookie(res) {
    AUTHENTICATION ROUTES
    ========================================================= */
 
-// POST /api/auth/google
-app.post("/auth/google", async (req, res) => {
+// POST /api/auth/google or /auth/google
+app.post(["/auth/google", "/api/auth/google"], async (req, res) => {
   try {
     await seedAdmins();
 
@@ -189,16 +206,16 @@ app.post("/auth/google", async (req, res) => {
   }
 });
 
-// GET /api/auth/me
-app.get("/auth/me", (req, res) => {
+// GET /api/auth/me or /auth/me
+app.get(["/auth/me", "/api/auth/me"], (req, res) => {
   if (req.user) {
     return res.json({ user: req.user });
   }
   return res.status(401).json({ error: "Not authenticated." });
 });
 
-// POST /api/auth/logout
-app.post("/auth/logout", (req, res) => {
+// POST /api/auth/logout or /auth/logout
+app.post(["/auth/logout", "/api/auth/logout"], (req, res) => {
   clearAuthCookie(res);
   return res.json({ success: true });
 });
@@ -220,8 +237,8 @@ function requireOwner(req, res, next) {
   next();
 }
 
-// GET /api/admin/list
-app.get("/admin/list", requireAdmin, async (req, res) => {
+// GET /api/admin/list or /admin/list
+app.get(["/admin/list", "/api/admin/list"], requireAdmin, async (req, res) => {
   try {
     await seedAdmins();
     const admins = await Admin.find().select("-__v").sort({ createdAt: -1 });
@@ -231,8 +248,8 @@ app.get("/admin/list", requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/add
-app.post("/admin/add", requireOwner, async (req, res) => {
+// POST /api/admin/add or /admin/add
+app.post(["/admin/add", "/api/admin/add"], requireOwner, async (req, res) => {
   try {
     const { email, role } = req.body;
     if (!email) return res.status(400).json({ error: "Email is required." });
@@ -250,8 +267,8 @@ app.post("/admin/add", requireOwner, async (req, res) => {
   }
 });
 
-// DELETE /api/admin/remove/:email
-app.delete("/admin/remove/:email", requireOwner, async (req, res) => {
+// DELETE /api/admin/remove/:email or /admin/remove/:email
+app.delete(["/admin/remove/:email", "/api/admin/remove/:email"], requireOwner, async (req, res) => {
   try {
     const email = req.params.email.toLowerCase();
     if (req.user && email === req.user.email.toLowerCase()) {
