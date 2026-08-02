@@ -35,7 +35,7 @@ const ORDER_HEADERS = [
    ========================================================= */
 let cachedSheets = null;
 
-function getSheetsClient() {
+async function getSheetsClient() {
   if (cachedSheets) return cachedSheets;
 
   if (!SERVICE_EMAIL || !SERVICE_KEY || !SHEET_ID) {
@@ -52,6 +52,8 @@ function getSheetsClient() {
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
 
+  await auth.authorize();
+
   cachedSheets = google.sheets({ version: "v4", auth });
   return cachedSheets;
 }
@@ -63,7 +65,7 @@ let tabsChecked = false;
 async function ensureTabsExist() {
   if (tabsChecked) return;
   try {
-    const sheets = getSheetsClient();
+    const sheets = await getSheetsClient();
     const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
     const existingTitles = (spreadsheet.data.sheets || []).map(s => s.properties.title);
 
@@ -84,7 +86,6 @@ async function ensureTabsExist() {
     tabsChecked = true;
   } catch (err) {
     console.error("Error checking/creating sheet tabs:", err.message);
-    // Continue anyway; range errors will be caught if tabs are missing
   }
 }
 
@@ -93,7 +94,7 @@ async function ensureTabsExist() {
    ========================================================= */
 async function readSheet(sheetName) {
   await ensureTabsExist();
-  const sheets = getSheetsClient();
+  const sheets = await getSheetsClient();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
     range: `${sheetName}!A:Z`,
@@ -106,7 +107,7 @@ async function readSheet(sheetName) {
    ========================================================= */
 async function appendRow(sheetName, values) {
   await ensureTabsExist();
-  const sheets = getSheetsClient();
+  const sheets = await getSheetsClient();
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,
     range: `${sheetName}!A:Z`,
@@ -120,7 +121,7 @@ async function appendRow(sheetName, values) {
    HELPER: Update a specific cell range
    ========================================================= */
 async function updateCell(sheetName, range, values) {
-  const sheets = getSheetsClient();
+  const sheets = await getSheetsClient();
   await sheets.spreadsheets.values.update({
     spreadsheetId: SHEET_ID,
     range: `${sheetName}!${range}`,
@@ -136,7 +137,7 @@ async function ensureHeaders(sheetName, headers) {
   const rows = await readSheet(sheetName);
   if (rows.length === 0 || rows[0][0] !== headers[0]) {
     // Insert headers as first row
-    const sheets = getSheetsClient();
+    const sheets = await getSheetsClient();
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
       range: `${sheetName}!A1`,
