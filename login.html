@@ -7,7 +7,7 @@
   <title>Sign In — Streamium</title>
 
   <!-- Google Identity Services -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer onload="initGoogleAuth()"></script>
 
 
 
@@ -204,6 +204,15 @@
     /* ---------- Google button ---------- */
     .google-btn { display: flex; align-items: center; justify-content: center; gap: 0.7rem; }
     .google-btn svg { flex-shrink: 0; }
+    #googleBtnContainer > div,
+    #googleBtnContainer iframe {
+      width: 100% !important;
+      height: 100% !important;
+      min-width: 100% !important;
+      min-height: 100% !important;
+      transform: scale(1.3);
+      cursor: pointer !important;
+    }
 
     /* ---------- Loading spinner on buttons ---------- */
     .btn.loading { color: transparent !important; pointer-events: none; }
@@ -498,44 +507,131 @@
         });
     }
 
-    /* Initialize GIS & check existing session when page loads */
-    window.addEventListener("load", async () => {
-      // NOTE: We intentionally do NOT auto-redirect on existing sessions here.
-      // Auto-redirect was causing an infinite loop between login.html and admin.html.
-      // Users will be redirected only after they actively click "Continue with Google".
+    /* ---------- 5. Google Sign-In (GIS) Initialization ---------- */
+    const DEFAULT_GOOGLE_CLIENT_ID = "343154279815-donvg1hja82bq5mlqc8b2jlbjfa9mctk.apps.googleusercontent.com";
+    let googleAuthInitialized = false;
+    let tokenClient = null;
 
+    function handleGoogleTokenResponse(accessToken) {
+      setLoading(googleBtn, true);
+      clearMessage();
+
+      fetch("https://www.googleapis.com/oauth2/0.3/userinfo", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+        .then((res) => res.json())
+        .then((profile) => {
+          return fetch("/api/auth/google", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({ profile }),
+          });
+        })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            const user = data.user;
+            const targetUrl = buildRedirectUrl(user);
+            const isDashboard = targetUrl === "/admin";
+            const roleBadge = user.role ? ` (${user.role})` : "";
+            const welcomeMsg = isDashboard
+              ? `Welcome back, ${user.name || "Admin"}${roleBadge}! Redirecting to Admin Dashboard…`
+              : `Welcome back, ${user.name || "Customer"}! Redirecting to Streamium…`;
+
+            showMessage(welcomeMsg, "success");
+            setTimeout(() => navigateWithFade(targetUrl), 700);
+          } else {
+            setLoading(googleBtn, false);
+            showMessage(data.error || "Sign-in failed. Please try again.", "error");
+          }
+        })
+        .catch(() => {
+          setLoading(googleBtn, false);
+          showMessage("Network error. Check your connection and try again.", "error");
+        });
+    }
+
+    async function initGoogleAuth() {
+      if (googleAuthInitialized) return;
+      if (!window.google || !google.accounts) return;
+
+      let clientId = DEFAULT_GOOGLE_CLIENT_ID;
       try {
         const res = await fetch("/api/config");
-        const { googleClientId } = await res.json();
-        if (window.google && google.accounts && googleClientId) {
+        if (res.ok) {
+          const data = await res.json();
+          if (data.googleClientId) clientId = data.googleClientId;
+        }
+      } catch (e) {
+        console.warn("Could not fetch /api/config, using default Client ID:", e);
+      }
+
+      try {
+        if (google.accounts.id) {
           google.accounts.id.initialize({
-            client_id: googleClientId,
+            client_id: clientId,
             callback: handleGoogleCredential,
+            auto_select: false,
           });
 
-          // Render Google's official button inside the transparent overlay container
-          google.accounts.id.renderButton(
-            document.getElementById("googleBtnContainer"),
-            {
+          const container = document.getElementById("googleBtnContainer");
+          if (container) {
+            container.innerHTML = "";
+            google.accounts.id.renderButton(container, {
               theme: "filled_black",
               size: "large",
               shape: "pill",
               text: "continue_with",
-              width: 400,
-            }
-          );
+              width: 380,
+            });
+          }
         }
+
+        if (google.accounts.oauth2) {
+          tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: "email profile openid",
+            callback: (tokenResponse) => {
+              if (tokenResponse && tokenResponse.access_token) {
+                handleGoogleTokenResponse(tokenResponse.access_token);
+              }
+            },
+          });
+        }
+
+        googleAuthInitialized = true;
       } catch (e) {
-        console.warn("Could not load config:", e);
+        console.warn("Could not load Google auth:", e);
       }
+    }
+
+    // Expose globally for script onload hook
+    window.initGoogleAuth = initGoogleAuth;
+
+    window.addEventListener("load", () => {
+      initGoogleAuth();
+      setTimeout(initGoogleAuth, 1000);
+      setTimeout(initGoogleAuth, 3000);
     });
 
     /* Custom Google button click fallback */
-    googleBtn.addEventListener("click", () => {
-      if (window.google && google.accounts) {
-        google.accounts.id.prompt();
+    googleBtn.addEventListener("click", async () => {
+      if (!googleAuthInitialized) {
+        setLoading(googleBtn, true);
+        await initGoogleAuth();
+        setLoading(googleBtn, false);
+      }
+      if (tokenClient) {
+        tokenClient.requestAccessToken();
+      } else if (window.google && google.accounts && google.accounts.id) {
+        google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            console.warn("Google One Tap prompt suppressed:", notification.getNotDisplayedReason() || notification.getSkippedReason());
+          }
+        });
       } else {
-        showMessage("Google sign-in is loading. Make sure the server is running at http://localhost:3000", "error");
+        showMessage("Google sign-in is loading. Please refresh the page or try again.", "error");
       }
     });
 

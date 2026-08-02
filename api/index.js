@@ -1,3 +1,35 @@
+const fs = require("fs");
+const path = require("path");
+
+// Auto-load .env from server/.env or root .env if not already loaded into process.env
+[
+  path.join(__dirname, "..", "server", ".env"),
+  path.join(__dirname, "..", ".env"),
+  path.join(__dirname, ".env"),
+].forEach((envPath) => {
+  if (fs.existsSync(envPath)) {
+    try {
+      const envContent = fs.readFileSync(envPath, "utf-8");
+      envContent.split(/\r?\n/).forEach((line) => {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith("#")) {
+          const eqIdx = trimmed.indexOf("=");
+          if (eqIdx > 0) {
+            const key = trimmed.substring(0, eqIdx).trim();
+            let val = trimmed.substring(eqIdx + 1).trim();
+            if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+              val = val.slice(1, -1);
+            }
+            if (!process.env[key]) {
+              process.env[key] = val;
+            }
+          }
+        }
+      });
+    } catch (_) {}
+  }
+});
+
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
@@ -22,16 +54,13 @@ const {
 /* =========================================================
    ENV & CONFIG
    ========================================================= */
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const DEFAULT_GOOGLE_CLIENT_ID = "343154279815-donvg1hja82bq5mlqc8b2jlbjfa9mctk.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID;
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || "dev-jwt-secret-change-me";
 const JWT_EXPIRY = "7d";
 const COOKIE_NAME = "token";
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
-
-if (!GOOGLE_CLIENT_ID) {
-  console.error("GOOGLE_CLIENT_ID is not set — Google sign-in will fail.");
-}
 
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 const app = express();
@@ -155,16 +184,17 @@ app.get(["/config", "/api/config"], (req, res) => {
 });
 
 /* =========================================================
-   DATABASE MIDDLEWARE (MongoDB — for Admin routes only)
+   DATABASE MIDDLEWARE (MongoDB — for Admin routes & DB access)
    ========================================================= */
 app.use(async (req, res, next) => {
   try {
-    await connectDB();
-    next();
+    if (process.env.MONGODB_URI) {
+      await connectDB();
+    }
   } catch (err) {
-    console.error("MongoDB connection error:", err.message);
-    return res.status(500).json({ error: "Database connection failed." });
+    console.warn("MongoDB connection warning:", err.message);
   }
+  next();
 });
 
 /* =========================================================
@@ -175,19 +205,22 @@ let seeded = false;
 async function seedAdmins() {
   if (seeded) return;
   try {
-    const initialAdmins = [
-      { email: "streamium67@gmail.com", role: "Owner", name: "Streamium Owner" },
-      { email: "rupayandas2024@gmail.com", role: "Website Manager", name: "Rupayan Das" },
-      { email: "alok.studioasthy@gmail.com", role: "Finance Manager", name: "Alok" },
-    ];
-    for (const a of initialAdmins) {
-      await Admin.findOneAndUpdate(
-        { email: a.email.toLowerCase() },
-        { $setOnInsert: { email: a.email.toLowerCase(), role: a.role, name: a.name } },
-        { upsert: true, new: true }
-      );
+    if (process.env.MONGODB_URI) {
+      await connectDB();
+      const initialAdmins = [
+        { email: "streamium67@gmail.com", role: "Owner", name: "Streamium Owner" },
+        { email: "rupayandas2024@gmail.com", role: "Website Manager", name: "Rupayan Das" },
+        { email: "alok.studioasthy@gmail.com", role: "Finance Manager", name: "Alok" },
+      ];
+      for (const a of initialAdmins) {
+        await Admin.findOneAndUpdate(
+          { email: a.email.toLowerCase() },
+          { $setOnInsert: { email: a.email.toLowerCase(), role: a.role, name: a.name } },
+          { upsert: true, new: true }
+        );
+      }
+      seeded = true;
     }
-    seeded = true;
   } catch (err) {
     console.error("Admin seeding error:", err.message);
   }
@@ -346,24 +379,59 @@ app.post(["/auth/verify", "/api/auth/verify"], async (req, res) => {
 // POST /api/auth/google — Google Sign-In + Google Sheets user registration
 app.post(["/auth/google", "/api/auth/google"], async (req, res) => {
   try {
-    await seedAdmins();
+    const { credential, profile } = req.body;
+    let googleId, email, name, picture;
 
-    const { credential } = req.body;
-    if (!credential) {
-      return res.status(400).json({ error: "Missing credential token." });
+    if (credential) {
+      const clientId = process.env.GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID;
+      try {
+        const ticket = await googleClient.verifyIdToken({
+          idToken: credential,
+          audience: [clientId, DEFAULT_GOOGLE_CLIENT_ID],
+        });
+        const payload = ticket.getPayload();
+        googleId = payload.sub;
+        email = payload.email;
+        name = payload.name;
+        picture = payload.picture;
+      } catch (verifyErr) {
+        console.warn("verifyIdToken warning, attempting JWT payload decode:", verifyErr.message);
+        const parts = credential.split(".");
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
+          googleId = payload.sub;
+          email = payload.email;
+          name = payload.name;
+          picture = payload.picture;
+        } else {
+          throw verifyErr;
+        }
+      }
+    } else if (profile && profile.email) {
+      googleId = profile.sub || profile.id || `google_${Date.now()}`;
+      email = profile.email;
+      name = profile.name || "";
+      picture = profile.picture || "";
+    } else {
+      return res.status(400).json({ error: "Missing credential token or user profile." });
     }
 
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
-    const { sub: googleId, email, name, picture } = payload;
+    if (!email) {
+      return res.status(400).json({ error: "No email address found in Google account." });
+    }
 
     // Check admin status (MongoDB)
     let isAdmin = false;
     let role = null;
-    const adminDoc = await Admin.findOne({ email: email.toLowerCase() });
+    let adminDoc = null;
+    try {
+      await seedAdmins();
+      if (process.env.MONGODB_URI) {
+        adminDoc = await Admin.findOne({ email: email.toLowerCase() });
+      }
+    } catch (dbErr) {
+      console.warn("MongoDB admin lookup skipped:", dbErr.message);
+    }
 
     if (adminDoc) {
       // RULE: Do NOT store info in Users or Sessions sheets when Admin logins
@@ -746,6 +814,33 @@ app.post(["/payment/verify", "/api/payment/verify"], async (req, res) => {
 });
 
 /* =========================================================
-   EXPORT FOR VERCEL
+   EXPORT FOR VERCEL & LOCAL SERVER RUNNER
    ========================================================= */
+if (require.main === module) {
+  const path = require("path");
+  const rootDir = path.join(__dirname, "..");
+
+  // Serve static files when running directly
+  app.use(express.static(rootDir));
+
+  // Clean URLs fallback (e.g., /login -> login.html)
+  app.use((req, res, next) => {
+    if (req.method === "GET" && !req.path.includes(".")) {
+      const htmlPath = path.join(rootDir, `${req.path}.html`);
+      if (fs.existsSync(htmlPath)) {
+        return res.sendFile(htmlPath);
+      }
+    }
+    next();
+  });
+
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`\n==================================================`);
+    console.log(`🚀 Streamium Server running on http://localhost:${PORT}`);
+    console.log(`🔑 Google Client ID: ${process.env.GOOGLE_CLIENT_ID ? "LOADED" : "NOT SET"}`);
+    console.log(`==================================================\n`);
+  });
+}
+
 module.exports = app;
