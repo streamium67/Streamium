@@ -20,7 +20,7 @@ const ORDERS_SHEET = "Orders";
 
 // Column headers (must match Row 1 in each sheet tab)
 const USER_HEADERS = [
-  "User ID", "Full Name", "Email", "Login Method", "Profile Picture",
+  "User ID", "Full Name", "Email", "Login Method",
   "First Login", "Last Login", "Login Count", "Account Status",
   "Subscription Status", "Current Plan"
 ];
@@ -179,13 +179,12 @@ async function findUserByEmail(email) {
           fullName: rows[i][1] || "",
           email: rows[i][2] || "",
           loginMethod: rows[i][3] || "",
-          profilePicture: rows[i][4] || "",
-          firstLogin: rows[i][5] || "",
-          lastLogin: rows[i][6] || "",
-          loginCount: parseInt(rows[i][7] || "0", 10),
-          accountStatus: rows[i][8] || "Active",
-          subscriptionStatus: rows[i][9] || "None",
-          currentPlan: rows[i][10] || "None",
+          firstLogin: rows[i][4] || "",
+          lastLogin: rows[i][5] || "",
+          loginCount: parseInt(rows[i][6] || "0", 10),
+          accountStatus: rows[i][7] || "Active",
+          subscriptionStatus: rows[i][8] || "None",
+          currentPlan: rows[i][9] || "None",
         },
       };
     }
@@ -206,26 +205,24 @@ async function getOrCreateUser({ email, name, picture, loginMethod }) {
   const now = new Date().toISOString();
 
   if (existing) {
-    // UPDATE existing user: Last Login (col G) + Login Count (col H)
+    // UPDATE existing user: Last Login (col F) + Login Count (col G)
     const newCount = existing.data.loginCount + 1;
     const rowIdx = existing.rowIndex;
 
-    // Update Last Login (G) and Login Count (H) — columns 7 and 8
-    await updateCell(USERS_SHEET, `G${rowIdx}:H${rowIdx}`, [now, newCount]);
+    // Update Last Login (F) and Login Count (G) — columns 5 and 6 (0-indexed)
+    await updateCell(USERS_SHEET, `F${rowIdx}:G${rowIdx}`, [now, newCount]);
 
-    // Also update name and picture if provided (they may have changed on Google)
-    if (name || picture) {
+    // Also update name if provided
+    if (name) {
       const updatedName = name || existing.data.fullName;
-      const updatedPic = picture || existing.data.profilePicture;
-      await updateCell(USERS_SHEET, `B${rowIdx}:E${rowIdx}`, [
-        updatedName, existing.data.email, existing.data.loginMethod, updatedPic
+      await updateCell(USERS_SHEET, `B${rowIdx}:D${rowIdx}`, [
+        updatedName, existing.data.email, existing.data.loginMethod
       ]);
     }
 
     return {
       ...existing.data,
       fullName: name || existing.data.fullName,
-      profilePicture: picture || existing.data.profilePicture,
       lastLogin: now,
       loginCount: newCount,
     };
@@ -238,7 +235,6 @@ async function getOrCreateUser({ email, name, picture, loginMethod }) {
     name || "",                       // Full Name
     email.toLowerCase(),              // Email
     loginMethod || "Google",          // Login Method
-    picture || "",                    // Profile Picture
     now,                              // First Login
     now,                              // Last Login
     1,                                // Login Count
@@ -254,7 +250,6 @@ async function getOrCreateUser({ email, name, picture, loginMethod }) {
     fullName: name || "",
     email: email.toLowerCase(),
     loginMethod: loginMethod || "Google",
-    profilePicture: picture || "",
     firstLogin: now,
     lastLogin: now,
     loginCount: 1,
@@ -301,14 +296,14 @@ async function createOrder({
 
 /* =========================================================
    UPDATE USER SUBSCRIPTION
-   Updates Subscription Status (col J) and Current Plan (col K)
+   Updates Subscription Status (col I) and Current Plan (col J)
    ========================================================= */
 async function updateUserSubscription(email, { subscriptionStatus, currentPlan }) {
   const existing = await findUserByEmail(email);
   if (!existing) return null;
 
   const rowIdx = existing.rowIndex;
-  await updateCell(USERS_SHEET, `J${rowIdx}:K${rowIdx}`, [
+  await updateCell(USERS_SHEET, `I${rowIdx}:J${rowIdx}`, [
     subscriptionStatus || "Active",
     currentPlan || "None",
   ]);
