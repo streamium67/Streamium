@@ -150,41 +150,85 @@
     }
 
     /* User chip shown after login */
-    .nav__user { display: none; align-items: center; gap: 0.6rem; font-weight: 600; white-space: nowrap; position: relative; }
+    .nav__user { display: none; align-items: center; white-space: nowrap; position: relative; }
     .nav__user.visible { display: flex; }
     
-    .profile-avatar-btn {
-      display: flex; align-items: center; justify-content: center;
-      width: 38px; height: 38px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-      color: #062622; font-weight: 700; font-size: 0.95rem;
-      border: 2px solid var(--glass-border); cursor: pointer;
-      position: relative; overflow: hidden; transition: transform var(--transition), box-shadow var(--transition);
-      padding: 0;
+    .profile-chip-btn {
+      display: flex; align-items: center; gap: 0.55rem;
+      padding: 0.3rem 0.85rem 0.3rem 0.3rem; border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      color: var(--text); font-weight: 600; font-size: 0.9rem; cursor: pointer;
+      font-family: inherit; transition: transform var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition);
     }
-    .profile-avatar-btn:hover { transform: scale(1.05); box-shadow: 0 0 14px rgba(20, 184, 166, 0.4); }
-    .profile-avatar-btn img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .profile-chip-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(20, 184, 166, 0.4);
+      box-shadow: 0 0 16px rgba(20, 184, 166, 0.25);
+      transform: translateY(-1px);
+    }
+    .profile-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #062622; font-weight: 700; font-size: 0.88rem;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0; border: 1.5px solid var(--accent-light);
+    }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .profile-chip-name { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .profile-chip-arrow { color: var(--text-muted); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+    .profile-chip-btn.active .profile-chip-arrow { transform: rotate(180deg); color: var(--accent-light); }
 
     .profile-dropdown {
       position: absolute; top: calc(100% + 12px); right: 0;
-      width: 220px; background: rgba(22, 22, 22, 0.96);
-      border: 1px solid var(--glass-border); border-radius: 14px;
-      padding: 1rem; backdrop-filter: blur(16px);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
-      display: none; flex-direction: column; gap: 0.75rem; z-index: 200;
+      width: 250px; background: rgba(18, 18, 18, 0.96);
+      border: 1px solid var(--glass-border); border-radius: 18px;
+      padding: 1.1rem; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 20px rgba(20, 184, 166, 0.15);
+      opacity: 0; visibility: hidden; transform: translateY(-10px) scale(0.96);
+      transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), visibility 0.25s ease;
+      z-index: 250; pointer-events: none;
     }
-    .profile-dropdown.show { display: flex; animation: fadeIn 0.2s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-    .profile-dropdown__name { font-weight: 700; font-size: 0.92rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .profile-dropdown__email { font-size: 0.78rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 0.15rem; }
-    .profile-dropdown__btn {
-      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
-      width: 100%; padding: 0.5rem; border-radius: 8px;
-      border: 1px solid rgba(248, 113, 113, 0.3); background: rgba(248, 113, 113, 0.1);
-      color: #f87171; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: background 0.2s ease;
-      font-family: inherit; margin-top: 0.2rem;
+    .profile-dropdown.show {
+      opacity: 1; visibility: visible; transform: translateY(0) scale(1); pointer-events: auto;
     }
-    .profile-dropdown__btn:hover { background: rgba(248, 113, 113, 0.25); }
+
+    .dropdown-header { display: flex; align-items: center; gap: 0.75rem; padding-bottom: 0.8rem; }
+    .dropdown-avatar-lg {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #062622; font-weight: 800; font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0; border: 2px solid var(--accent-light);
+    }
+    .dropdown-avatar-lg img { width: 100%; height: 100%; object-fit: cover; }
+    .dropdown-user-info { min-width: 0; flex: 1; }
+    .dropdown-name { font-weight: 700; font-size: 0.95rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dropdown-email { font-size: 0.76rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 0.1rem; }
+    .dropdown-badge {
+      display: inline-block; margin-top: 0.3rem; padding: 0.1rem 0.6rem; border-radius: 999px;
+      font-size: 0.68rem; font-weight: 700; background: rgba(20, 184, 166, 0.15);
+      border: 1px solid rgba(20, 184, 166, 0.35); color: var(--accent-light); text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    .dropdown-divider { height: 1px; background: var(--glass-border); margin: 0.7rem 0; }
+    .dropdown-menu { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+    .dropdown-item {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.6rem 0.85rem; border-radius: 10px;
+      color: var(--text); font-weight: 500; font-size: 0.88rem;
+      text-decoration: none; border: none; background: transparent; width: 100%;
+      cursor: pointer; transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+      font-family: inherit; text-align: left;
+    }
+    .dropdown-item:hover {
+      background: rgba(20, 184, 166, 0.12); color: var(--accent-light); transform: translateX(3px);
+    }
+    .dropdown-icon { font-size: 1rem; width: 20px; display: inline-flex; justify-content: center; }
+    .dropdown-item--admin { color: var(--accent-light); font-weight: 600; }
+    .dropdown-item--admin:hover { background: rgba(20, 184, 166, 0.2); }
+    .dropdown-item--logout { color: #f87171; margin-top: 0.2rem; }
+    .dropdown-item--logout:hover { background: rgba(248, 113, 113, 0.18); color: #fca5a5; transform: translateX(3px); }
 
     /* ---------- Hero ---------- */
     .hero {
@@ -880,7 +924,7 @@
       });
     })();
 
-    /* ---------- Check User Session (shows profile avatar for customers) ---------- */
+    /* ---------- Check User Session (Logged-In Customer Experience) ---------- */
     (async function checkUserSession() {
       try {
         const res = await fetch("/api/auth/me", { credentials: "same-origin" });
@@ -896,26 +940,88 @@
           navUser.classList.add("visible");
 
           const initial = (user.name || user.email || "U").charAt(0).toUpperCase();
-          const avatarContent = user.picture
+          const avatarHtml = user.picture
             ? `<img src="${user.picture}" alt="${user.name || 'User'}">`
             : `<span>${initial}</span>`;
 
-          const adminDashboardLink = user.isAdmin
-            ? `<a href="admin.html" style="color:var(--accent); font-size:0.84rem; font-weight:600; text-decoration:none; display:block; padding:0.2rem 0; border-bottom:1px solid var(--glass-border); margin-bottom:0.4rem;">⚙️ Admin Dashboard</a>`
+          const displayName = (user.name || user.email || "Customer").split(" ")[0];
+          const badgeText = user.isAdmin ? (user.role || "Admin") : "Customer";
+
+          const adminItem = user.isAdmin
+            ? `<li>
+                <a href="admin.html" class="dropdown-item dropdown-item--admin">
+                  <span class="dropdown-icon">⚡</span>
+                  <span class="dropdown-text">Admin Dashboard</span>
+                </a>
+               </li>`
             : "";
 
           navUser.innerHTML = `
-            <button class="profile-avatar-btn" id="avatarBtn" aria-label="User Profile">
-              ${avatarContent}
+            <button class="profile-chip-btn" id="avatarBtn" aria-label="User Account Menu" aria-expanded="false">
+              <div class="profile-avatar">${avatarHtml}</div>
+              <span class="profile-chip-name">${displayName}</span>
+              <svg class="profile-chip-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
             </button>
-            <div class="profile-dropdown" id="profileDropdown">
-              <div>
-                <div class="profile-dropdown__name">${user.name || 'Customer'}</div>
-                <div class="profile-dropdown__email">${user.email}</div>
+            
+            <div class="profile-dropdown glass" id="profileDropdown" aria-hidden="true">
+              <div class="dropdown-header">
+                <div class="dropdown-avatar-lg">${avatarHtml}</div>
+                <div class="dropdown-user-info">
+                  <div class="dropdown-name">${user.name || 'Customer'}</div>
+                  <div class="dropdown-email">${user.email}</div>
+                  <span class="dropdown-badge">${badgeText}</span>
+                </div>
               </div>
-              ${adminDashboardLink}
-              <button class="profile-dropdown__btn" id="logoutBtn">
-                <span>Sign Out</span>
+
+              <div class="dropdown-divider"></div>
+
+              <ul class="dropdown-menu">
+                <li>
+                  <a href="profile.html" class="dropdown-item">
+                    <span class="dropdown-icon">👤</span>
+                    <span class="dropdown-text">My Profile</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="subscription.html" class="dropdown-item">
+                    <span class="dropdown-icon">📦</span>
+                    <span class="dropdown-text">My Subscription</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="profile.html#devices" class="dropdown-item">
+                    <span class="dropdown-icon">📱</span>
+                    <span class="dropdown-text">My Devices</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="subscription.html#payment-history" class="dropdown-item">
+                    <span class="dropdown-icon">💳</span>
+                    <span class="dropdown-text">Payment History</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="profile.html#settings" class="dropdown-item">
+                    <span class="dropdown-icon">⚙️</span>
+                    <span class="dropdown-text">Settings</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="#faq" class="dropdown-item" id="dropdownHelpLink">
+                    <span class="dropdown-icon">❓</span>
+                    <span class="dropdown-text">Help &amp; Support</span>
+                  </a>
+                </li>
+                ${adminItem}
+              </ul>
+
+              <div class="dropdown-divider"></div>
+
+              <button class="dropdown-item dropdown-item--logout" id="logoutBtn">
+                <span class="dropdown-icon">🚪</span>
+                <span class="dropdown-text">Logout</span>
               </button>
             </div>
           `;
@@ -923,15 +1029,29 @@
           const avatarBtn = document.getElementById("avatarBtn");
           const profileDropdown = document.getElementById("profileDropdown");
           const logoutBtn = document.getElementById("logoutBtn");
+          const helpLink = document.getElementById("dropdownHelpLink");
 
           avatarBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            profileDropdown.classList.toggle("show");
+            const isShowing = profileDropdown.classList.toggle("show");
+            avatarBtn.classList.toggle("active", isShowing);
+            avatarBtn.setAttribute("aria-expanded", isShowing ? "true" : "false");
+            profileDropdown.setAttribute("aria-hidden", isShowing ? "false" : "true");
           });
+
+          if (helpLink) {
+            helpLink.addEventListener("click", () => {
+              profileDropdown.classList.remove("show");
+              avatarBtn.classList.remove("active");
+            });
+          }
 
           document.addEventListener("click", (e) => {
             if (!navUser.contains(e.target)) {
               profileDropdown.classList.remove("show");
+              avatarBtn.classList.remove("active");
+              avatarBtn.setAttribute("aria-expanded", "false");
+              profileDropdown.setAttribute("aria-hidden", "true");
             }
           });
 
