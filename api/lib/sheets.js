@@ -571,6 +571,38 @@ async function getUserSessions(email) {
   return sessions;
 }
 
+/**
+ * Retrieves ALL session records from Google Sheets for Admin Dashboard (newest first)
+ */
+async function getAllSessions() {
+  const rows = await readSheet(SESSIONS_SHEET);
+  if (rows.length <= 1) return [];
+
+  const sessions = [];
+  for (let i = 1; i < rows.length; i++) {
+    sessions.push({
+      sessionId: rows[i][0] || "",
+      userId: rows[i][1] || "",
+      fullName: rows[i][2] || "",
+      email: rows[i][3] || "",
+      loginMethod: rows[i][4] || "",
+      loginDateTime: rows[i][5] || "",
+      logoutDateTime: rows[i][6] || "",
+      sessionStatus: rows[i][7] || "",
+      ipAddress: rows[i][8] || "",
+      location: rows[i][9] || "",
+      browserName: rows[i][10] || "",
+      browserVersion: rows[i][11] || "",
+      osName: rows[i][12] || "",
+      deviceType: rows[i][13] || "",
+      language: rows[i][14] || "",
+      timeZone: rows[i][15] || "",
+      referrer: rows[i][16] || "",
+    });
+  }
+  return sessions.reverse();
+}
+
 /* =========================================================
    EXPORTS
    ========================================================= */
@@ -584,6 +616,7 @@ module.exports = {
   logoutSession,
   revokeAllOtherSessions,
   getUserSessions,
+  getAllSessions,
   ensureHeaders,
   USER_HEADERS,
   ORDER_HEADERS,

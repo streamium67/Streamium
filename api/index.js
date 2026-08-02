@@ -16,6 +16,7 @@ const {
   logoutSession,
   revokeAllOtherSessions,
   getUserSessions,
+  getAllSessions,
 } = require("./lib/sheets");
 
 /* =========================================================
@@ -436,6 +437,17 @@ app.get(["/admin/list", "/api/admin/list"], requireAdmin, async (req, res) => {
     return res.json({ admins });
   } catch (err) {
     return res.status(500).json({ error: "Failed to fetch admins." });
+  }
+});
+
+// GET /api/admin/sessions — Fetch real user session logs from Google Sheets for Admin Dashboard
+app.get(["/admin/sessions", "/api/admin/sessions"], requireAdmin, async (req, res) => {
+  try {
+    const sessions = await getAllSessions();
+    return res.json({ success: true, sessions });
+  } catch (err) {
+    console.error("Admin fetch sessions error:", err.message);
+    return res.status(500).json({ error: "Failed to fetch user sessions from Google Sheets." });
   }
 });
 

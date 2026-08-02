@@ -448,6 +448,7 @@
         <button class="nav-item" data-page="support"><span class="ico">🎫</span> Support Tickets</button>
         <button class="nav-item" data-page="settings"><span class="ico">⚙️</span> Website Settings</button>
         <button class="nav-item" data-page="admins"><span class="ico">🛡️</span> Admin Management</button>
+        <button class="nav-item" data-page="sessions"><span class="ico">📱</span> User Sessions (Real Data)</button>
         <button class="nav-item" data-page="logs"><span class="ico">📜</span> Activity Logs</button>
         <button class="nav-item logout" id="logoutBtn"><span class="ico">⏻</span> Logout</button>
       </nav>
@@ -544,6 +545,40 @@
               <table>
                 <thead><tr><th>Customer</th><th>Plan</th><th>Status</th><th>Renewal Date</th><th>Device Limit</th><th>Actions</th></tr></thead>
                 <tbody id="subsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ USER SESSIONS (REAL GOOGLE SHEETS DATA) ============ -->
+        <section class="page" id="page-sessions">
+          <div class="page-head">
+            <div>
+              <h1 class="page-title">User Sessions</h1>
+              <p class="page-sub">Real customer login session records live from Google Sheets.</p>
+            </div>
+            <button class="btn btn--outline" id="refreshSessionsBtn">🔄 Refresh Data</button>
+          </div>
+          <div class="panel glass">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Session ID</th>
+                    <th>User ID</th>
+                    <th>Customer</th>
+                    <th>Method</th>
+                    <th>Login Time</th>
+                    <th>Logout Time</th>
+                    <th>Status</th>
+                    <th>IP &amp; Location</th>
+                    <th>Device &amp; OS</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="sessionsBody">
+                  <tr><td colspan="10" style="text-align:center; color:var(--text-muted); padding:2rem;">Loading real session data from Google Sheets...</td></tr>
+                </tbody>
               </table>
             </div>
           </div>
@@ -928,6 +963,9 @@
         pages.forEach(function (p) { p.classList.remove('active'); });
         var page = document.getElementById('page-' + target);
         if (page) page.classList.add('active');
+        if (target === 'sessions') {
+          loadRealSessions();
+        }
         closeSidebar();
         document.querySelector('.content').scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
@@ -1098,10 +1136,8 @@
     orders.slice(0, 5).forEach(function (o) {
       var st = o[5] === 'Paid' ? 'green' : o[5] === 'Pending' ? 'amber' : 'red';
       var d = document.createElement('div');
-      d.className = 'notif glass';
-      d.innerHTML = '<div class="n-ico" style="background:rgba(20,184,166,0.15);color:var(--accent)">🧾</div>' +
-        '<div class="n-body"><div class="n-title">' + o[1] + ' — ' + o[2] + '</div><div class="n-desc">' + o[0] + ' · ' + o[4] + '</div></div>' +
-        '<span class="badge ' + st + '">' + o[3] + '</span>';
+      d.className = 'notif-item';
+      d.innerHTML = '<span class="badge ' + st + '">' + o[5] + '</span><div><div style="font-weight:600">' + o[1] + ' — ' + o[2] + ' (' + o[3] + ')</div><div style="font-size:0.78rem;color:var(--text-muted)">' + o[0] + ' · ' + o[6] + '</div></div>';
       recentOrders.appendChild(d);
     });
 
