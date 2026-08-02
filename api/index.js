@@ -247,16 +247,86 @@ function clearAuthCookie(res) {
 }
 
 /* =========================================================
-   EMAIL OTP STORE & ROUTES
+   EMAIL OTP STORE & ROUTES (Nodemailer Integration)
    ========================================================= */
+const nodemailer = require("nodemailer");
 const otpStore = new Map();
 
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+let smtpTransporter = null;
+
+function getSMTPTransporter() {
+  if (smtpTransporter) return smtpTransporter;
+
+  const smtpUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const smtpPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+  const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+  const smtpPort = parseInt(process.env.SMTP_PORT || "465", 10);
+
+  if (smtpUser && smtpPass) {
+    smtpTransporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    });
+    return smtpTransporter;
+  }
+  return null;
+}
+
+async function sendEmailOTP(toEmail, code) {
+  try {
+    const transporter = getSMTPTransporter();
+    if (!transporter) {
+      console.log(`[OTP GENERATED (SMTP NOT CONFIGURED)] Email: ${toEmail} -> Code: ${code}`);
+      return { sent: false, reason: "SMTP credentials not configured" };
+    }
+
+    const fromName = process.env.SMTP_FROM_NAME || "Streamium";
+    const fromEmail = process.env.SMTP_USER || process.env.EMAIL_USER;
+
+    const htmlContent = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background: #0f0f0f; color: #ffffff; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #14b8a6; font-size: 28px; margin: 0; font-weight: 800; letter-spacing: -0.5px;">Streamium</h1>
+          <p style="color: #a1a1aa; font-size: 14px; margin-top: 4px;">4K Ultra HD Streaming Platform</p>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+          <p style="color: #e4e4e7; font-size: 15px; margin: 0 0 16px 0;">Your 6-digit verification code is:</p>
+          <div style="font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #14b8a6; background: rgba(20, 184, 166, 0.1); padding: 14px 20px; border-radius: 8px; display: inline-block; font-family: monospace;">
+            ${code}
+          </div>
+          <p style="color: #a1a1aa; font-size: 13px; margin: 16px 0 0 0;">This code expires in <strong>10 minutes</strong>. Do not share it with anyone.</p>
+        </div>
+        <p style="color: #71717a; font-size: 12px; text-align: center; margin: 0;">If you did not request this email, please ignore it.</p>
+      </div>
+    `;
+
+    await transporter.sendMail({
+      from: `"${fromName}" <${fromEmail}>`,
+      to: toEmail,
+      subject: `${code} is your Streamium verification code`,
+      text: `Your Streamium verification code is ${code}. It expires in 10 minutes.`,
+      html: htmlContent,
+    });
+
+    console.log(`[REAL EMAIL SENT] Delivered OTP to ${toEmail}`);
+    return { sent: true };
+  } catch (err) {
+    console.error(`[SMTP ERROR] Failed to send email to ${toEmail}:`, err.message);
+    return { sent: false, error: err.message };
+  }
+}
+
 // POST /api/auth/email — Send 6-digit OTP code to email
-app.post(["/auth/email", "/api/auth/email"], (req, res) => {
+app.post(["/auth/email", "/api/auth/email"], async (req, res) => {
   try {
     const { email } = req.body;
     if (!email || !email.includes("@")) {
@@ -268,9 +338,16 @@ app.post(["/auth/email", "/api/auth/email"], (req, res) => {
     const expires = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
 
     otpStore.set(cleanEmail, { code, expires });
-    console.log(`[OTP SENT] Email: ${cleanEmail} -> Code: ${code}`);
 
-    return res.json({ success: true, message: "Verification code sent." });
+    // Send real email via Nodemailer if SMTP credentials exist
+    const emailResult = await sendEmailOTP(cleanEmail, code);
+
+    return res.json({
+      success: true,
+      message: emailResult.sent
+        ? "Verification code sent to your email inbox."
+        : "Verification code generated."
+    });
   } catch (err) {
     console.error("Email OTP error:", err.message);
     return res.status(500).json({ error: "Failed to send verification code." });
