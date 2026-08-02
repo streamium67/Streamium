@@ -26,7 +26,22 @@ const app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
-// Lightweight cookie parser (no dependency needed)
+/**
+ * URL Prefix Normalization Middleware.
+ * Strip leading "/api" so routes match whether Vercel passes "/api/config" or "/config".
+ */
+app.use((req, res, next) => {
+  if (req.url.startsWith("/api/")) {
+    req.url = req.url.substring(4);
+  } else if (req.url === "/api") {
+    req.url = "/";
+  }
+  next();
+});
+
+/**
+ * Lightweight Cookie Parser Middleware
+ */
 app.use((req, res, next) => {
   req.cookies = {};
   const cookieHeader = req.headers.cookie;
@@ -41,7 +56,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// JWT auth — populates req.user from cookie (does NOT reject unauthenticated)
+/**
+ * JWT Authentication Middleware
+ */
 app.use((req, res, next) => {
   req.user = null;
   const token = req.cookies[COOKIE_NAME];
@@ -55,7 +72,23 @@ app.use((req, res, next) => {
   next();
 });
 
-// Connect to MongoDB (uses cached connection)
+/* =========================================================
+   PUBLIC ROUTES (No DB required)
+   ========================================================= */
+
+// Healthcheck: GET /api or /
+app.get("/", (req, res) => {
+  res.json({ status: "ok", message: "Streamium API is running" });
+});
+
+// GET /api/config or /config — returns Google Client ID
+app.get("/config", (req, res) => {
+  res.json({ googleClientId: GOOGLE_CLIENT_ID || "" });
+});
+
+/* =========================================================
+   DATABASE MIDDLEWARE (for Auth & Admin routes)
+   ========================================================= */
 app.use(async (req, res, next) => {
   try {
     await connectDB();
@@ -67,7 +100,7 @@ app.use(async (req, res, next) => {
 });
 
 /* =========================================================
-   ADMIN SEEDING (runs once per cold start)
+   ADMIN SEEDING
    ========================================================= */
 let seeded = false;
 
@@ -93,34 +126,31 @@ async function seedAdmins() {
 }
 
 /* =========================================================
-   HELPER — JWT cookie management
+   AUTH COOKIE HELPERS
    ========================================================= */
 function setAuthCookie(res, payload) {
   const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
   const secure = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
-  res.setHeader("Set-Cookie",
+  res.setHeader(
+    "Set-Cookie",
     `${COOKIE_NAME}=${token}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Lax${secure ? "; Secure" : ""}`
   );
 }
 
 function clearAuthCookie(res) {
   const secure = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
-  res.setHeader("Set-Cookie",
+  res.setHeader(
+    "Set-Cookie",
     `${COOKIE_NAME}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax${secure ? "; Secure" : ""}`
   );
 }
 
 /* =========================================================
-   ROUTE: GET /api/config
+   AUTHENTICATION ROUTES
    ========================================================= */
-app.get("/api/config", (req, res) => {
-  return res.json({ googleClientId: GOOGLE_CLIENT_ID || "" });
-});
 
-/* =========================================================
-   ROUTE: POST /api/auth/google
-   ========================================================= */
-app.post("/api/auth/google", async (req, res) => {
+// POST /api/auth/google
+app.post("/auth/google", async (req, res) => {
   try {
     await seedAdmins();
 
@@ -159,26 +189,22 @@ app.post("/api/auth/google", async (req, res) => {
   }
 });
 
-/* =========================================================
-   ROUTE: GET /api/auth/me
-   ========================================================= */
-app.get("/api/auth/me", (req, res) => {
+// GET /api/auth/me
+app.get("/auth/me", (req, res) => {
   if (req.user) {
     return res.json({ user: req.user });
   }
   return res.status(401).json({ error: "Not authenticated." });
 });
 
-/* =========================================================
-   ROUTE: POST /api/auth/logout
-   ========================================================= */
-app.post("/api/auth/logout", (req, res) => {
+// POST /api/auth/logout
+app.post("/auth/logout", (req, res) => {
   clearAuthCookie(res);
   return res.json({ success: true });
 });
 
 /* =========================================================
-   MIDDLEWARE: Auth guards
+   ADMIN GUARD MIDDLEWARE
    ========================================================= */
 function requireAdmin(req, res, next) {
   if (!req.user || !req.user.isAdmin) {
@@ -194,10 +220,8 @@ function requireOwner(req, res, next) {
   next();
 }
 
-/* =========================================================
-   ROUTE: GET /api/admin/list
-   ========================================================= */
-app.get("/api/admin/list", requireAdmin, async (req, res) => {
+// GET /api/admin/list
+app.get("/admin/list", requireAdmin, async (req, res) => {
   try {
     await seedAdmins();
     const admins = await Admin.find().select("-__v").sort({ createdAt: -1 });
@@ -207,10 +231,8 @@ app.get("/api/admin/list", requireAdmin, async (req, res) => {
   }
 });
 
-/* =========================================================
-   ROUTE: POST /api/admin/add
-   ========================================================= */
-app.post("/api/admin/add", requireOwner, async (req, res) => {
+// POST /api/admin/add
+app.post("/admin/add", requireOwner, async (req, res) => {
   try {
     const { email, role } = req.body;
     if (!email) return res.status(400).json({ error: "Email is required." });
@@ -228,10 +250,8 @@ app.post("/api/admin/add", requireOwner, async (req, res) => {
   }
 });
 
-/* =========================================================
-   ROUTE: DELETE /api/admin/remove/:email
-   ========================================================= */
-app.delete("/api/admin/remove/:email", requireOwner, async (req, res) => {
+// DELETE /api/admin/remove/:email
+app.delete("/admin/remove/:email", requireOwner, async (req, res) => {
   try {
     const email = req.params.email.toLowerCase();
     if (req.user && email === req.user.email.toLowerCase()) {
@@ -246,6 +266,6 @@ app.delete("/api/admin/remove/:email", requireOwner, async (req, res) => {
 });
 
 /* =========================================================
-   EXPORT FOR VERCEL — NO app.listen()!
+   EXPORT FOR VERCEL
    ========================================================= */
 module.exports = app;
