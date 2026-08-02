@@ -1,7 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const { OAuth2Client } = require("google-auth-library");
+const Razorpay = require("razorpay");
 const connectDB = require("./lib/db");
 const Admin = require("./models/Admin");
 
@@ -12,6 +14,8 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || "dev-jwt-secret-change-me";
 const JWT_EXPIRY = "7d";
 const COOKIE_NAME = "token";
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
 
 if (!GOOGLE_CLIENT_ID) {
   console.error("GOOGLE_CLIENT_ID is not set — Google sign-in will fail.");
@@ -279,6 +283,94 @@ app.delete(["/admin/remove/:email", "/api/admin/remove/:email"], requireOwner, a
     return res.json({ success: true });
   } catch (err) {
     return res.status(500).json({ error: "Failed to remove admin." });
+  }
+});
+
+/* =========================================================
+   RAZORPAY PAYMENT ROUTES
+   ========================================================= */
+
+let razorpayInstance = null;
+function getRazorpay() {
+  if (!razorpayInstance && RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
+    razorpayInstance = new Razorpay({
+      key_id: RAZORPAY_KEY_ID,
+      key_secret: RAZORPAY_KEY_SECRET,
+    });
+  }
+  return razorpayInstance;
+}
+
+// GET /api/payment/key — expose Razorpay Key ID to frontend
+app.get(["/payment/key", "/api/payment/key"], (req, res) => {
+  res.json({ key: RAZORPAY_KEY_ID || "" });
+});
+
+// POST /api/payment/create-order
+app.post(["/payment/create-order", "/api/payment/create-order"], async (req, res) => {
+  try {
+    const rp = getRazorpay();
+    if (!rp) {
+      return res.status(500).json({ error: "Razorpay is not configured." });
+    }
+
+    const { amount, planName, currency } = req.body;
+    if (!amount || !planName) {
+      return res.status(400).json({ error: "Amount and planName are required." });
+    }
+
+    const order = await rp.orders.create({
+      amount: Math.round(amount * 100), // Razorpay expects paise
+      currency: currency || "INR",
+      receipt: `streamium_${Date.now()}`,
+      notes: {
+        plan: planName,
+        email: req.user?.email || "guest",
+      },
+    });
+
+    res.json({
+      success: true,
+      order: {
+        id: order.id,
+        amount: order.amount,
+        currency: order.currency,
+      },
+    });
+  } catch (err) {
+    console.error("Razorpay create-order error:", err.message);
+    res.status(500).json({ error: "Failed to create payment order." });
+  }
+});
+
+// POST /api/payment/verify
+app.post(["/payment/verify", "/api/payment/verify"], (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ error: "Missing payment verification fields." });
+    }
+
+    const expectedSignature = crypto
+      .createHmac("sha256", RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex");
+
+    if (expectedSignature === razorpay_signature) {
+      // Payment verified successfully
+      res.json({
+        success: true,
+        message: "Payment verified successfully.",
+        paymentId: razorpay_payment_id,
+        orderId: razorpay_order_id,
+      });
+    } else {
+      res.status(400).json({ error: "Payment verification failed. Invalid signature." });
+    }
+  } catch (err) {
+    console.error("Razorpay verify error:", err.message);
+    res.status(500).json({ error: "Payment verification error." });
   }
 });
 
