@@ -29,12 +29,7 @@
     body {
       min-height: 100vh;
       color: var(--text);
-      background-color: var(--bg);
-      background-image:
-        radial-gradient(ellipse 80% 55% at 50% -10%, rgba(20, 184, 166, 0.25), transparent),
-        linear-gradient(180deg, #101616 0%, var(--bg) 70%);
-      background-repeat: no-repeat;
-      background-attachment: fixed;
+      background: var(--bg);
       font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
       line-height: 1.6;
       overflow-x: hidden;
@@ -261,7 +256,10 @@
     .qr__img { width: 100%; height: 100%; object-fit: contain; }
     .qr__badge {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      box-shadow: 0 0 0 5px #fff; border-radius: 12px;
+      width: 48px; height: 48px; border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 5px #fff;
+      display: grid; place-items: center;
     }
     .qr__scanline {
       position: absolute; left: 0; right: 0; height: 38%;
@@ -316,8 +314,8 @@
     .or-divider { display: flex; align-items: center; gap: 0.9rem; margin: 1.6rem 0 1.3rem; }
     .or-divider::before, .or-divider::after { content: ""; flex: 1; height: 1px; background: var(--glass-border); }
     .or-divider span {
-      color: var(--text-muted); font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px;
-      padding: 0.2rem 0.7rem; border: 1px solid var(--glass-border); border-radius: 999px;
+      color: var(--accent); font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px;
+      padding: 0.2rem 0.7rem; border: 1px solid rgba(20, 184, 166, 0.35); border-radius: 999px;
     }
 
     /* App tiles */
@@ -448,21 +446,38 @@
       <!-- ===== Plan summary ===== -->
       <section class="glass summary card-float fade-in d2" aria-label="Order summary">
         <div class="summary__item">
-          <span class="summary__icon" aria-hidden="true">🎬</span>
+          <span class="summary__icon" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)">
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <path d="M8 21h8" />
+              <path d="M12 17v4" />
+              <polygon points="10,7 10,13 15,10" fill="currentColor" stroke="none" />
+            </svg>
+          </span>
           <div>
             <p class="summary__label">Plan</p>
             <p class="summary__value" id="planValue">Netflix Premium (1 Month)</p>
           </div>
         </div>
         <div class="summary__item">
-          <span class="summary__icon" aria-hidden="true">💰</span>
+          <span class="summary__icon" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="M2 10h20" />
+              <rect x="6" y="14" width="4" height="2" rx="0.5" fill="currentColor" stroke="none" />
+            </svg>
+          </span>
           <div>
             <p class="summary__label">Amount</p>
             <p class="summary__value" id="amountValue">₹199</p>
           </div>
         </div>
         <div class="summary__item">
-          <span class="summary__icon" aria-hidden="true">📱</span>
+          <span class="summary__icon" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+          </span>
           <div>
             <p class="summary__label">Mobile Number</p>
             <p class="summary__value" id="mobileValue">+91 9876543210</p>
@@ -554,7 +569,12 @@
               <div class="qr" id="qr">
                 <div class="qr__frame">
                   <img class="qr__img" id="qrImage" alt="UPI QR code to pay Streamium" />
-                  <span class="qr__badge" id="qrBadge" aria-hidden="true"></span>
+                  <span class="qr__badge" id="qrBadge" aria-hidden="true">
+                    <svg width="30" height="30" viewBox="0 0 48 48">
+                      <polygon points="14,8 14,40 42,24" fill="url(#streamBadgeGrad)" />
+                      <defs><linearGradient id="streamBadgeGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4CAF50"/><stop offset="100%" stop-color="#FF9800"/></linearGradient></defs>
+                    </svg>
+                  </span>
                   <span class="qr__scanline" aria-hidden="true"></span>
                   <div class="qr__skeleton" id="qrSkeleton" aria-hidden="true"></div>
                 </div>
@@ -800,9 +820,6 @@
       });
 
       scanHint.textContent = METHODS[method].hint;
-
-      const activeLogo = document.querySelector(".pay-option.active .logo");
-      qrBadge.innerHTML = activeLogo ? activeLogo.outerHTML : "";
     }
 
     document.querySelectorAll(".pay-option").forEach((btn) => {
