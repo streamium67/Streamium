@@ -23,18 +23,21 @@
       --transition: 0.35s cubic-bezier(0.25, 0.8, 0.35, 1);
     }
 
-    /* ================= Reset & base (matching index.html default theme) ================= */
+    /* ================= Reset & base ================= */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
       min-height: 100vh;
       color: var(--text);
-      background: var(--bg);
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 55% at 50% -10%, rgba(20, 184, 166, 0.25), transparent),
+        linear-gradient(180deg, #101616 0%, var(--bg) 70%);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
       font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
       line-height: 1.6;
       overflow-x: hidden;
-      display: flex;
-      flex-direction: column;
     }
     img, svg { display: block; max-width: 100%; }
     a { color: inherit; text-decoration: none; }
@@ -47,8 +50,8 @@
     ::-webkit-scrollbar-thumb { background: linear-gradient(var(--accent), var(--accent-dark)); border-radius: 8px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-    /* ================= Compact Layout Helper ================= */
-    .container { width: min(860px, 92%); margin-inline: auto; }
+    /* ================= Layout helpers ================= */
+    .container { width: min(1140px, 92%); margin-inline: auto; }
 
     /* ================= Glassmorphism ================= */
     .glass {
@@ -69,24 +72,24 @@
     }
     .card-float { transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition); }
     .card-float:hover {
-      transform: translateY(-4px);
+      transform: translateY(-6px);
       border-color: rgba(20, 184, 166, 0.35);
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 30px rgba(20, 184, 166, 0.12);
+      box-shadow: 0 22px 50px rgba(0, 0, 0, 0.45), 0 0 40px rgba(20, 184, 166, 0.12);
     }
 
     /* ================= Buttons & ripple ================= */
     .btn {
-      display: inline-block; padding: 0.7rem 1.6rem;
+      display: inline-block; padding: 0.8rem 2rem;
       border: none; border-radius: 999px;
-      font-weight: 600; font-size: 0.95rem; cursor: pointer;
+      font-weight: 600; font-size: 1rem; cursor: pointer;
       position: relative; overflow: hidden;
       transition: transform var(--transition), box-shadow var(--transition), background var(--transition), border-color var(--transition), color var(--transition);
     }
     .btn--primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #062622; }
-    .btn--primary:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(20, 184, 166, 0.4); }
+    .btn--primary:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(20, 184, 166, 0.4); }
     .btn--outline { background: transparent; color: var(--text); border: 1.5px solid var(--glass-border); }
-    .btn--outline:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
-    .btn--sm { padding: 0.4rem 1.1rem; font-size: 0.85rem; }
+    .btn--outline:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-3px); }
+    .btn--sm { padding: 0.45rem 1.3rem; font-size: 0.9rem; }
 
     .ripple-circle {
       position: absolute; border-radius: 50%;
@@ -98,7 +101,7 @@
     @keyframes ripple { to { transform: scale(4); opacity: 0; } }
 
     /* ================= Floating particles ================= */
-    .particles { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+    .particles { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
     .particle {
       position: absolute; bottom: -10px; border-radius: 50%;
       background: rgba(20, 184, 166, 0.35);
@@ -107,158 +110,158 @@
     @keyframes float { to { transform: translateY(-110vh) translateX(6vw); opacity: 0; } }
 
     /* ================= Fade in ================= */
-    .fade-in { opacity: 0; transform: translateY(16px); animation: fadeUp 0.65s cubic-bezier(0.25, 0.8, 0.35, 1) forwards; }
-    .d1 { animation-delay: 0.05s; } .d2 { animation-delay: 0.12s; }
-    .d3 { animation-delay: 0.2s; } .d4 { animation-delay: 0.28s; }
+    .fade-in { opacity: 0; transform: translateY(22px); animation: fadeUp 0.75s cubic-bezier(0.25, 0.8, 0.35, 1) forwards; }
+    .d1 { animation-delay: 0.05s; } .d2 { animation-delay: 0.16s; }
+    .d3 { animation-delay: 0.27s; } .d4 { animation-delay: 0.38s; }
     @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
 
     /* ================= Header ================= */
-    .checkout-header { padding: 1.8rem 0 1.2rem; text-align: center; }
-    .brand { display: inline-flex; align-items: center; gap: 0.6rem; }
+    .checkout-header { padding: 3rem 0 2rem; text-align: center; }
+    .brand { display: inline-flex; align-items: center; gap: 0.75rem; }
     .brand__mark {
       display: grid; place-items: center;
-      width: 40px; height: 40px; border-radius: 12px;
+      width: 48px; height: 48px; border-radius: 14px;
       background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-      color: #062622; font-size: 1.4rem; font-weight: 800; line-height: 1;
-      box-shadow: 0 8px 22px rgba(20, 184, 166, 0.35);
+      color: #062622; font-size: 1.6rem; font-weight: 800; line-height: 1;
+      box-shadow: 0 10px 28px rgba(20, 184, 166, 0.35);
       animation: floatMark 5s ease-in-out infinite;
     }
-    @keyframes floatMark { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-    .brand__name { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 800; letter-spacing: 0.5px; }
+    @keyframes floatMark { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    .brand__name { font-size: clamp(1.7rem, 5vw, 2.4rem); font-weight: 800; letter-spacing: 0.5px; }
     .brand__name span { color: var(--accent); }
 
-    .secure-line { display: flex; align-items: center; justify-content: center; gap: 0.8rem; margin-top: 0.75rem; }
+    .secure-line { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1rem; }
     .secure-line__rule {
-      height: 1px; flex: 0 1 clamp(30px, 12vw, 120px);
+      height: 1px; flex: 0 1 clamp(40px, 16vw, 160px);
       background: linear-gradient(90deg, transparent, rgba(20, 184, 166, 0.8));
-      box-shadow: 0 0 12px rgba(20, 184, 166, 0.6);
+      box-shadow: 0 0 14px rgba(20, 184, 166, 0.6);
     }
     .secure-line__rule--right { background: linear-gradient(90deg, rgba(20, 184, 166, 0.8), transparent); }
     .secure-line__text {
-      display: inline-flex; align-items: center; gap: 0.4rem;
-      color: var(--accent); font-size: clamp(0.68rem, 2vw, 0.78rem);
-      font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase;
-      text-shadow: 0 0 16px rgba(20, 184, 166, 0.5);
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--accent); font-size: clamp(0.7rem, 2.4vw, 0.82rem);
+      font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(20, 184, 166, 0.5);
       white-space: nowrap;
     }
 
-    /* ================= Plan summary (Compact) ================= */
-    .summary { display: grid; grid-template-columns: repeat(3, 1fr); padding: 1rem 1rem; }
-    .summary__item { position: relative; display: flex; align-items: center; gap: 0.8rem; padding: 0.2rem 1rem; min-width: 0; }
+    /* ================= Plan summary ================= */
+    .summary { display: grid; grid-template-columns: repeat(3, 1fr); padding: 1.6rem 1.2rem; }
+    .summary__item { position: relative; display: flex; align-items: center; gap: 1rem; padding: 0.4rem 1.5rem; min-width: 0; }
     .summary__item + .summary__item::before {
       content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
       width: 1px; height: 60%; background: var(--glass-border);
     }
     .summary__icon {
       flex-shrink: 0; display: grid; place-items: center;
-      width: 42px; height: 42px; border-radius: 12px; font-size: 1.2rem;
+      width: 54px; height: 54px; border-radius: 14px; font-size: 1.5rem;
       background: rgba(20, 184, 166, 0.12);
       border: 1px solid rgba(20, 184, 166, 0.35);
-      box-shadow: 0 0 18px rgba(20, 184, 166, 0.15);
+      box-shadow: 0 0 24px rgba(20, 184, 166, 0.18), inset 0 0 20px rgba(20, 184, 166, 0.08);
       transition: transform var(--transition), box-shadow var(--transition);
     }
-    .summary__item:hover .summary__icon { transform: translateY(-2px) scale(1.04); box-shadow: 0 0 24px rgba(20, 184, 166, 0.35); }
-    .summary__label { color: var(--text-muted); font-size: 0.68rem; letter-spacing: 1.4px; text-transform: uppercase; line-height: 1.3; }
-    .summary__value { font-size: clamp(0.88rem, 1.8vw, 0.98rem); font-weight: 700; overflow-wrap: anywhere; }
+    .summary__item:hover .summary__icon { transform: translateY(-3px) scale(1.06); box-shadow: 0 0 34px rgba(20, 184, 166, 0.4); }
+    .summary__label { color: var(--text-muted); font-size: 0.74rem; letter-spacing: 1.6px; text-transform: uppercase; line-height: 1.4; }
+    .summary__value { font-size: clamp(0.98rem, 2vw, 1.1rem); font-weight: 700; overflow-wrap: anywhere; }
 
-    /* ================= Checkout grid (Smaller & Sleek) ================= */
-    .checkout-grid { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 16px; align-items: start; margin-top: 16px; }
-    .pane { padding: 1.2rem 1.2rem; min-width: 0; }
-    .card-title { color: var(--accent); font-size: 0.75rem; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; }
+    /* ================= Checkout grid ================= */
+    .checkout-grid { display: grid; grid-template-columns: 30% minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 24px; }
+    .pane { padding: 1.6rem 1.5rem; min-width: 0; }
+    .card-title { color: var(--accent); font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
 
     /* ================= Payment options ================= */
-    .pay-options { display: grid; gap: 0.65rem; margin-top: 1rem; }
+    .pay-options { display: grid; gap: 0.85rem; margin-top: 1.4rem; }
     .pay-option {
       position: relative; overflow: hidden;
-      display: flex; align-items: center; gap: 0.75rem; width: 100%;
-      padding: 0.65rem 0.85rem; text-align: left; cursor: pointer;
-      color: var(--text); font-weight: 600; font-size: 0.9rem;
+      display: flex; align-items: center; gap: 0.9rem; width: 100%;
+      padding: 0.8rem 1rem; text-align: left; cursor: pointer;
+      color: var(--text); font-weight: 600;
       background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--glass-border); border-radius: 12px;
+      border: 1px solid var(--glass-border); border-radius: 14px;
       transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition), background var(--transition);
     }
-    .pay-option:hover { transform: translateY(-2px); border-color: rgba(20, 184, 166, 0.5); box-shadow: 0 8px 20px rgba(20, 184, 166, 0.14); }
+    .pay-option:hover { transform: translateY(-2px); border-color: rgba(20, 184, 166, 0.5); box-shadow: 0 12px 28px rgba(20, 184, 166, 0.16); }
     .pay-option:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .pay-option.active {
       border-color: var(--accent);
       background: linear-gradient(135deg, rgba(20, 184, 166, 0.14), rgba(255, 255, 255, 0.04));
-      box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.35), 0 10px 24px rgba(20, 184, 166, 0.18);
+      box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.35), 0 14px 32px rgba(20, 184, 166, 0.2);
     }
     .pay-option__name { min-width: 0; }
     .pay-option__radio {
       margin-left: auto; flex-shrink: 0; display: grid; place-items: center;
-      width: 18px; height: 18px; border-radius: 50%;
+      width: 20px; height: 20px; border-radius: 50%;
       border: 1.5px solid var(--glass-border);
       transition: border-color var(--transition), box-shadow var(--transition);
     }
     .pay-option__radio::after {
-      content: ""; width: 8px; height: 8px; border-radius: 50%;
+      content: ""; width: 10px; height: 10px; border-radius: 50%;
       background: var(--accent); transform: scale(0); transition: transform var(--transition);
     }
-    .pay-option.active .pay-option__radio { border-color: var(--accent); box-shadow: 0 0 10px rgba(20, 184, 166, 0.55); }
+    .pay-option.active .pay-option__radio { border-color: var(--accent); box-shadow: 0 0 14px rgba(20, 184, 166, 0.55); }
     .pay-option.active .pay-option__radio::after { transform: scale(1); }
 
-    /* Brand logo chips */
+    /* Brand logo chips (no white backgrounds) */
     .logo {
       flex-shrink: 0; display: grid; place-items: center;
-      width: 30px; height: 30px; border-radius: 8px;
-      font-size: 0.52rem; font-weight: 800; letter-spacing: 0.5px; color: #fff;
+      width: 34px; height: 34px; border-radius: 10px;
+      font-size: 0.58rem; font-weight: 800; letter-spacing: 0.5px; color: #fff;
       border: 1px solid rgba(255, 255, 255, 0.14);
     }
-    .logo svg { width: 60%; height: 60%; }
-    .logo--lg { width: 42px; height: 42px; border-radius: 12px; font-size: 0.62rem; }
+    .logo svg { width: 62%; height: 62%; }
+    .logo--lg { width: 48px; height: 48px; border-radius: 14px; font-size: 0.68rem; }
     .logo--upi { background: linear-gradient(135deg, #ff8a00, #0e8f4d); }
     .logo--gpay { background: #16181d; }
-    .logo--phonepe { background: #5f259f; font-size: 0.75rem; }
-    .logo--paytm { background: #052a4a; color: #00baf2; font-size: 0.44rem; }
-    .logo--lg.logo--paytm { font-size: 0.54rem; }
-    .logo--famapp { background: linear-gradient(135deg, #ff9a2e, #f4511e); font-size: 0.88rem; }
+    .logo--phonepe { background: #5f259f; font-size: 0.8rem; }
+    .logo--paytm { background: #052a4a; color: #00baf2; font-size: 0.48rem; }
+    .logo--lg.logo--paytm { font-size: 0.58rem; }
+    .logo--famapp { background: linear-gradient(135deg, #ff9a2e, #f4511e); font-size: 0.95rem; }
 
-    .safe-note { display: flex; align-items: flex-start; gap: 0.6rem; margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid var(--glass-border); }
-    .safe-note svg { flex-shrink: 0; width: 18px; height: 18px; color: var(--accent); margin-top: 2px; }
-    .safe-note strong { display: block; font-size: 0.82rem; }
-    .safe-note span { color: var(--text-muted); font-size: 0.74rem; }
+    .safe-note { display: flex; align-items: flex-start; gap: 0.7rem; margin-top: 1.6rem; padding-top: 1.3rem; border-top: 1px solid var(--glass-border); }
+    .safe-note svg { flex-shrink: 0; width: 22px; height: 22px; color: var(--accent); margin-top: 2px; }
+    .safe-note strong { display: block; font-size: 0.9rem; }
+    .safe-note span { color: var(--text-muted); font-size: 0.8rem; }
 
-    /* ================= Payment details (Compact) ================= */
-    .pay-head { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap; }
+    /* ================= Payment details ================= */
+    .pay-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
     .timer {
-      display: inline-flex; align-items: center; gap: 0.4rem;
-      color: var(--accent); font-size: 0.72rem; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      color: var(--accent); font-size: 0.76rem; font-weight: 600;
       background: rgba(20, 184, 166, 0.1);
       border: 1px solid rgba(20, 184, 166, 0.3);
-      padding: 0.2rem 0.65rem; border-radius: 999px;
+      padding: 0.25rem 0.75rem; border-radius: 999px;
       transition: color var(--transition), border-color var(--transition), background var(--transition);
     }
     .timer__icon { animation: tick 2s steps(1, end) infinite; }
     @keyframes tick { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0.35; } }
     .timer.is-warning { color: #fca5a5; border-color: rgba(248, 113, 113, 0.45); background: rgba(248, 113, 113, 0.1); }
 
-    .pay-progress { height: 2px; margin-top: 0.8rem; border-radius: 2px; background: var(--glass-border); overflow: hidden; }
+    .pay-progress { height: 2px; margin-top: 1rem; border-radius: 2px; background: var(--glass-border); overflow: hidden; }
     .pay-progress__bar {
       height: 100%; width: 100%;
       background: linear-gradient(90deg, var(--accent-dark), var(--accent), var(--accent-light));
-      box-shadow: 0 0 10px rgba(20, 184, 166, 0.6);
+      box-shadow: 0 0 14px rgba(20, 184, 166, 0.6);
       transition: width 1s linear;
     }
 
-    .pay-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.4rem; margin-top: 1.2rem; }
-    .sub-title { color: var(--accent-light); font-size: 0.76rem; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
-    .sub-hint { color: var(--text-muted); font-size: 0.78rem; margin-top: 0.2rem; }
+    .pay-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; margin-top: 1.6rem; }
+    .sub-title { color: var(--accent-light); font-size: 0.82rem; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }
+    .sub-hint { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; }
 
-    /* Compact QR Frame */
-    .qr { position: relative; margin-top: 0.8rem; width: min(180px, 100%); }
+    /* QR */
+    .qr { position: relative; margin-top: 1rem; width: min(240px, 100%); }
     .qr__frame {
       position: relative; overflow: hidden;
-      aspect-ratio: 1 / 1; padding: 10px;
-      background: #fff; border-radius: 12px;
-      box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.3), 0 0 30px rgba(20, 184, 166, 0.2);
+      aspect-ratio: 1 / 1; padding: 12px;
+      background: #fff; border-radius: 14px;
+      box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.3), 0 0 44px rgba(20, 184, 166, 0.22);
       transition: transform var(--transition), box-shadow var(--transition);
     }
-    .qr:hover .qr__frame { transform: translateY(-3px); box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.55), 0 0 45px rgba(20, 184, 166, 0.3); }
+    .qr:hover .qr__frame { transform: translateY(-4px); box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.55), 0 0 60px rgba(20, 184, 166, 0.35); }
     .qr__img { width: 100%; height: 100%; object-fit: contain; }
     .qr__badge {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      box-shadow: 0 0 0 4px #fff; border-radius: 10px;
+      box-shadow: 0 0 0 5px #fff; border-radius: 12px;
     }
     .qr__scanline {
       position: absolute; left: 0; right: 0; height: 38%;
@@ -267,7 +270,7 @@
     }
     @keyframes scan { 0%, 100% { top: -38%; } 50% { top: 100%; } }
     .qr__skeleton {
-      position: absolute; inset: 0; border-radius: 12px;
+      position: absolute; inset: 0; border-radius: 14px;
       background: linear-gradient(100deg, #e9e9e9 20%, #f7f7f7 40%, #e9e9e9 60%);
       background-size: 220% 100%; animation: shimmer 1.3s linear infinite;
     }
@@ -275,106 +278,106 @@
     .qr.is-ready .qr__skeleton { display: none; }
     .qr__expired {
       position: absolute; inset: 0; display: none;
-      flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem;
-      background: rgba(15, 15, 15, 0.86); border-radius: 12px; text-align: center;
+      flex-direction: column; align-items: center; justify-content: center; gap: 0.8rem;
+      background: rgba(15, 15, 15, 0.86); border-radius: 14px; text-align: center;
       backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
     }
     .qr.is-expired .qr__expired { display: flex; }
     .qr.is-expired .qr__scanline { display: none; }
-    .qr__expired p { font-weight: 700; font-size: 0.85rem; }
+    .qr__expired p { font-weight: 700; font-size: 0.92rem; }
 
-    /* Compact UPI input field */
+    /* UPI id */
     .upi-field {
-      display: flex; align-items: center; gap: 0.5rem; margin-top: 0.7rem;
-      padding: 0.4rem 0.4rem 0.4rem 0.8rem;
+      display: flex; align-items: center; gap: 0.6rem; margin-top: 0.9rem;
+      padding: 0.5rem 0.5rem 0.5rem 1rem;
       background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--glass-border); border-radius: 10px;
+      border: 1px solid var(--glass-border); border-radius: 12px;
       transition: border-color var(--transition), box-shadow var(--transition);
     }
     .upi-field:hover { border-color: rgba(20, 184, 166, 0.45); }
     .upi-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2); }
     .upi-field input {
       flex: 1; min-width: 0; background: none; border: none; outline: none;
-      color: var(--text); font: inherit; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.3px;
+      color: var(--text); font: inherit; font-weight: 600; letter-spacing: 0.3px;
     }
     .copy-btn {
-      flex-shrink: 0; display: inline-flex; align-items: center; gap: 0.3rem;
-      padding: 0.35rem 0.75rem; border-radius: 999px; cursor: pointer;
-      font-size: 0.78rem; font-weight: 700; color: var(--accent-light);
+      flex-shrink: 0; display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.45rem 0.9rem; border-radius: 999px; cursor: pointer;
+      font-size: 0.82rem; font-weight: 700; color: var(--accent-light);
       background: rgba(20, 184, 166, 0.12); border: 1px solid rgba(20, 184, 166, 0.35);
       position: relative; overflow: hidden;
       transition: transform var(--transition), box-shadow var(--transition), background var(--transition), color var(--transition);
     }
-    .copy-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(20, 184, 166, 0.3); }
+    .copy-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(20, 184, 166, 0.3); }
     .copy-btn.is-copied { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #062622; border-color: transparent; }
-    .copy-btn svg { width: 13px; height: 13px; }
+    .copy-btn svg { width: 15px; height: 15px; }
 
     /* OR divider */
-    .or-divider { display: flex; align-items: center; gap: 0.7rem; margin: 1.2rem 0 1rem; }
+    .or-divider { display: flex; align-items: center; gap: 0.9rem; margin: 1.6rem 0 1.3rem; }
     .or-divider::before, .or-divider::after { content: ""; flex: 1; height: 1px; background: var(--glass-border); }
     .or-divider span {
-      color: var(--text-muted); font-size: 0.65rem; font-weight: 700; letter-spacing: 1.4px;
-      padding: 0.15rem 0.6rem; border: 1px solid var(--glass-border); border-radius: 999px;
+      color: var(--text-muted); font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px;
+      padding: 0.2rem 0.7rem; border: 1px solid var(--glass-border); border-radius: 999px;
     }
 
     /* App tiles */
-    .app-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 0.65rem; margin-top: 0.7rem; }
+    .app-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(74px, 1fr)); gap: 0.9rem; margin-top: 0.9rem; }
     .app-tile {
       position: relative; overflow: hidden;
-      display: grid; justify-items: center; gap: 0.4rem;
-      padding: 0.65rem 0.3rem; cursor: pointer; color: inherit;
+      display: grid; justify-items: center; gap: 0.55rem;
+      padding: 0.9rem 0.4rem; cursor: pointer; color: inherit;
       background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--glass-border); border-radius: 12px;
+      border: 1px solid var(--glass-border); border-radius: 14px;
       transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
     }
-    .app-tile:hover { transform: translateY(-4px); border-color: rgba(20, 184, 166, 0.5); box-shadow: 0 12px 24px rgba(20, 184, 166, 0.18); }
+    .app-tile:hover { transform: translateY(-6px); border-color: rgba(20, 184, 166, 0.5); box-shadow: 0 16px 34px rgba(20, 184, 166, 0.18); }
     .app-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .app-tile__name { font-size: 0.7rem; color: var(--text-muted); }
+    .app-tile__name { font-size: 0.76rem; color: var(--text-muted); }
 
-    /* Compact Verify button */
+    /* Verify button */
     .btn--verify {
-      display: flex; align-items: center; justify-content: center; gap: 0.6rem;
-      width: 100%; height: 48px; margin-top: 1.4rem; padding: 0 1.2rem;
-      font-size: 0.92rem; font-weight: 800; letter-spacing: 1px;
-      box-shadow: 0 10px 26px rgba(20, 184, 166, 0.28);
+      display: flex; align-items: center; justify-content: center; gap: 0.7rem;
+      width: 100%; height: 60px; margin-top: 2rem; padding: 0 1.5rem;
+      font-size: 1.02rem; font-weight: 800; letter-spacing: 1.2px;
+      box-shadow: 0 14px 34px rgba(20, 184, 166, 0.28);
     }
-    .btn--verify:hover { box-shadow: 0 14px 34px rgba(20, 184, 166, 0.45); }
+    .btn--verify:hover { box-shadow: 0 20px 46px rgba(20, 184, 166, 0.45); }
     .btn--verify .arrow { transition: transform var(--transition); }
-    .btn--verify:hover .arrow { transform: translateX(4px); }
+    .btn--verify:hover .arrow { transform: translateX(6px); }
     .btn--verify:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
     .btn--verify.is-loading { pointer-events: none; }
     .spinner {
-      width: 16px; height: 16px; border-radius: 50%;
+      width: 18px; height: 18px; border-radius: 50%;
       border: 2px solid rgba(6, 38, 34, 0.35); border-top-color: #062622;
       animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .encrypted-note {
-      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
-      margin-top: 0.8rem; color: var(--text-muted); font-size: 0.75rem;
+      display: flex; align-items: center; justify-content: center; gap: 0.45rem;
+      margin-top: 1rem; color: var(--text-muted); font-size: 0.8rem;
     }
 
     /* ================= Secured by ================= */
     .secured-by {
-      display: flex; align-items: center; justify-content: center; gap: 0.8rem;
-      margin: 1.6rem 0 1.8rem;
+      display: flex; align-items: center; justify-content: center; gap: 1rem;
+      margin: 2.6rem 0 2.4rem;
     }
-    .secured-by__rule { height: 1px; flex: 0 1 clamp(25px, 8vw, 75px); background: linear-gradient(90deg, transparent, var(--glass-border)); }
+    .secured-by__rule { height: 1px; flex: 0 1 clamp(30px, 10vw, 90px); background: linear-gradient(90deg, transparent, var(--glass-border)); }
     .secured-by__rule--right { background: linear-gradient(90deg, var(--glass-border), transparent); }
-    .secured-by__text { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--text-muted); font-size: 0.76rem; white-space: nowrap; }
+    .secured-by__text { display: inline-flex; align-items: center; gap: 0.45rem; color: var(--text-muted); font-size: 0.8rem; white-space: nowrap; }
     .secured-by__text b { color: var(--accent); font-weight: 700; }
 
     /* ================= Toast ================= */
     .toast {
       position: fixed; left: 50%; bottom: 2rem; z-index: 600;
       transform: translate(-50%, 160%); opacity: 0;
-      padding: 0.6rem 1.2rem; border-radius: 999px;
-      font-size: 0.84rem; font-weight: 600;
+      padding: 0.7rem 1.3rem; border-radius: 999px;
+      font-size: 0.88rem; font-weight: 600;
       background: rgba(22, 22, 22, 0.92);
       border: 1px solid var(--glass-border);
       backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
       transition: transform var(--transition), opacity var(--transition);
     }
     .toast.show { transform: translate(-50%, 0); opacity: 1; }
@@ -382,20 +385,29 @@
     .toast--err { color: #fca5a5; border-color: rgba(248, 113, 113, 0.45); }
 
     /* ================= Responsive ================= */
-    @media (max-width: 768px) {
+    @media (max-width: 1024px) {
+      .checkout-grid { grid-template-columns: 34% minmax(0, 1fr); }
+    }
+    @media (max-width: 900px) {
       .checkout-grid { grid-template-columns: 1fr; }
-      .summary { grid-template-columns: 1fr; gap: 0.8rem; padding: 1rem; }
-      .summary__item { padding: 0.4rem 0; }
+      .summary { grid-template-columns: 1fr; gap: 1.1rem; padding: 1.4rem; }
+      .summary__item { padding: 0.55rem 0; }
       .summary__item + .summary__item::before {
-        left: 0; right: 0; top: -0.4rem; transform: none;
+        left: 0; right: 0; top: -0.55rem; transform: none;
         width: 100%; height: 1px;
       }
     }
-    @media (max-width: 600px) {
-      .checkout-header { padding: 1.4rem 0 1rem; }
-      .pay-body { grid-template-columns: 1fr; gap: 1.2rem; }
-      .qr { width: min(200px, 100%); margin-inline: auto; }
-      .pane { padding: 1.1rem 1rem; }
+    @media (max-width: 700px) {
+      .checkout-header { padding: 2.2rem 0 1.6rem; }
+      .pay-body { grid-template-columns: 1fr; gap: 1.6rem; }
+      .qr { width: min(260px, 100%); margin-inline: auto; }
+      .pane { padding: 1.3rem 1.15rem; }
+      .summary__icon { width: 48px; height: 48px; font-size: 1.3rem; }
+    }
+    @media (max-width: 420px) {
+      .brand__mark { width: 42px; height: 42px; font-size: 1.35rem; }
+      .secure-line { gap: 0.6rem; }
+      .btn--verify { font-size: 0.92rem; letter-spacing: 0.8px; }
     }
 
     /* ================= Reduced motion ================= */
@@ -422,7 +434,7 @@
       <div class="secure-line">
         <span class="secure-line__rule" aria-hidden="true"></span>
         <span class="secure-line__text">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             <path d="M9 12l2 2 4-4" />
           </svg>
@@ -521,7 +533,7 @@
           <div class="pay-head">
             <h2 class="card-title">Payment Details</h2>
             <span class="timer" id="timer" role="timer" aria-live="off">
-              <svg class="timer__icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+              <svg class="timer__icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="9" />
                 <path d="M12 7v5l3 2" />
               </svg>
@@ -602,19 +614,19 @@
 
           <!-- Verify -->
           <button class="btn btn--primary btn--verify ripple" type="button" id="verifyBtn">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               <path d="M9 12l2 2 4-4" />
             </svg>
             <span id="verifyLabel">VERIFY PAYMENT</span>
-            <svg class="arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg class="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M5 12h14" />
               <path d="M13 6l6 6-6 6" />
             </svg>
           </button>
 
           <p class="encrypted-note">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
               <rect x="4" y="10" width="16" height="11" rx="2" />
               <path d="M8 10V7a4 4 0 0 1 8 0v3" />
             </svg>
@@ -628,7 +640,7 @@
     <p class="secured-by">
       <span class="secured-by__rule" aria-hidden="true"></span>
       <span class="secured-by__text">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent)" aria-hidden="true">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent)" aria-hidden="true">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
         </svg>
         Secured by <b>Streamium</b>
@@ -646,6 +658,9 @@
        CONFIG
        ========================================================= */
     const CONFIG = {
+      // Leave empty for demo mode (orders are kept in localStorage).
+      // Set to your endpoint to store orders in a real database, e.g.
+      // "/api/orders" or a Google Apps Script / Supabase / Firebase URL.
       API_ENDPOINT: "",
       UPI_ID: "streamium@upi",
       PAYEE_NAME: "Streamium",
@@ -653,16 +668,16 @@
       SUCCESS_URL: "payment-success.html",
       HOME_URL: "index.html",
       QR_ENDPOINT: "https://api.qrserver.com/v1/create-qr-code/",
-      STATIC_QR_IMAGE: ""
+      STATIC_QR_IMAGE: "" // optional: "assets/streamium-upi-qr.png" to use your own QR
     };
 
     const PLANS = {
-      basic:           { name: "Basic 720p (1 Month)",      amount: 81.38 },
-      standard:        { name: "Standard 1080p (1 Month)",  amount: 157.91 },
-      premium:         { name: "Premium 4K (1 Month)",      amount: 196.17 },
-      netflix_premium: { name: "Netflix Premium (1 Month)", amount: 199 }
+      netflix_premium: { name: "Netflix Premium (1 Month)", amount: 199 },
+      basic:           { name: "Basic 720p (1 Month)",      amount: 50 },
+      standard:        { name: "Standard 1080p (1 Month)",  amount: 75 },
+      premium:         { name: "Premium 4K (1 Month)",      amount: 100 }
     };
-    const DEFAULT_PLAN = "premium";
+    const DEFAULT_PLAN = "netflix_premium";
 
     const METHODS = {
       upi:     { name: "UPI",        hint: "Scan the QR code using any UPI app", scheme: "upi://pay" },
@@ -674,10 +689,9 @@
 
     const query = new URLSearchParams(location.search);
 
-    /* ---------- 1. Floating particles ---------- */
+    /* ---------- 1. Floating particles (same as index.html) ---------- */
     (function createParticles() {
       const container = document.getElementById("particles");
-      if (!container) return;
       for (let i = 0; i < 28; i++) {
         const p = document.createElement("span");
         p.className = "particle";
@@ -691,7 +705,7 @@
       }
     })();
 
-    /* ---------- 2. Ripple effect ---------- */
+    /* ---------- 2. Ripple effect (same as index.html) ---------- */
     function attachRipple(el) {
       el.addEventListener("click", (e) => {
         const circle = document.createElement("span");
@@ -711,7 +725,6 @@
     const toastEl = document.getElementById("toast");
     let toastTimer;
     function toast(message, kind) {
-      if (!toastEl) return;
       toastEl.textContent = message;
       toastEl.className = "toast show " + (kind === "err" ? "toast--err" : "toast--ok");
       clearTimeout(toastTimer);
@@ -719,37 +732,30 @@
     }
 
     /* ---------- 4. Logged-in user + selected plan ---------- */
-    function readStoredCheckout() {
-      try { return JSON.parse(sessionStorage.getItem("streamium_checkout_data") || "{}"); }
-      catch (e) { return {}; }
-    }
     function readStoredUser() {
       try { return JSON.parse(localStorage.getItem("streamium_user") || "{}"); }
       catch (e) { return {}; }
     }
 
-    const storedCheckout = readStoredCheckout();
     const storedUser = readStoredUser();
-
     const user = {
       userId: query.get("uid") || storedUser.userId || storedUser.id || "GUEST-" + Math.random().toString(36).slice(2, 8).toUpperCase(),
-      name: (storedCheckout.firstName ? `${storedCheckout.firstName} ${storedCheckout.lastName || ''}`.trim() : null) || query.get("name") || storedUser.name || "Guest User",
+      name: query.get("name") || storedUser.name || "Guest User",
       email: query.get("email") || storedUser.email || "guest@streamium.com",
-      mobile: (storedCheckout.phone ? `+91 ${storedCheckout.phone}` : null) || query.get("mobile") || storedUser.mobile || storedUser.phone || "+91 9876543210"
+      mobile: query.get("mobile") || storedUser.mobile || storedUser.phone || "+91 9876543210"
     };
 
-    const planKey = (query.get("plan") || storedCheckout.planKey || "").toLowerCase();
+    const planKey = (query.get("plan") || "").toLowerCase();
     const plan = PLANS[planKey] || PLANS[DEFAULT_PLAN];
-
     const state = {
       method: "upi",
-      planName: storedCheckout.planName ? `${storedCheckout.planName} (1 Month)` : (query.get("planName") || plan.name),
-      amount: storedCheckout.totalPrice || Number(query.get("amount")) || plan.amount
+      planName: query.get("planName") || plan.name,
+      amount: Number(query.get("amount")) > 0 ? Number(query.get("amount")) : plan.amount
     };
 
-    const inr = new Intl.NumberFormat("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const inr = new Intl.NumberFormat("en-IN");
     document.getElementById("planValue").textContent = state.planName;
-    document.getElementById("amountValue").textContent = "₹" + (typeof state.amount === "number" ? inr.format(state.amount) : state.amount);
+    document.getElementById("amountValue").textContent = "₹" + inr.format(state.amount);
     document.getElementById("mobileValue").textContent = user.mobile;
     document.getElementById("upiId").value = CONFIG.UPI_ID;
 
@@ -772,7 +778,7 @@
 
     function renderQr() {
       qrWrap.classList.remove("is-ready");
-      const data = payLink("upi");
+      const data = payLink("upi"); // UPI intent string works with every UPI app
       qrImage.src = CONFIG.STATIC_QR_IMAGE ||
         CONFIG.QR_ENDPOINT + "?size=360x360&margin=0&qzone=1&ecc=H&format=png&data=" + encodeURIComponent(data);
     }
@@ -885,7 +891,7 @@
 
     document.getElementById("restartBtn").addEventListener("click", () => location.reload());
 
-    /* ---------- 8. Verify payment → store order ---------- */
+    /* ---------- 8. Verify payment → store order → success page ---------- */
     function makeOrderId() {
       const d = new Date();
       const stamp = d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
@@ -904,28 +910,24 @@
         amount: state.amount,
         paymentMethod: METHODS[state.method].name,
         orderId: makeOrderId(),
-        status: "Paid",
-        verificationStatus: "Verified",
-        createdDate: now.toLocaleDateString("en-CA"),
-        createdTime: now.toLocaleTimeString("en-GB", { hour12: false }),
+        status: "Pending Verification",
+        verificationStatus: "Pending",
+        createdDate: now.toLocaleDateString("en-CA"),                        // YYYY-MM-DD
+        createdTime: now.toLocaleTimeString("en-GB", { hour12: false }),     // HH:MM:SS
         createdAt: now.toISOString()
       };
     }
 
     async function saveOrder(order) {
-      fetch("/api/payment/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({
-          razorpay_order_id: order.orderId,
-          razorpay_payment_id: "PAY_" + order.orderId,
-          razorpay_signature: "simulated_sig",
-          planName: order.plan,
-          amountPaid: order.amount
-        })
-      }).catch(() => {});
-
+      if (CONFIG.API_ENDPOINT) {
+        const res = await fetch(CONFIG.API_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(order)
+        });
+        if (!res.ok) throw new Error("Request failed with status " + res.status);
+      }
+      // Always keep a local copy so payment-success.html can show the order.
       const all = JSON.parse(localStorage.getItem("streamium_orders") || "[]");
       all.push(order);
       localStorage.setItem("streamium_orders", JSON.stringify(all));
@@ -955,13 +957,12 @@
       try {
         await saveOrder(order);
         clearInterval(countdown);
-        verifyLabel.textContent = "PAYMENT VERIFIED";
+        verifyLabel.textContent = "REQUEST SUBMITTED";
         const spinner = verifyBtn.querySelector(".spinner");
         if (spinner) spinner.remove();
-        toast("Payment verified successfully! Redirecting...");
         setTimeout(() => {
-          window.location.href = "/";
-        }, 1500);
+          window.location.href = CONFIG.SUCCESS_URL + "?order=" + encodeURIComponent(order.orderId);
+        }, 700);
       } catch (err) {
         setLoading(false);
         toast("Could not submit right now. Please try again.", "err");
