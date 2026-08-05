@@ -3,497 +3,1045 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Streamium Payment — Select your preferred payment method to activate subscription." />
-  <title>Payment — Streamium</title>
-
+  <meta name="description" content="Streamium Secure Checkout — Complete your subscription payment." />
+  <title>Streamium — Secure Checkout</title>
   <style>
-    /* ---------- Design Tokens ---------- */
+    /* ---------- Root Variables & Design System ---------- */
     :root {
-      --bg: #0f0f0f;
-      --bg-soft: #161616;
-      --accent: #14b8a6;
-      --accent-dark: #0f766e;
-      --accent-light: #5eead4;
-      --text: #f5f5f5;
-      --text-muted: #b3b3b3;
-      --glass: rgba(255, 255, 255, 0.05);
-      --glass-border: rgba(255, 255, 255, 0.12);
-      --radius: 16px;
-      --transition: 0.35s cubic-bezier(0.25, 0.8, 0.35, 1);
+      --bg-dark: #060911;
+      --card-bg: #0b1220;
+      --card-inner: #0e1728;
+      --card-border: #16253b;
+      --card-border-active: #00dfb2;
+      --accent: #00dfb2;
+      --accent-dark: #00a885;
+      --accent-glow: rgba(0, 223, 178, 0.22);
+      --text-main: #f0f6fc;
+      --text-muted: #7b8e9f;
+      --text-dim: #4e6175;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* ---------- Reset & Base ---------- */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+
     body {
-      background: var(--bg); color: var(--text);
-      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-      line-height: 1.6; min-height: 100vh;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
       display: flex; flex-direction: column;
-    }
-    a { color: inherit; text-decoration: none; }
-
-    /* Custom scrollbar */
-    ::-webkit-scrollbar { width: 10px; }
-    ::-webkit-scrollbar-track { background: var(--bg-soft); }
-    ::-webkit-scrollbar-thumb { background: linear-gradient(var(--accent), var(--accent-dark)); border-radius: 8px; }
-
-    .container { width: min(1100px, 92%); margin-inline: auto; }
-
-    /* ---------- Glass ---------- */
-    .glass {
-      background: var(--glass); border: 1px solid var(--glass-border);
-      border-radius: var(--radius);
-      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      align-items: center; justify-content: center;
+      padding: 1.5rem 1rem;
+      line-height: 1.5;
     }
 
-    /* ---------- Buttons ---------- */
-    .btn {
-      display: inline-block; width: 100%; padding: 0.95rem 2rem;
-      border: none; border-radius: 999px;
-      font-weight: 700; font-size: 1.05rem; cursor: pointer;
-      position: relative; overflow: hidden;
-      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
-      font-family: inherit; text-align: center;
+    .checkout-wrapper {
+      width: min(880px, 100%);
+      margin: 0 auto;
     }
-    .btn--primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #062622; }
-    .btn--primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(20, 184, 166, 0.4); }
-    .btn--primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-    .ripple-circle {
-      position: absolute; border-radius: 50%;
-      background: rgba(255, 255, 255, 0.45);
-      transform: scale(0);
-      animation: ripple 0.6s ease-out forwards;
-      pointer-events: none;
+    /* ---------- Header & Logo ---------- */
+    .header {
+      text-align: center;
+      margin-bottom: 1.8rem;
     }
-    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
 
-    /* ---------- Top Progress Bar ---------- */
-    .progress-bar {
-      position: fixed; top: 0; left: 0; width: 0; height: 3px; z-index: 9999;
-      background: linear-gradient(90deg, var(--accent), var(--accent-light));
-      box-shadow: 0 0 10px rgba(20, 184, 166, 0.5), 0 0 5px rgba(20, 184, 166, 0.3);
-      transition: width 0.4s ease, opacity 0.4s ease;
-      pointer-events: none;
+    .brand-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      text-decoration: none;
+      margin-bottom: 0.8rem;
     }
-    .progress-bar.done { opacity: 0; }
 
-    /* ---------- Header Navigation ---------- */
-    .nav {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(15, 15, 15, 0.85);
-      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--glass-border);
+    .brand-logo svg {
+      width: 32px;
+      height: 32px;
     }
-    .nav__inner { display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; }
-    .nav__logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 0.5px; }
-    .nav__logo span { color: var(--accent); }
-    .nav__back { color: var(--text-muted); font-size: 0.9rem; transition: color var(--transition); }
-    .nav__back:hover { color: var(--accent); }
 
-    /* ---------- Main Layout ---------- */
-    .payment-page { padding: 2.5rem 0 5rem; flex: 1; }
-    .payment-header { text-align: center; margin-bottom: 2.5rem; }
-    .payment-header h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); margin-bottom: 0.4rem; }
-    .payment-header p { color: var(--text-muted); font-size: 1rem; }
+    .secure-badge-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
 
-    .payment-grid {
-      display: grid; gap: 2rem;
+    .secure-line {
+      height: 1px;
+      width: 60px;
+      background: linear-gradient(90deg, transparent, rgba(0, 223, 178, 0.4), transparent);
+    }
+
+    .secure-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .secure-badge svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* ---------- Top Info Bar (Plan, Amount, Phone) ---------- */
+    .info-bar {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      padding: 1.1rem 1.4rem;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    @media (max-width: 680px) {
+      .info-bar {
+        grid-template-columns: 1fr;
+        gap: 0.9rem;
+      }
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding-right: 0.5rem;
+    }
+
+    .info-item:not(:last-child) {
+      border-right: 1px solid var(--card-border);
+    }
+
+    @media (max-width: 680px) {
+      .info-item:not(:last-child) {
+        border-right: none;
+        border-bottom: 1px solid var(--card-border);
+        padding-bottom: 0.8rem;
+      }
+    }
+
+    .info-icon-box {
+      width: 44px;
+      height: 44px;
+      background: var(--card-inner);
+      border: 1px solid rgba(0, 223, 178, 0.3);
+      border-radius: var(--radius-md);
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .info-icon-box svg {
+      width: 22px;
+      height: 22px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .info-text-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 0.15rem;
+    }
+
+    .info-text-val {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ---------- Main Content Grid ---------- */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 310px 1fr;
+      gap: 1.4rem;
       align-items: start;
     }
-    @media (min-width: 860px) {
-      .payment-grid { grid-template-columns: 1fr 380px; }
+
+    @media (max-width: 820px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
-    /* ---------- Left Column: Payment Options ---------- */
-    .payment-methods { padding: 2rem; }
-    .payment-methods h2 {
-      font-size: 1.2rem; margin-bottom: 1.5rem;
-      display: flex; align-items: center; gap: 0.6rem;
+    /* ---------- Left Card: PAYMENT OPTIONS ---------- */
+    .card-options {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
     }
 
-    /* Method Selector Tabs */
-    .method-tabs {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 0.8rem; margin-bottom: 2rem;
-    }
-    .tab-btn {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px; padding: 0.9rem 0.8rem;
-      color: var(--text-muted); text-align: center;
-      font-size: 0.88rem; font-weight: 600; cursor: pointer;
-      display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
-      transition: all var(--transition);
-    }
-    .tab-btn:hover { border-color: rgba(20, 184, 166, 0.5); color: var(--text); }
-    .tab-btn.active {
-      background: rgba(20, 184, 166, 0.12);
-      border-color: var(--accent); color: var(--accent-light);
+    .card-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    /* Form Fields */
-    .method-content { display: none; }
-    .method-content.active { display: block; animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
-    .form-group { display: grid; gap: 0.4rem; margin-bottom: 1.2rem; }
-    .form-group label { font-size: 0.88rem; color: var(--text-muted); }
-    .form-row { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
-
-    input, select {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--glass-border);
-      border-radius: 10px; padding: 0.85rem 1rem;
-      color: var(--text); font: inherit; width: 100%;
-      transition: border-color var(--transition), box-shadow var(--transition);
-    }
-    input:focus, select:focus {
-      outline: none; border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
-    }
-    select option { background: #1a1a1a; color: #fff; }
-
-    /* UPI Apps grid */
-    .upi-apps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; margin-bottom: 1.4rem; }
-    .upi-app-card {
-      background: rgba(255, 255, 255, 0.04); border: 1px solid var(--glass-border);
-      border-radius: 10px; padding: 0.75rem 0.5rem; text-align: center;
-      cursor: pointer; font-size: 0.82rem; font-weight: 600;
-      transition: all var(--transition);
-    }
-    .upi-app-card:hover, .upi-app-card.selected {
-      border-color: var(--accent); background: rgba(20, 184, 166, 0.15); color: var(--accent-light);
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
     }
 
-    .or-divider {
-      text-align: center; color: var(--text-muted); font-size: 0.82rem;
-      margin: 1.2rem 0; position: relative;
-    }
-    .or-divider::before, .or-divider::after {
-      content: ""; position: absolute; top: 50%; width: 42%; height: 1px;
-      background: var(--glass-border);
-    }
-    .or-divider::before { left: 0; }
-    .or-divider::after { right: 0; }
-
-    /* QR simulation */
-    .qr-box {
-      text-align: center; padding: 1.2rem; background: rgba(255,255,255,0.03);
-      border: 1px dashed var(--glass-border); border-radius: 12px; margin-top: 1rem;
-    }
-    .qr-code-img {
-      width: 140px; height: 140px; border-radius: 8px; margin: 0.5rem auto;
-      background: #fff; padding: 8px; display: block;
+    .option-item {
+      background: var(--card-inner);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: var(--transition);
+      user-select: none;
     }
 
-    /* Security badge */
-    .security-badge {
-      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-      color: var(--text-muted); font-size: 0.8rem; margin-top: 1.5rem;
+    .option-item:hover {
+      border-color: rgba(0, 223, 178, 0.4);
+      background: #111d30;
     }
 
-    /* ---------- Right Column: Order Summary ---------- */
-    .order-summary { padding: 1.8rem; position: sticky; top: 90px; }
-    .order-summary h2 {
-      font-size: 1.15rem; margin-bottom: 1.2rem; padding-bottom: 0.8rem;
-      border-bottom: 1px solid var(--glass-border);
-    }
-    .summary-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0.45rem 0; color: var(--text-muted); font-size: 0.92rem;
-    }
-    .summary-row.total {
-      border-top: 1px solid var(--glass-border);
-      margin-top: 0.8rem; padding-top: 1rem;
-      color: var(--text); font-weight: 800; font-size: 1.2rem;
-    }
-    .summary-row.total .amount { color: var(--accent); }
-
-    .plan-pill {
-      display: inline-block; background: rgba(20, 184, 166, 0.15);
-      border: 1px solid rgba(20, 184, 166, 0.35); color: var(--accent-light);
-      font-weight: 700; font-size: 0.72rem; letter-spacing: 1px;
-      padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase;
+    .option-item.active {
+      border-color: var(--card-border-active);
+      box-shadow: 0 0 16px var(--accent-glow);
+      background: #0f2233;
     }
 
-    .user-info-box {
-      margin-top: 1.2rem; padding: 0.9rem 1rem;
-      background: rgba(255, 255, 255, 0.03); border-radius: 10px;
-      border: 1px solid var(--glass-border); font-size: 0.85rem;
+    .option-left {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
     }
-    .user-info-box strong { color: var(--text); display: block; margin-bottom: 0.2rem; }
-    .user-info-box span { color: var(--text-muted); display: block; }
 
-    /* ---------- Status & Alert Messages ---------- */
-    .payment-status {
-      margin-top: 1rem; text-align: center; font-weight: 600;
-      font-size: 0.92rem; min-height: 1.5em;
+    .option-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      flex-shrink: 0;
     }
-    .payment-status.error { color: #f87171; }
-    .payment-status.success { color: var(--accent); }
+
+    .option-name {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    /* Radio button indicator */
+    .radio-circle {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #2d425c;
+      display: grid;
+      place-items: center;
+      transition: var(--transition);
+    }
+
+    .option-item.active .radio-circle {
+      border-color: var(--accent);
+      background: rgba(0, 223, 178, 0.15);
+    }
+
+    .radio-circle::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0;
+      transform: scale(0);
+      transition: var(--transition);
+    }
+
+    .option-item.active .radio-circle::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .secure-trust-footer {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding-top: 0.6rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: 0.4rem;
+    }
+
+    .trust-icon {
+      color: var(--accent);
+      margin-top: 0.1rem;
+    }
+
+    .trust-text-head {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .trust-text-sub {
+      font-size: 0.73rem;
+      color: var(--text-muted);
+    }
+
+    /* ---------- Right Card: PAYMENT DETAILS ---------- */
+    .card-details {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 1.4rem 1.6rem;
+    }
+
+    .details-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.4rem;
+    }
+
+    .timer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .timer-badge svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--accent);
+      fill: none;
+    }
+
+    .timer-badge span.time {
+      color: var(--accent);
+      font-weight: 700;
+      font-family: monospace;
+      font-size: 0.95rem;
+    }
+
+    .details-body {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 1.8rem;
+      align-items: start;
+    }
+
+    @media (max-width: 600px) {
+      .details-body {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* QR Code Column */
+    .qr-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .section-subtitle {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.2rem;
+      align-self: flex-start;
+    }
+
+    .section-subdesc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      align-self: flex-start;
+    }
+
+    .qr-frame {
+      background: #ffffff;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      width: 200px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      position: relative;
+    }
+
+    .qr-frame svg.qr-matrix {
+      width: 100%;
+      height: 100%;
+    }
+
+    .qr-center-icon {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 42px; height: 42px;
+      background: #ffffff;
+      border-radius: 50%;
+      padding: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      display: grid;
+      place-items: center;
+    }
+
+    /* UPI ID Column */
+    .upi-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .upi-input-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .upi-input-field {
+      flex: 1;
+      background: var(--card-inner);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.9rem;
+      color: #ffffff;
+      font-size: 0.9rem;
+      font-family: monospace;
+      outline: none;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 0.65rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .copy-btn:hover {
+      background: rgba(0, 223, 178, 0.12);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .copy-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    /* Divider */
+    .or-divider-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0.2rem 0;
+      position: relative;
+    }
+
+    .or-divider-bar::before {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; top: 50%;
+      height: 1px;
+      background: var(--card-border);
+    }
+
+    .or-circle {
+      position: relative;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      z-index: 1;
+    }
+
+    /* Use Any UPI App Grid */
+    .app-shortcuts-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .app-shortcuts-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+    }
+
+    .app-shortcut-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .app-shortcut-item:hover {
+      transform: translateY(-2px);
+    }
+
+    .app-shortcut-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .app-shortcut-name {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Bottom Action Button */
+    .verify-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #00dfb2, #00b894);
+      color: #041c18;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 0.95rem 1.4rem;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-top: 1.4rem;
+      box-shadow: 0 6px 20px rgba(0, 223, 178, 0.35);
+      transition: var(--transition);
+    }
+
+    .verify-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(0, 223, 178, 0.5);
+    }
+
+    .verify-btn:active {
+      transform: translateY(0);
+    }
+
+    .verify-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .encrypted-note {
+      text-align: center;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      margin-top: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+    }
+
+    .encrypted-note svg {
+      width: 12px;
+      height: 12px;
+      fill: var(--text-muted);
+    }
+
+    /* ---------- Bottom Footer ---------- */
+    .footer-secured {
+      margin-top: 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .footer-line {
+      height: 1px;
+      width: 80px;
+      background: linear-gradient(90deg, transparent, rgba(0, 223, 178, 0.3), transparent);
+    }
+
+    .footer-secured span {
+      color: var(--accent);
+      font-weight: 700;
+    }
 
     /* ---------- Success Modal ---------- */
     .success-modal {
-      position: fixed; inset: 0; z-index: 1000;
-      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
-      display: none; place-items: center; padding: 1.5rem;
-    }
-    .success-modal.active { display: grid; animation: fadeIn 0.4s ease; }
-    .success-card {
-      background: #141414; border: 1px solid var(--glass-border);
-      border-radius: 20px; padding: 2.5rem 2rem; text-align: center;
-      max-width: 440px; width: 100%; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-    }
-    .check-icon {
-      width: 70px; height: 70px; border-radius: 50%;
-      background: rgba(20, 184, 166, 0.2); border: 2px solid var(--accent);
-      color: var(--accent); display: grid; place-items: center;
-      font-size: 2.2rem; margin: 0 auto 1.2rem;
-    }
-    .success-card h3 { font-size: 1.6rem; margin-bottom: 0.5rem; }
-    .success-card p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; }
-    .txn-id {
-      background: rgba(255, 255, 255, 0.05); padding: 0.6rem 1rem;
-      border-radius: 8px; font-family: monospace; font-size: 0.88rem;
-      color: var(--accent-light); margin-bottom: 1.5rem; display: inline-block;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(4, 7, 13, 0.88);
+      backdrop-filter: blur(12px);
+      display: none;
+      place-items: center;
+      padding: 1rem;
     }
 
-    /* ---------- Footer ---------- */
-    .footer {
-      border-top: 1px solid var(--glass-border); background: var(--bg-soft);
-      padding: 1.2rem 0; text-align: center;
-      color: var(--text-muted); font-size: 0.85rem;
+    .success-modal.active {
+      display: grid;
+      animation: modalFade 0.35s ease;
+    }
+
+    @keyframes modalFade {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .success-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border-active);
+      box-shadow: 0 0 35px var(--accent-glow);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      max-width: 420px;
+      width: 100%;
+    }
+
+    .success-icon-wrap {
+      width: 64px;
+      height: 64px;
+      background: rgba(0, 223, 178, 0.15);
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      margin: 0 auto 1.2rem;
+    }
+
+    .success-icon-wrap svg {
+      width: 32px;
+      height: 32px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 3;
+    }
+
+    .success-card h3 {
+      font-size: 1.5rem;
+      color: #ffffff;
+      margin-bottom: 0.4rem;
+    }
+
+    .success-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 1.4rem;
+    }
+
+    .txn-badge {
+      background: var(--card-inner);
+      border: 1px solid var(--card-border);
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+      display: inline-block;
+    }
+
+    .home-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #041c18;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 0.85rem;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-  <!-- ===== Progress Bar ===== -->
-  <div class="progress-bar" id="progressBar"></div>
+  <div class="checkout-wrapper">
 
-  <!-- ===== Navbar ===== -->
-  <header class="nav">
-    <nav class="nav__inner container" aria-label="Payment navigation">
-      <a href="/" class="nav__logo">Stream<span>ium</span></a>
-      <a href="/checkout.html" class="nav__back" id="backToCheckout">← Back to Checkout</a>
-    </nav>
-  </header>
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+      <a href="/" class="brand-logo">
+        <!-- Streamium Teal Icon -->
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="40" rx="10" fill="#0b1220"/>
+          <path d="M12 14C12 11.7909 13.7909 10 16 10H28C28 12.2091 26.2091 14 24 14H12Z" fill="#00DFB2"/>
+          <path d="M28 26C28 28.2091 26.2091 30 24 30H12C12 27.7909 13.7909 26 16 26H28Z" fill="#00DFB2"/>
+          <path d="M12 20C12 17.7909 13.7909 16 16 16H24C26.2091 16 28 17.7909 28 20C28 22.2091 26.2091 24 24 24H16C13.7909 24 12 22.2091 12 20Z" fill="#00DFB2"/>
+        </svg>
+        <span>Streamium</span>
+      </a>
 
-  <!-- ===== Payment Section ===== -->
-  <main class="payment-page">
-    <div class="container">
-      <div class="payment-header">
-        <h1>Payment Details</h1>
-        <p>Choose your preferred payment method to complete your order</p>
+      <div class="secure-badge-container">
+        <div class="secure-line"></div>
+        <div class="secure-badge">
+          <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+          SECURE CHECKOUT
+        </div>
+        <div class="secure-line"></div>
+      </div>
+    </header>
+
+    <!-- ===== TOP INFO BAR ===== -->
+    <section class="info-bar">
+      <!-- Item 1: Plan -->
+      <div class="info-item">
+        <div class="info-icon-box">
+          <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M17 2l-5 5-5-5"/></svg>
+        </div>
+        <div>
+          <span class="info-text-label">Plan</span>
+          <div class="info-text-val" id="displayPlan">Streamium Premium (1 Month)</div>
+        </div>
       </div>
 
-      <div class="payment-grid">
+      <!-- Item 2: Amount -->
+      <div class="info-item">
+        <div class="info-icon-box">
+          <svg viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>
+        </div>
+        <div>
+          <span class="info-text-label">Amount</span>
+          <div class="info-text-val" id="displayAmount">₹199</div>
+        </div>
+      </div>
 
-        <!-- ===== Left: Payment Method Form ===== -->
-        <section class="payment-methods glass">
-          <h2>Select Payment Method</h2>
+      <!-- Item 3: Mobile Number -->
+      <div class="info-item">
+        <div class="info-icon-box">
+          <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <div>
+          <span class="info-text-label">Mobile Number</span>
+          <div class="info-text-val" id="displayPhone">+91 9876543210</div>
+        </div>
+      </div>
+    </section>
 
-          <!-- Payment Tabs -->
-          <div class="method-tabs" role="tablist">
-            <button type="button" class="tab-btn active" data-tab="upi">
-              <span>📱</span> UPI / QR
-            </button>
-            <button type="button" class="tab-btn" data-tab="card">
-              <span>💳</span> Cards
-            </button>
-            <button type="button" class="tab-btn" data-tab="netbanking">
-              <span>🏦</span> Net Banking
-            </button>
-            <button type="button" class="tab-btn" data-tab="wallet">
-              <span>👛</span> Wallets
-            </button>
+    <!-- ===== MAIN TWO-COLUMN GRID ===== -->
+    <div class="main-grid">
+
+      <!-- LEFT COLUMN: PAYMENT OPTIONS -->
+      <aside class="card-options">
+        <div class="card-title">
+          <span>PAYMENT OPTIONS</span>
+        </div>
+
+        <div class="options-list">
+          <!-- 1. UPI (Active) -->
+          <div class="option-item active" data-option="upi">
+            <div class="option-left">
+              <div class="option-icon" style="background:#0b1d28;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L2 19h20L12 2z" fill="#00DFB2"/>
+                  <path d="M12 8l-5 9h10l-5-9z" fill="#FFC72C"/>
+                </svg>
+              </div>
+              <span class="option-name">UPI</span>
+            </div>
+            <div class="radio-circle"></div>
           </div>
 
-          <!-- TAB 1: UPI / QR -->
-          <div class="method-content active" id="tab-upi">
-            <label style="font-size:0.88rem; color:var(--text-muted); margin-bottom:0.6rem; display:block;">
-              Select UPI App
-            </label>
-            <div class="upi-apps">
-              <div class="upi-app-card selected" data-app="gpay">GPay</div>
-              <div class="upi-app-card" data-app="phonepe">PhonePe</div>
-              <div class="upi-app-card" data-app="paytm">Paytm</div>
-              <div class="upi-app-card" data-app="bhim">BHIM</div>
+          <!-- 2. Google Pay -->
+          <div class="option-item" data-option="gpay">
+            <div class="option-left">
+              <div class="option-icon" style="background:#ffffff;">
+                <svg width="22" height="22" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+              </div>
+              <span class="option-name">Google Pay</span>
             </div>
+            <div class="radio-circle"></div>
+          </div>
 
-            <div class="form-group">
-              <label for="upiId">Enter UPI ID</label>
-              <input type="text" id="upiId" placeholder="username@upi or 9876543210@paytm" value="user@okaxis" />
+          <!-- 3. PhonePe -->
+          <div class="option-item" data-option="phonepe">
+            <div class="option-left">
+              <div class="option-icon" style="background:#5f259f;">
+                <span style="color:#fff; font-weight:900; font-size:0.9rem;">पे</span>
+              </div>
+              <span class="option-name">PhonePe</span>
             </div>
+            <div class="radio-circle"></div>
+          </div>
 
-            <div class="or-divider">OR SCAN QR CODE</div>
+          <!-- 4. Paytm -->
+          <div class="option-item" data-option="paytm">
+            <div class="option-left">
+              <div class="option-icon" style="background:#ffffff;">
+                <span style="color:#002e6e; font-weight:900; font-size:0.65rem; letter-spacing:-0.5px;">paytm</span>
+              </div>
+              <span class="option-name">Paytm</span>
+            </div>
+            <div class="radio-circle"></div>
+          </div>
 
-            <div class="qr-box">
-              <p style="font-size:0.85rem; color:var(--text-muted);">Scan with any UPI App (GPay, PhonePe, Paytm)</p>
-              <!-- SVG generated QR code representation -->
-              <svg class="qr-code-img" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- 5. FamApp -->
+          <div class="option-item" data-option="famapp">
+            <div class="option-left">
+              <div class="option-icon" style="background:#ff5500;">
+                <span style="color:#fff; font-weight:900; font-size:0.95rem;">F</span>
+              </div>
+              <span class="option-name">FamApp</span>
+            </div>
+            <div class="radio-circle"></div>
+          </div>
+        </div>
+
+        <div class="secure-trust-footer">
+          <div class="trust-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div>
+            <div class="trust-text-head">100% Secure Payments</div>
+            <div class="trust-text-sub">Your data is safe with us</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- RIGHT COLUMN: PAYMENT DETAILS -->
+      <main class="card-details">
+        <div class="details-header">
+          <div class="card-title">PAYMENT DETAILS</div>
+          <div class="timer-badge">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span class="time" id="countdownTimer">10:00</span> minutes
+          </div>
+        </div>
+
+        <div class="details-body">
+
+          <!-- Left side: SCAN & PAY QR -->
+          <div class="qr-column">
+            <div class="section-subtitle">SCAN & PAY</div>
+            <div class="section-subdesc">Scan the QR code using any UPI app</div>
+
+            <div class="qr-frame">
+              <!-- Crisp SVG QR Matrix -->
+              <svg class="qr-matrix" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="100" height="100" fill="white"/>
-                <rect x="10" y="10" width="25" height="25" fill="black"/>
-                <rect x="15" y="15" width="15" height="15" fill="white"/>
-                <rect x="18" y="18" width="9" height="9" fill="black"/>
-                <rect x="65" y="10" width="25" height="25" fill="black"/>
-                <rect x="70" y="15" width="15" height="15" fill="white"/>
-                <rect x="73" y="18" width="9" height="9" fill="black"/>
-                <rect x="10" y="65" width="25" height="25" fill="black"/>
-                <rect x="15" y="70" width="15" height="15" fill="white"/>
-                <rect x="18" y="73" width="9" height="9" fill="black"/>
-                <rect x="42" y="10" width="10" height="20" fill="black"/>
-                <rect x="42" y="42" width="16" height="16" fill="black"/>
-                <rect x="65" y="45" width="25" height="10" fill="black"/>
-                <rect x="65" y="65" width="12" height="25" fill="black"/>
-                <rect x="82" y="75" width="8" height="15" fill="black"/>
-                <rect x="42" y="70" width="15" height="20" fill="black"/>
+                <!-- Outer Finder Patterns -->
+                <rect x="6" y="6" width="26" height="26" fill="black"/>
+                <rect x="11" y="11" width="16" height="16" fill="white"/>
+                <rect x="15" y="15" width="8" height="8" fill="black"/>
+
+                <rect x="68" y="6" width="26" height="26" fill="black"/>
+                <rect x="73" y="11" width="16" height="16" fill="white"/>
+                <rect x="77" y="15" width="8" height="8" fill="black"/>
+
+                <rect x="6" y="68" width="26" height="26" fill="black"/>
+                <rect x="11" y="73" width="16" height="16" fill="white"/>
+                <rect x="15" y="77" width="8" height="8" fill="black"/>
+
+                <!-- Data Modules -->
+                <rect x="38" y="8" width="6" height="14" fill="black"/>
+                <rect x="50" y="6" width="10" height="6" fill="black"/>
+                <rect x="46" y="18" width="12" height="6" fill="black"/>
+
+                <rect x="8" y="38" width="12" height="6" fill="black"/>
+                <rect x="24" y="44" width="8" height="8" fill="black"/>
+                <rect x="6" y="54" width="16" height="6" fill="black"/>
+
+                <rect x="70" y="38" width="8" height="14" fill="black"/>
+                <rect x="84" y="44" width="10" height="12" fill="black"/>
+                <rect x="66" y="58" width="16" height="6" fill="black"/>
+
+                <rect x="38" y="70" width="8" height="16" fill="black"/>
+                <rect x="52" y="66" width="10" height="8" fill="black"/>
+                <rect x="48" y="82" width="18" height="10" fill="black"/>
+                <rect x="72" y="74" width="18" height="18" fill="black"/>
               </svg>
-              <p style="font-size:0.78rem; color:var(--accent-light); font-weight:600;">₹<span class="pay-amount-label">0.00</span></p>
-            </div>
-          </div>
 
-          <!-- TAB 2: Credit / Debit Cards -->
-          <div class="method-content" id="tab-card">
-            <div class="form-group">
-              <label for="cardName">Cardholder Name</label>
-              <input type="text" id="cardName" placeholder="Name as printed on card" />
-            </div>
-
-            <div class="form-group">
-              <label for="cardNumber">Card Number</label>
-              <input type="text" id="cardNumber" placeholder="4111 2222 3333 4444" maxlength="19" inputmode="numeric" />
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="cardExpiry">Expiry Date</label>
-                <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" />
-              </div>
-              <div class="form-group">
-                <label for="cardCvv">CVV</label>
-                <input type="password" id="cardCvv" placeholder="123" maxlength="4" inputmode="numeric" />
+              <!-- Center Logo -->
+              <div class="qr-center-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L2 19h20L12 2z" fill="#00DFB2"/>
+                  <path d="M12 8l-5 9h10l-5-9z" fill="#FFC72C"/>
+                </svg>
               </div>
             </div>
           </div>
 
-          <!-- TAB 3: Net Banking -->
-          <div class="method-content" id="tab-netbanking">
-            <div class="form-group">
-              <label for="bankSelect">Select Bank</label>
-              <select id="bankSelect">
-                <option value="hdfc">HDFC Bank</option>
-                <option value="icici">ICICI Bank</option>
-                <option value="sbi">State Bank of India (SBI)</option>
-                <option value="axis">Axis Bank</option>
-                <option value="kotak">Kotak Mahindra Bank</option>
-                <option value="other">Other Banks</option>
-              </select>
-            </div>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.8rem;">
-              You will be redirected to your bank's secure portal to authorize the transaction.
-            </p>
-          </div>
-
-          <!-- TAB 4: Wallets -->
-          <div class="method-content" id="tab-wallet">
-            <div class="form-group">
-              <label for="walletSelect">Select Wallet</label>
-              <select id="walletSelect">
-                <option value="amazonpay">Amazon Pay</option>
-                <option value="paytmwallet">Paytm Wallet</option>
-                <option value="mobikwik">MobiKwik</option>
-                <option value="freecharge">Freecharge</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="walletMobile">Linked Mobile Number</label>
-              <input type="tel" id="walletMobile" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric" />
-            </div>
-          </div>
-
-          <!-- Payment Button & Status -->
-          <div style="margin-top: 2rem;">
-            <button type="button" class="btn btn--primary ripple" id="completePaymentBtn">
-              Complete Payment ₹<span class="pay-amount-label">0.00</span>
-            </button>
-
-            <div class="security-badge">
-              <span>🔒 256-bit SSL Encrypted</span> • <span>Bank Grade Security</span>
+          <!-- Right side: OR PAY USING UPI ID -->
+          <div class="upi-column">
+            <div>
+              <div class="section-subtitle">OR PAY USING UPI ID</div>
+              <div class="upi-input-group" style="margin-top:0.6rem;">
+                <input type="text" class="upi-input-field" id="upiIdValue" value="streamium@upi" readonly />
+                <button class="copy-btn" id="copyUpiBtn">
+                  <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <span>Copy</span>
+                </button>
+              </div>
             </div>
 
-            <div class="payment-status" id="paymentStatus" role="status"></div>
-          </div>
-        </section>
+            <div class="or-divider-bar">
+              <div class="or-circle">OR</div>
+            </div>
 
-        <!-- ===== Right: Order & Customer Summary ===== -->
-        <aside class="order-summary glass" aria-label="Order breakdown">
-          <h2>Summary</h2>
+            <div>
+              <div class="app-shortcuts-label">USE ANY UPI APP</div>
+              <div class="app-shortcuts-grid" style="margin-top:0.6rem;">
+                <!-- GPay Shortcut -->
+                <div class="app-shortcut-item">
+                  <div class="app-shortcut-icon" style="background:#ffffff;">
+                    <svg width="24" height="24" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                  </div>
+                  <span class="app-shortcut-name">G Pay</span>
+                </div>
 
-          <div class="summary-row">
-            <span>Plan</span>
-            <span class="plan-pill" id="summaryPlanName">PREMIUM</span>
-          </div>
-          <div class="summary-row">
-            <span>Quality</span>
-            <span id="summaryPlanQuality" style="color:var(--text); font-weight:600;">4K Ultra HD</span>
-          </div>
-          <div class="summary-row">
-            <span>Base price</span>
-            <span id="summaryBasePrice">₹166.25</span>
-          </div>
-          <div class="summary-row">
-            <span>GST (18%)</span>
-            <span id="summaryGst">₹29.92</span>
-          </div>
-          <div class="summary-row total">
-            <span>Total Payable</span>
-            <span class="amount" id="summaryTotalPrice">₹196.17</span>
+                <!-- PhonePe Shortcut -->
+                <div class="app-shortcut-item">
+                  <div class="app-shortcut-icon" style="background:#5f259f;">
+                    <span style="color:#fff; font-weight:900; font-size:1.1rem;">पे</span>
+                  </div>
+                  <span class="app-shortcut-name">PhonePe</span>
+                </div>
+
+                <!-- Paytm Shortcut -->
+                <div class="app-shortcut-item">
+                  <div class="app-shortcut-icon" style="background:#ffffff;">
+                    <span style="color:#002e6e; font-weight:900; font-size:0.75rem; letter-spacing:-0.5px;">paytm</span>
+                  </div>
+                  <span class="app-shortcut-name">Paytm</span>
+                </div>
+
+                <!-- FamApp Shortcut -->
+                <div class="app-shortcut-item">
+                  <div class="app-shortcut-icon" style="background:#ff5500;">
+                    <span style="color:#fff; font-weight:900; font-size:1.1rem;">F</span>
+                  </div>
+                  <span class="app-shortcut-name">FamApp</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- Customer details -->
-          <div class="user-info-box">
-            <strong id="summaryCustomerName">Customer Details</strong>
-            <span id="summaryCustomerPhone"></span>
-            <span id="summaryCustomerLocation"></span>
-          </div>
-        </aside>
+        </div>
 
+        <!-- Verify Payment Action Button -->
+        <button type="button" class="verify-btn" id="verifyPaymentBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          <span>VERIFY PAYMENT</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:auto;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+
+        <div class="encrypted-note">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Your payment is 100% secure and encrypted
+        </div>
+      </main>
+
+    </div>
+
+    <!-- ===== BOTTOM FOOTER ===== -->
+    <footer class="footer-secured">
+      <div class="footer-line"></div>
+      <div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#00DFB2" style="vertical-align:middle; margin-right:4px;"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+        Secured by <span>Streamium</span>
       </div>
-    </div>
-  </main>
+      <div class="footer-line"></div>
+    </footer>
 
-  <!-- ===== Success Modal Overlay ===== -->
-  <div class="success-modal" id="successModal">
-    <div class="success-card">
-      <div class="check-icon">✓</div>
-      <h3>Payment Successful!</h3>
-      <p>Thank you for subscribing to Streamium. Your plan is now active.</p>
-      <div class="txn-id">TXN: <span id="txnIdDisplay">STRM_987654321</span></div>
-      <button class="btn btn--primary" id="goHomeBtn">Go to Home Screen</button>
-    </div>
   </div>
 
-  <!-- ===== Footer ===== -->
-  <footer class="footer">
-    © 2026 Streamium. All rights reserved. Secure payment demonstration page.
-  </footer>
+  <!-- ===== SUCCESS MODAL OVERLAY ===== -->
+  <div class="success-modal" id="successModal">
+    <div class="success-card">
+      <div class="success-icon-wrap">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h3>Payment Verified!</h3>
+      <p>Your transaction was successful. Your Streamium plan is now active.</p>
+      <div class="txn-badge">TXN: <span id="txnId">STRM_987654321</span></div>
+      <button class="home-btn" id="goHomeBtn">Go to Home Screen</button>
+    </div>
+  </div>
 
   <script>
     "use strict";
 
-    /* ---------- Load Checkout State from sessionStorage or URL ---------- */
-    const PLANS = {
-      basic: { name: "Basic", quality: "720p HD", basePrice: 68.97, gst: 12.41, total: 81.38 },
-      standard: { name: "Standard", quality: "1080p Full HD", basePrice: 133.82, gst: 24.09, total: 157.91 },
-      premium: { name: "Premium", quality: "4K Ultra HD", basePrice: 166.25, gst: 29.92, total: 196.17 }
-    };
-
+    /* ---------- Load Data from sessionStorage / URL ---------- */
     const params = new URLSearchParams(location.search);
-    const planKey = params.get("plan") || "premium";
-    const defaultPlan = PLANS[planKey] || PLANS.premium;
+    const planParam = params.get("plan") || "premium";
+
+    const defaultPlans = {
+      basic: { name: "Streamium Basic (1 Month)", amount: "₹81.38" },
+      standard: { name: "Streamium Standard (1 Month)", amount: "₹157.91" },
+      premium: { name: "Streamium Premium (1 Month)", amount: "₹199" }
+    };
 
     let checkoutData = null;
     try {
@@ -501,134 +1049,89 @@
       if (stored) checkoutData = JSON.parse(stored);
     } catch (_) {}
 
-    const planName = checkoutData ? checkoutData.planName : defaultPlan.name;
-    const planQuality = checkoutData ? checkoutData.planQuality : defaultPlan.quality;
-    const basePrice = checkoutData ? checkoutData.basePrice : defaultPlan.basePrice;
-    const gstAmount = checkoutData ? checkoutData.gstAmount : defaultPlan.gst;
-    const totalPrice = checkoutData ? checkoutData.totalPrice : defaultPlan.total;
+    const selectedPlan = checkoutData ? `${checkoutData.planName} (1 Month)` : (defaultPlans[planParam]?.name || "Streamium Premium (1 Month)");
+    const selectedAmount = checkoutData ? `₹${checkoutData.totalPrice}` : (defaultPlans[planParam]?.amount || "₹199");
+    const userPhone = (checkoutData && checkoutData.phone) ? `+91 ${checkoutData.phone}` : "+91 9876543210";
 
-    // Render Order Summary
-    document.getElementById("summaryPlanName").textContent = planName;
-    document.getElementById("summaryPlanQuality").textContent = planQuality;
-    document.getElementById("summaryBasePrice").textContent = `₹${basePrice.toFixed(2)}`;
-    document.getElementById("summaryGst").textContent = `₹${gstAmount.toFixed(2)}`;
-    document.getElementById("summaryTotalPrice").textContent = `₹${totalPrice.toFixed(2)}`;
+    document.getElementById("displayPlan").textContent = selectedPlan;
+    document.getElementById("displayAmount").textContent = selectedAmount;
+    document.getElementById("displayPhone").textContent = userPhone;
 
-    document.querySelectorAll(".pay-amount-label").forEach(el => {
-      el.textContent = totalPrice.toFixed(2);
-    });
-
-    if (checkoutData && (checkoutData.firstName || checkoutData.lastName)) {
-      document.getElementById("summaryCustomerName").textContent = `${checkoutData.firstName || ""} ${checkoutData.lastName || ""}`.trim();
-      if (checkoutData.phone) {
-        document.getElementById("summaryCustomerPhone").textContent = `+91 ${checkoutData.phone}`;
-      }
-      if (checkoutData.city || checkoutData.state) {
-        document.getElementById("summaryCustomerLocation").textContent = `${checkoutData.city || ""}, ${checkoutData.state || ""}`.replace(/^, |, $/g, "");
-      }
-    }
-
-    // Set Back to Checkout link query
-    const backBtn = document.getElementById("backToCheckout");
-    if (backBtn) backBtn.href = `/checkout.html?plan=${encodeURIComponent(planKey)}`;
-
-    /* ---------- Tab Switcher ---------- */
-    const tabBtns = document.querySelectorAll(".tab-btn");
-    const methodContents = document.querySelectorAll(".method-content");
-
-    tabBtns.forEach(btn => {
-      btn.addEventListener("click", () => {
-        const targetTab = btn.dataset.tab;
-        tabBtns.forEach(b => b.classList.remove("active"));
-        methodContents.forEach(c => c.classList.remove("active"));
-
-        btn.classList.add("active");
-        const activeContent = document.getElementById(`tab-${targetTab}`);
-        if (activeContent) activeContent.classList.add("active");
-      });
-    });
-
-    /* ---------- UPI App selector ---------- */
-    const upiAppCards = document.querySelectorAll(".upi-app-card");
-    upiAppCards.forEach(card => {
-      card.addEventListener("click", () => {
-        upiAppCards.forEach(c => c.classList.remove("selected"));
-        card.classList.add("selected");
-        const app = card.dataset.app;
-        const upiInput = document.getElementById("upiId");
-        if (upiInput) {
-          upiInput.value = `user@${app === 'gpay' ? 'okaxis' : app === 'phonepe' ? 'ybl' : app === 'paytm' ? 'paytm' : 'upi'}`;
+    /* ---------- Payment Option Selector ---------- */
+    const optionItems = document.querySelectorAll(".option-item");
+    optionItems.forEach(item => {
+      item.addEventListener("click", () => {
+        optionItems.forEach(i => i.classList.remove("active"));
+        item.classList.add("active");
+        const opt = item.dataset.option;
+        const upiField = document.getElementById("upiIdValue");
+        if (upiField) {
+          upiField.value = opt === "gpay" ? "streamium@okaxis" :
+                          opt === "phonepe" ? "streamium@ybl" :
+                          opt === "paytm" ? "streamium@paytm" :
+                          opt === "famapp" ? "streamium@fam" : "streamium@upi";
         }
       });
     });
 
-    /* ---------- Formatting for Card Input ---------- */
-    const cardNumberInput = document.getElementById("cardNumber");
-    if (cardNumberInput) {
-      cardNumberInput.addEventListener("input", (e) => {
-        let v = e.target.value.replace(/\D/g, "").substring(0, 16);
-        let matches = v.match(/.{1,4}/g);
-        e.target.value = matches ? matches.join(" ") : v;
+    /* ---------- Copy UPI ID ---------- */
+    const copyBtn = document.getElementById("copyUpiBtn");
+    const upiInput = document.getElementById("upiIdValue");
+
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(upiInput.value).then(() => {
+        const textSpan = copyBtn.querySelector("span");
+        textSpan.textContent = "Copied!";
+        copyBtn.style.borderColor = "#00DFB2";
+        copyBtn.style.color = "#00DFB2";
+        setTimeout(() => {
+          textSpan.textContent = "Copy";
+        }, 2000);
+      }).catch(() => {
+        upiInput.select();
+        document.execCommand("copy");
+        copyBtn.querySelector("span").textContent = "Copied!";
+        setTimeout(() => {
+          copyBtn.querySelector("span").textContent = "Copy";
+        }, 2000);
       });
-    }
+    });
 
-    const cardExpiryInput = document.getElementById("cardExpiry");
-    if (cardExpiryInput) {
-      cardExpiryInput.addEventListener("input", (e) => {
-        let v = e.target.value.replace(/\D/g, "").substring(0, 4);
-        if (v.length >= 3) {
-          e.target.value = `${v.substring(0, 2)}/${v.substring(2)}`;
-        } else {
-          e.target.value = v;
+    /* ---------- 10-Minute Countdown Timer ---------- */
+    (function startTimer() {
+      let duration = 10 * 60; // 10 minutes in seconds
+      const timerDisplay = document.getElementById("countdownTimer");
+      if (!timerDisplay) return;
+
+      const timerInterval = setInterval(() => {
+        const minutes = Math.floor(duration / 60);
+        const seconds = duration % 60;
+
+        timerDisplay.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+        if (--duration < 0) {
+          clearInterval(timerInterval);
+          timerDisplay.textContent = "00:00";
         }
-      });
-    }
-
-    /* ---------- Payment Completion Handler ---------- */
-    const payBtn = document.getElementById("completePaymentBtn");
-    const payStatus = document.getElementById("paymentStatus");
-    const successModal = document.getElementById("successModal");
-    const txnIdDisplay = document.getElementById("txnIdDisplay");
-
-    payBtn.addEventListener("click", async () => {
-      payStatus.className = "payment-status";
-      payStatus.textContent = "";
-
-      // Simple active tab validation
-      const activeTab = document.querySelector(".tab-btn.active")?.dataset.tab;
-      if (activeTab === "upi") {
-        const upiVal = document.getElementById("upiId").value.trim();
-        if (!upiVal || !upiVal.includes("@")) {
-          payStatus.className = "payment-status error";
-          payStatus.textContent = "Please enter a valid UPI ID (e.g. name@bank).";
-          return;
-        }
-      } else if (activeTab === "card") {
-        const cNum = document.getElementById("cardNumber").value.replace(/\s/g, "");
-        const cExp = document.getElementById("cardExpiry").value.trim();
-        const cCvv = document.getElementById("cardCvv").value.trim();
-        if (cNum.length < 15 || !cExp.includes("/") || cCvv.length < 3) {
-          payStatus.className = "payment-status error";
-          payStatus.textContent = "Please enter valid card details.";
-          return;
-        }
-      }
-
-      // Processing state UI
-      payBtn.disabled = true;
-      payBtn.textContent = "Processing Payment...";
-      payStatus.className = "payment-status";
-      payStatus.textContent = "Connecting to payment gateway...";
-
-      setTimeout(() => {
-        payStatus.textContent = "Authorizing transaction...";
       }, 1000);
+    })();
+
+    /* ---------- Verify Payment Button & Success Modal ---------- */
+    const verifyBtn = document.getElementById("verifyPaymentBtn");
+    const successModal = document.getElementById("successModal");
+    const txnIdEl = document.getElementById("txnId");
+
+    verifyBtn.addEventListener("click", () => {
+      const btnSpan = verifyBtn.querySelector("span");
+      btnSpan.textContent = "VERIFYING PAYMENT...";
+      verifyBtn.style.opacity = "0.8";
+      verifyBtn.disabled = true;
 
       setTimeout(() => {
         const randomTxn = "STRM_" + Math.random().toString(36).substring(2, 11).toUpperCase();
-        txnIdDisplay.textContent = randomTxn;
+        txnIdEl.textContent = randomTxn;
 
-        // Try notifying backend if api/payment/verify or subscription is available
+        // Optionally send payment verification request to backend
         fetch("/api/payment/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -637,37 +1140,18 @@
             razorpay_order_id: "ORDER_" + randomTxn,
             razorpay_payment_id: randomTxn,
             razorpay_signature: "simulated_signature",
-            planName: planName,
-            amountPaid: totalPrice
+            planName: selectedPlan,
+            amountPaid: selectedAmount
           })
         }).catch(() => {});
 
-        // Show Success Modal
         successModal.classList.add("active");
-      }, 2400);
+      }, 2000);
     });
 
-    // Go Home action
     document.getElementById("goHomeBtn").addEventListener("click", () => {
       window.location.href = "/";
     });
-
-    /* ---------- Progress Bar Logic ---------- */
-    (function() {
-      const bar = document.getElementById('progressBar');
-      if (!bar) return;
-      let w = 0;
-      const iv = setInterval(() => {
-        w += Math.random() * 15 + 5;
-        if (w > 90) w = 90;
-        bar.style.width = w + '%';
-      }, 200);
-      window.addEventListener('load', () => {
-        clearInterval(iv);
-        bar.style.width = '100%';
-        setTimeout(() => { bar.classList.add('done'); }, 400);
-      });
-    })();
   </script>
 </body>
 </html>
