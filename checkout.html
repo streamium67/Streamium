@@ -6,8 +6,6 @@
   <meta name="description" content="Streamium checkout — complete your subscription securely." />
   <title>Checkout — Streamium</title>
 
-  <!-- Razorpay Checkout -->
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
   <style>
     /* ---------- Design tokens (same as main site) ---------- */
@@ -496,30 +494,13 @@
       }
     });
 
-    /* ---------- Form submit → Razorpay Payment ---------- */
+    /* ---------- Form submit → Redirect to payment.html ---------- */
     const form = document.getElementById("checkoutForm");
     const formError = document.getElementById("formError");
     const payStatus = document.getElementById("payStatus");
     const payBtn = document.getElementById("payBtn");
-    let currentUserEmail = "";
-    let currentUserName = "";
-    let currentUserPhone = "";
 
-    // Capture user info for Razorpay prefill
-    (async function captureUser() {
-      try {
-        const r = await fetch("/api/auth/me", { credentials: "same-origin" });
-        if (r.ok) {
-          const d = await r.json();
-          if (d.user) {
-            currentUserEmail = d.user.email || "";
-            currentUserName = d.user.name || "";
-          }
-        }
-      } catch (_) {}
-    })();
-
-    form.addEventListener("submit", async (e) => {
+    form.addEventListener("submit", (e) => {
       e.preventDefault();
       formError.textContent = "";
       payStatus.textContent = "";
@@ -531,105 +512,30 @@
         return;
       }
 
-      currentUserPhone = form.phone.value.trim();
-      const firstName = form.firstName.value.trim();
+      // Collect user billing and profile details
+      const checkoutData = {
+        firstName: form.firstName.value.trim(),
+        lastName: form.lastName.value.trim(),
+        phone: form.phone.value.trim(),
+        profileName: form.profileName.value.trim(),
+        address1: form.address1.value.trim(),
+        city: form.city.value.trim(),
+        state: form.state.value.trim(),
+        pincode: form.pincode.value.trim(),
+        planKey: params.get("plan") || "premium",
+        planName: plan.name,
+        planQuality: plan.quality,
+        basePrice: plan.basePrice,
+        gstAmount: gstAmount,
+        totalPrice: totalPrice,
+      };
 
-      // Disable button while processing
-      payBtn.disabled = true;
-      payBtn.textContent = "Processing...";
-      payStatus.style.color = "var(--accent)";
-      payStatus.textContent = "Creating payment order...";
+      // Save checkout state for payment.html
+      sessionStorage.setItem("streamium_checkout_data", JSON.stringify(checkoutData));
 
-      try {
-        // 1. Get Razorpay Key
-        const keyRes = await fetch("/api/payment/key");
-        const { key } = await keyRes.json();
-        if (!key) throw new Error("Razorpay key not configured.");
-
-        // 2. Create order on backend
-        const orderRes = await fetch("/api/payment/create-order", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify({ amount: totalPrice, planName: plan.name }),
-        });
-        const orderData = await orderRes.json();
-        if (!orderData.success) throw new Error(orderData.error || "Order creation failed.");
-
-        // 3. Open Razorpay checkout popup
-        payStatus.textContent = "Opening payment window...";
-
-        const options = {
-          key: key,
-          amount: orderData.order.amount,
-          currency: orderData.order.currency,
-          name: "Streamium",
-          description: `${plan.name} Plan — ${plan.quality}`,
-          order_id: orderData.order.id,
-          prefill: {
-            name: currentUserName || `${firstName} ${form.lastName.value.trim()}`,
-            email: currentUserEmail,
-            contact: currentUserPhone ? `+91${currentUserPhone}` : "",
-          },
-          theme: {
-            color: "#14b8a6",
-          },
-          handler: async function (response) {
-            // 4. Verify payment on backend
-            payStatus.textContent = "Verifying payment...";
-            try {
-              const verifyRes = await fetch("/api/payment/verify", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "same-origin",
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  planName: plan.name,
-                  amountPaid: totalPrice,
-                }),
-              });
-              const verifyData = await verifyRes.json();
-              if (verifyData.success) {
-                payStatus.style.color = "var(--accent)";
-                payStatus.textContent = `🎉 Payment successful, ${firstName}! Your ${plan.name} plan (₹${totalPrice.toFixed(2)}/month) is now active! Redirecting...`;
-                setTimeout(() => { window.location.href = "/"; }, 2500);
-              } else {
-                throw new Error(verifyData.error || "Verification failed.");
-              }
-            } catch (verifyErr) {
-              payStatus.style.color = "#f87171";
-              payStatus.textContent = "Payment received but verification failed. Contact support.";
-              payBtn.disabled = false;
-              payBtn.textContent = `Pay ₹${totalPrice.toFixed(2)}`;
-            }
-          },
-          modal: {
-            ondismiss: function () {
-              payStatus.style.color = "#f87171";
-              payStatus.textContent = "Payment cancelled. You can try again.";
-              payBtn.disabled = false;
-              payBtn.textContent = `Pay ₹${totalPrice.toFixed(2)}`;
-            },
-          },
-        };
-
-        const rzp = new Razorpay(options);
-        rzp.on("payment.failed", function (response) {
-          payStatus.style.color = "#f87171";
-          payStatus.textContent = `Payment failed: ${response.error.description}. Please try again.`;
-          payBtn.disabled = false;
-          payBtn.textContent = `Pay ₹${totalPrice.toFixed(2)}`;
-        });
-        rzp.open();
-
-      } catch (err) {
-        payStatus.style.color = "#f87171";
-        payStatus.textContent = err.message || "Something went wrong. Please try again.";
-        payBtn.disabled = false;
-        payBtn.textContent = `Pay ₹${totalPrice.toFixed(2)}`;
-      }
+      // Redirect to payment.html
+      const planParam = encodeURIComponent(params.get("plan") || "premium");
+      window.location.href = `/payment.html?plan=${planParam}`;
     });
 
     /* --- Progress bar logic --- */

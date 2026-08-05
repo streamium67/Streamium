@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Streamium Payment — Select your preferred payment method to activate subscription." />
+  <title>Payment — Streamium</title>
+
+  <style>
+    /* ---------- Design Tokens ---------- */
+    :root {
+      --bg: #0f0f0f;
+      --bg-soft: #161616;
+      --accent: #14b8a6;
+      --accent-dark: #0f766e;
+      --accent-light: #5eead4;
+      --text: #f5f5f5;
+      --text-muted: #b3b3b3;
+      --glass: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --radius: 16px;
+      --transition: 0.35s cubic-bezier(0.25, 0.8, 0.35, 1);
+    }
+
+    /* ---------- Reset & Base ---------- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.6; min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg-soft); }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(var(--accent), var(--accent-dark)); border-radius: 8px; }
+
+    .container { width: min(1100px, 92%); margin-inline: auto; }
+
+    /* ---------- Glass ---------- */
+    .glass {
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    }
+
+    /* ---------- Buttons ---------- */
+    .btn {
+      display: inline-block; width: 100%; padding: 0.95rem 2rem;
+      border: none; border-radius: 999px;
+      font-weight: 700; font-size: 1.05rem; cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+      font-family: inherit; text-align: center;
+    }
+    .btn--primary { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #062622; }
+    .btn--primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(20, 184, 166, 0.4); }
+    .btn--primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .ripple-circle {
+      position: absolute; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.45);
+      transform: scale(0);
+      animation: ripple 0.6s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+    /* ---------- Top Progress Bar ---------- */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; width: 0; height: 3px; z-index: 9999;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      box-shadow: 0 0 10px rgba(20, 184, 166, 0.5), 0 0 5px rgba(20, 184, 166, 0.3);
+      transition: width 0.4s ease, opacity 0.4s ease;
+      pointer-events: none;
+    }
+    .progress-bar.done { opacity: 0; }
+
+    /* ---------- Header Navigation ---------- */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15, 15, 15, 0.85);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .nav__inner { display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; }
+    .nav__logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 0.5px; }
+    .nav__logo span { color: var(--accent); }
+    .nav__back { color: var(--text-muted); font-size: 0.9rem; transition: color var(--transition); }
+    .nav__back:hover { color: var(--accent); }
+
+    /* ---------- Main Layout ---------- */
+    .payment-page { padding: 2.5rem 0 5rem; flex: 1; }
+    .payment-header { text-align: center; margin-bottom: 2.5rem; }
+    .payment-header h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); margin-bottom: 0.4rem; }
+    .payment-header p { color: var(--text-muted); font-size: 1rem; }
+
+    .payment-grid {
+      display: grid; gap: 2rem;
+      align-items: start;
+    }
+    @media (min-width: 860px) {
+      .payment-grid { grid-template-columns: 1fr 380px; }
+    }
+
+    /* ---------- Left Column: Payment Options ---------- */
+    .payment-methods { padding: 2rem; }
+    .payment-methods h2 {
+      font-size: 1.2rem; margin-bottom: 1.5rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+
+    /* Method Selector Tabs */
+    .method-tabs {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.8rem; margin-bottom: 2rem;
+    }
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px; padding: 0.9rem 0.8rem;
+      color: var(--text-muted); text-align: center;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+      transition: all var(--transition);
+    }
+    .tab-btn:hover { border-color: rgba(20, 184, 166, 0.5); color: var(--text); }
+    .tab-btn.active {
+      background: rgba(20, 184, 166, 0.12);
+      border-color: var(--accent); color: var(--accent-light);
+    }
+
+    /* Form Fields */
+    .method-content { display: none; }
+    .method-content.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .form-group { display: grid; gap: 0.4rem; margin-bottom: 1.2rem; }
+    .form-group label { font-size: 0.88rem; color: var(--text-muted); }
+    .form-row { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+
+    input, select {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px; padding: 0.85rem 1rem;
+      color: var(--text); font: inherit; width: 100%;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    input:focus, select:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+    }
+    select option { background: #1a1a1a; color: #fff; }
+
+    /* UPI Apps grid */
+    .upi-apps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; margin-bottom: 1.4rem; }
+    .upi-app-card {
+      background: rgba(255, 255, 255, 0.04); border: 1px solid var(--glass-border);
+      border-radius: 10px; padding: 0.75rem 0.5rem; text-align: center;
+      cursor: pointer; font-size: 0.82rem; font-weight: 600;
+      transition: all var(--transition);
+    }
+    .upi-app-card:hover, .upi-app-card.selected {
+      border-color: var(--accent); background: rgba(20, 184, 166, 0.15); color: var(--accent-light);
+    }
+
+    .or-divider {
+      text-align: center; color: var(--text-muted); font-size: 0.82rem;
+      margin: 1.2rem 0; position: relative;
+    }
+    .or-divider::before, .or-divider::after {
+      content: ""; position: absolute; top: 50%; width: 42%; height: 1px;
+      background: var(--glass-border);
+    }
+    .or-divider::before { left: 0; }
+    .or-divider::after { right: 0; }
+
+    /* QR simulation */
+    .qr-box {
+      text-align: center; padding: 1.2rem; background: rgba(255,255,255,0.03);
+      border: 1px dashed var(--glass-border); border-radius: 12px; margin-top: 1rem;
+    }
+    .qr-code-img {
+      width: 140px; height: 140px; border-radius: 8px; margin: 0.5rem auto;
+      background: #fff; padding: 8px; display: block;
+    }
+
+    /* Security badge */
+    .security-badge {
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      color: var(--text-muted); font-size: 0.8rem; margin-top: 1.5rem;
+    }
+
+    /* ---------- Right Column: Order Summary ---------- */
+    .order-summary { padding: 1.8rem; position: sticky; top: 90px; }
+    .order-summary h2 {
+      font-size: 1.15rem; margin-bottom: 1.2rem; padding-bottom: 0.8rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .summary-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.45rem 0; color: var(--text-muted); font-size: 0.92rem;
+    }
+    .summary-row.total {
+      border-top: 1px solid var(--glass-border);
+      margin-top: 0.8rem; padding-top: 1rem;
+      color: var(--text); font-weight: 800; font-size: 1.2rem;
+    }
+    .summary-row.total .amount { color: var(--accent); }
+
+    .plan-pill {
+      display: inline-block; background: rgba(20, 184, 166, 0.15);
+      border: 1px solid rgba(20, 184, 166, 0.35); color: var(--accent-light);
+      font-weight: 700; font-size: 0.72rem; letter-spacing: 1px;
+      padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase;
+    }
+
+    .user-info-box {
+      margin-top: 1.2rem; padding: 0.9rem 1rem;
+      background: rgba(255, 255, 255, 0.03); border-radius: 10px;
+      border: 1px solid var(--glass-border); font-size: 0.85rem;
+    }
+    .user-info-box strong { color: var(--text); display: block; margin-bottom: 0.2rem; }
+    .user-info-box span { color: var(--text-muted); display: block; }
+
+    /* ---------- Status & Alert Messages ---------- */
+    .payment-status {
+      margin-top: 1rem; text-align: center; font-weight: 600;
+      font-size: 0.92rem; min-height: 1.5em;
+    }
+    .payment-status.error { color: #f87171; }
+    .payment-status.success { color: var(--accent); }
+
+    /* ---------- Success Modal ---------- */
+    .success-modal {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
+      display: none; place-items: center; padding: 1.5rem;
+    }
+    .success-modal.active { display: grid; animation: fadeIn 0.4s ease; }
+    .success-card {
+      background: #141414; border: 1px solid var(--glass-border);
+      border-radius: 20px; padding: 2.5rem 2rem; text-align: center;
+      max-width: 440px; width: 100%; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+    .check-icon {
+      width: 70px; height: 70px; border-radius: 50%;
+      background: rgba(20, 184, 166, 0.2); border: 2px solid var(--accent);
+      color: var(--accent); display: grid; place-items: center;
+      font-size: 2.2rem; margin: 0 auto 1.2rem;
+    }
+    .success-card h3 { font-size: 1.6rem; margin-bottom: 0.5rem; }
+    .success-card p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; }
+    .txn-id {
+      background: rgba(255, 255, 255, 0.05); padding: 0.6rem 1rem;
+      border-radius: 8px; font-family: monospace; font-size: 0.88rem;
+      color: var(--accent-light); margin-bottom: 1.5rem; display: inline-block;
+    }
+
+    /* ---------- Footer ---------- */
+    .footer {
+      border-top: 1px solid var(--glass-border); background: var(--bg-soft);
+      padding: 1.2rem 0; text-align: center;
+      color: var(--text-muted); font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Progress Bar ===== -->
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- ===== Navbar ===== -->
+  <header class="nav">
+    <nav class="nav__inner container" aria-label="Payment navigation">
+      <a href="/" class="nav__logo">Stream<span>ium</span></a>
+      <a href="/checkout.html" class="nav__back" id="backToCheckout">← Back to Checkout</a>
+    </nav>
+  </header>
+
+  <!-- ===== Payment Section ===== -->
+  <main class="payment-page">
+    <div class="container">
+      <div class="payment-header">
+        <h1>Payment Details</h1>
+        <p>Choose your preferred payment method to complete your order</p>
+      </div>
+
+      <div class="payment-grid">
+
+        <!-- ===== Left: Payment Method Form ===== -->
+        <section class="payment-methods glass">
+          <h2>Select Payment Method</h2>
+
+          <!-- Payment Tabs -->
+          <div class="method-tabs" role="tablist">
+            <button type="button" class="tab-btn active" data-tab="upi">
+              <span>📱</span> UPI / QR
+            </button>
+            <button type="button" class="tab-btn" data-tab="card">
+              <span>💳</span> Cards
+            </button>
+            <button type="button" class="tab-btn" data-tab="netbanking">
+              <span>🏦</span> Net Banking
+            </button>
+            <button type="button" class="tab-btn" data-tab="wallet">
+              <span>👛</span> Wallets
+            </button>
+          </div>
+
+          <!-- TAB 1: UPI / QR -->
+          <div class="method-content active" id="tab-upi">
+            <label style="font-size:0.88rem; color:var(--text-muted); margin-bottom:0.6rem; display:block;">
+              Select UPI App
+            </label>
+            <div class="upi-apps">
+              <div class="upi-app-card selected" data-app="gpay">GPay</div>
+              <div class="upi-app-card" data-app="phonepe">PhonePe</div>
+              <div class="upi-app-card" data-app="paytm">Paytm</div>
+              <div class="upi-app-card" data-app="bhim">BHIM</div>
+            </div>
+
+            <div class="form-group">
+              <label for="upiId">Enter UPI ID</label>
+              <input type="text" id="upiId" placeholder="username@upi or 9876543210@paytm" value="user@okaxis" />
+            </div>
+
+            <div class="or-divider">OR SCAN QR CODE</div>
+
+            <div class="qr-box">
+              <p style="font-size:0.85rem; color:var(--text-muted);">Scan with any UPI App (GPay, PhonePe, Paytm)</p>
+              <!-- SVG generated QR code representation -->
+              <svg class="qr-code-img" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="100" fill="white"/>
+                <rect x="10" y="10" width="25" height="25" fill="black"/>
+                <rect x="15" y="15" width="15" height="15" fill="white"/>
+                <rect x="18" y="18" width="9" height="9" fill="black"/>
+                <rect x="65" y="10" width="25" height="25" fill="black"/>
+                <rect x="70" y="15" width="15" height="15" fill="white"/>
+                <rect x="73" y="18" width="9" height="9" fill="black"/>
+                <rect x="10" y="65" width="25" height="25" fill="black"/>
+                <rect x="15" y="70" width="15" height="15" fill="white"/>
+                <rect x="18" y="73" width="9" height="9" fill="black"/>
+                <rect x="42" y="10" width="10" height="20" fill="black"/>
+                <rect x="42" y="42" width="16" height="16" fill="black"/>
+                <rect x="65" y="45" width="25" height="10" fill="black"/>
+                <rect x="65" y="65" width="12" height="25" fill="black"/>
+                <rect x="82" y="75" width="8" height="15" fill="black"/>
+                <rect x="42" y="70" width="15" height="20" fill="black"/>
+              </svg>
+              <p style="font-size:0.78rem; color:var(--accent-light); font-weight:600;">₹<span class="pay-amount-label">0.00</span></p>
+            </div>
+          </div>
+
+          <!-- TAB 2: Credit / Debit Cards -->
+          <div class="method-content" id="tab-card">
+            <div class="form-group">
+              <label for="cardName">Cardholder Name</label>
+              <input type="text" id="cardName" placeholder="Name as printed on card" />
+            </div>
+
+            <div class="form-group">
+              <label for="cardNumber">Card Number</label>
+              <input type="text" id="cardNumber" placeholder="4111 2222 3333 4444" maxlength="19" inputmode="numeric" />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="cardExpiry">Expiry Date</label>
+                <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" />
+              </div>
+              <div class="form-group">
+                <label for="cardCvv">CVV</label>
+                <input type="password" id="cardCvv" placeholder="123" maxlength="4" inputmode="numeric" />
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: Net Banking -->
+          <div class="method-content" id="tab-netbanking">
+            <div class="form-group">
+              <label for="bankSelect">Select Bank</label>
+              <select id="bankSelect">
+                <option value="hdfc">HDFC Bank</option>
+                <option value="icici">ICICI Bank</option>
+                <option value="sbi">State Bank of India (SBI)</option>
+                <option value="axis">Axis Bank</option>
+                <option value="kotak">Kotak Mahindra Bank</option>
+                <option value="other">Other Banks</option>
+              </select>
+            </div>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.8rem;">
+              You will be redirected to your bank's secure portal to authorize the transaction.
+            </p>
+          </div>
+
+          <!-- TAB 4: Wallets -->
+          <div class="method-content" id="tab-wallet">
+            <div class="form-group">
+              <label for="walletSelect">Select Wallet</label>
+              <select id="walletSelect">
+                <option value="amazonpay">Amazon Pay</option>
+                <option value="paytmwallet">Paytm Wallet</option>
+                <option value="mobikwik">MobiKwik</option>
+                <option value="freecharge">Freecharge</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="walletMobile">Linked Mobile Number</label>
+              <input type="tel" id="walletMobile" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric" />
+            </div>
+          </div>
+
+          <!-- Payment Button & Status -->
+          <div style="margin-top: 2rem;">
+            <button type="button" class="btn btn--primary ripple" id="completePaymentBtn">
+              Complete Payment ₹<span class="pay-amount-label">0.00</span>
+            </button>
+
+            <div class="security-badge">
+              <span>🔒 256-bit SSL Encrypted</span> • <span>Bank Grade Security</span>
+            </div>
+
+            <div class="payment-status" id="paymentStatus" role="status"></div>
+          </div>
+        </section>
+
+        <!-- ===== Right: Order & Customer Summary ===== -->
+        <aside class="order-summary glass" aria-label="Order breakdown">
+          <h2>Summary</h2>
+
+          <div class="summary-row">
+            <span>Plan</span>
+            <span class="plan-pill" id="summaryPlanName">PREMIUM</span>
+          </div>
+          <div class="summary-row">
+            <span>Quality</span>
+            <span id="summaryPlanQuality" style="color:var(--text); font-weight:600;">4K Ultra HD</span>
+          </div>
+          <div class="summary-row">
+            <span>Base price</span>
+            <span id="summaryBasePrice">₹166.25</span>
+          </div>
+          <div class="summary-row">
+            <span>GST (18%)</span>
+            <span id="summaryGst">₹29.92</span>
+          </div>
+          <div class="summary-row total">
+            <span>Total Payable</span>
+            <span class="amount" id="summaryTotalPrice">₹196.17</span>
+          </div>
+
+          <!-- Customer details -->
+          <div class="user-info-box">
+            <strong id="summaryCustomerName">Customer Details</strong>
+            <span id="summaryCustomerPhone"></span>
+            <span id="summaryCustomerLocation"></span>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== Success Modal Overlay ===== -->
+  <div class="success-modal" id="successModal">
+    <div class="success-card">
+      <div class="check-icon">✓</div>
+      <h3>Payment Successful!</h3>
+      <p>Thank you for subscribing to Streamium. Your plan is now active.</p>
+      <div class="txn-id">TXN: <span id="txnIdDisplay">STRM_987654321</span></div>
+      <button class="btn btn--primary" id="goHomeBtn">Go to Home Screen</button>
+    </div>
+  </div>
+
+  <!-- ===== Footer ===== -->
+  <footer class="footer">
+    © 2026 Streamium. All rights reserved. Secure payment demonstration page.
+  </footer>
+
+  <script>
+    "use strict";
+
+    /* ---------- Load Checkout State from sessionStorage or URL ---------- */
+    const PLANS = {
+      basic: { name: "Basic", quality: "720p HD", basePrice: 68.97, gst: 12.41, total: 81.38 },
+      standard: { name: "Standard", quality: "1080p Full HD", basePrice: 133.82, gst: 24.09, total: 157.91 },
+      premium: { name: "Premium", quality: "4K Ultra HD", basePrice: 166.25, gst: 29.92, total: 196.17 }
+    };
+
+    const params = new URLSearchParams(location.search);
+    const planKey = params.get("plan") || "premium";
+    const defaultPlan = PLANS[planKey] || PLANS.premium;
+
+    let checkoutData = null;
+    try {
+      const stored = sessionStorage.getItem("streamium_checkout_data");
+      if (stored) checkoutData = JSON.parse(stored);
+    } catch (_) {}
+
+    const planName = checkoutData ? checkoutData.planName : defaultPlan.name;
+    const planQuality = checkoutData ? checkoutData.planQuality : defaultPlan.quality;
+    const basePrice = checkoutData ? checkoutData.basePrice : defaultPlan.basePrice;
+    const gstAmount = checkoutData ? checkoutData.gstAmount : defaultPlan.gst;
+    const totalPrice = checkoutData ? checkoutData.totalPrice : defaultPlan.total;
+
+    // Render Order Summary
+    document.getElementById("summaryPlanName").textContent = planName;
+    document.getElementById("summaryPlanQuality").textContent = planQuality;
+    document.getElementById("summaryBasePrice").textContent = `₹${basePrice.toFixed(2)}`;
+    document.getElementById("summaryGst").textContent = `₹${gstAmount.toFixed(2)}`;
+    document.getElementById("summaryTotalPrice").textContent = `₹${totalPrice.toFixed(2)}`;
+
+    document.querySelectorAll(".pay-amount-label").forEach(el => {
+      el.textContent = totalPrice.toFixed(2);
+    });
+
+    if (checkoutData && (checkoutData.firstName || checkoutData.lastName)) {
+      document.getElementById("summaryCustomerName").textContent = `${checkoutData.firstName || ""} ${checkoutData.lastName || ""}`.trim();
+      if (checkoutData.phone) {
+        document.getElementById("summaryCustomerPhone").textContent = `+91 ${checkoutData.phone}`;
+      }
+      if (checkoutData.city || checkoutData.state) {
+        document.getElementById("summaryCustomerLocation").textContent = `${checkoutData.city || ""}, ${checkoutData.state || ""}`.replace(/^, |, $/g, "");
+      }
+    }
+
+    // Set Back to Checkout link query
+    const backBtn = document.getElementById("backToCheckout");
+    if (backBtn) backBtn.href = `/checkout.html?plan=${encodeURIComponent(planKey)}`;
+
+    /* ---------- Tab Switcher ---------- */
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    const methodContents = document.querySelectorAll(".method-content");
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const targetTab = btn.dataset.tab;
+        tabBtns.forEach(b => b.classList.remove("active"));
+        methodContents.forEach(c => c.classList.remove("active"));
+
+        btn.classList.add("active");
+        const activeContent = document.getElementById(`tab-${targetTab}`);
+        if (activeContent) activeContent.classList.add("active");
+      });
+    });
+
+    /* ---------- UPI App selector ---------- */
+    const upiAppCards = document.querySelectorAll(".upi-app-card");
+    upiAppCards.forEach(card => {
+      card.addEventListener("click", () => {
+        upiAppCards.forEach(c => c.classList.remove("selected"));
+        card.classList.add("selected");
+        const app = card.dataset.app;
+        const upiInput = document.getElementById("upiId");
+        if (upiInput) {
+          upiInput.value = `user@${app === 'gpay' ? 'okaxis' : app === 'phonepe' ? 'ybl' : app === 'paytm' ? 'paytm' : 'upi'}`;
+        }
+      });
+    });
+
+    /* ---------- Formatting for Card Input ---------- */
+    const cardNumberInput = document.getElementById("cardNumber");
+    if (cardNumberInput) {
+      cardNumberInput.addEventListener("input", (e) => {
+        let v = e.target.value.replace(/\D/g, "").substring(0, 16);
+        let matches = v.match(/.{1,4}/g);
+        e.target.value = matches ? matches.join(" ") : v;
+      });
+    }
+
+    const cardExpiryInput = document.getElementById("cardExpiry");
+    if (cardExpiryInput) {
+      cardExpiryInput.addEventListener("input", (e) => {
+        let v = e.target.value.replace(/\D/g, "").substring(0, 4);
+        if (v.length >= 3) {
+          e.target.value = `${v.substring(0, 2)}/${v.substring(2)}`;
+        } else {
+          e.target.value = v;
+        }
+      });
+    }
+
+    /* ---------- Payment Completion Handler ---------- */
+    const payBtn = document.getElementById("completePaymentBtn");
+    const payStatus = document.getElementById("paymentStatus");
+    const successModal = document.getElementById("successModal");
+    const txnIdDisplay = document.getElementById("txnIdDisplay");
+
+    payBtn.addEventListener("click", async () => {
+      payStatus.className = "payment-status";
+      payStatus.textContent = "";
+
+      // Simple active tab validation
+      const activeTab = document.querySelector(".tab-btn.active")?.dataset.tab;
+      if (activeTab === "upi") {
+        const upiVal = document.getElementById("upiId").value.trim();
+        if (!upiVal || !upiVal.includes("@")) {
+          payStatus.className = "payment-status error";
+          payStatus.textContent = "Please enter a valid UPI ID (e.g. name@bank).";
+          return;
+        }
+      } else if (activeTab === "card") {
+        const cNum = document.getElementById("cardNumber").value.replace(/\s/g, "");
+        const cExp = document.getElementById("cardExpiry").value.trim();
+        const cCvv = document.getElementById("cardCvv").value.trim();
+        if (cNum.length < 15 || !cExp.includes("/") || cCvv.length < 3) {
+          payStatus.className = "payment-status error";
+          payStatus.textContent = "Please enter valid card details.";
+          return;
+        }
+      }
+
+      // Processing state UI
+      payBtn.disabled = true;
+      payBtn.textContent = "Processing Payment...";
+      payStatus.className = "payment-status";
+      payStatus.textContent = "Connecting to payment gateway...";
+
+      setTimeout(() => {
+        payStatus.textContent = "Authorizing transaction...";
+      }, 1000);
+
+      setTimeout(() => {
+        const randomTxn = "STRM_" + Math.random().toString(36).substring(2, 11).toUpperCase();
+        txnIdDisplay.textContent = randomTxn;
+
+        // Try notifying backend if api/payment/verify or subscription is available
+        fetch("/api/payment/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            razorpay_order_id: "ORDER_" + randomTxn,
+            razorpay_payment_id: randomTxn,
+            razorpay_signature: "simulated_signature",
+            planName: planName,
+            amountPaid: totalPrice
+          })
+        }).catch(() => {});
+
+        // Show Success Modal
+        successModal.classList.add("active");
+      }, 2400);
+    });
+
+    // Go Home action
+    document.getElementById("goHomeBtn").addEventListener("click", () => {
+      window.location.href = "/";
+    });
+
+    /* ---------- Progress Bar Logic ---------- */
+    (function() {
+      const bar = document.getElementById('progressBar');
+      if (!bar) return;
+      let w = 0;
+      const iv = setInterval(() => {
+        w += Math.random() * 15 + 5;
+        if (w > 90) w = 90;
+        bar.style.width = w + '%';
+      }, 200);
+      window.addEventListener('load', () => {
+        clearInterval(iv);
+        bar.style.width = '100%';
+        setTimeout(() => { bar.classList.add('done'); }, 400);
+      });
+    })();
+  </script>
+</body>
+</html>
