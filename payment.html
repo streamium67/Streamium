@@ -7,6 +7,9 @@
   <meta name="description" content="Streamium Secure Checkout — pay with UPI, Google Pay, PhonePe, Paytm or FamApp. 100% secure and encrypted." />
   <title>Secure Checkout — Streamium</title>
 
+  <!-- Supabase JS Client SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     /* ================= Design tokens (identical to index.html) ================= */
     :root {
@@ -678,10 +681,10 @@
        CONFIG
        ========================================================= */
     const CONFIG = {
-      // Leave empty for demo mode (orders are kept in localStorage).
-      // Set to your endpoint to store orders in a real database, e.g.
-      // "/api/orders" or a Google Apps Script / Supabase / Firebase URL.
-      API_ENDPOINT: "",
+      API_ENDPOINT: "/api/payments",
+      SUPABASE_URL: window.SUPABASE_URL || localStorage.getItem("SUPABASE_URL") || "",
+      SUPABASE_ANON_KEY: window.SUPABASE_ANON_KEY || localStorage.getItem("SUPABASE_ANON_KEY") || "",
+      SUPABASE_TABLE: "payments",
       UPI_ID: "streamium@upi",
       PAYEE_NAME: "Streamium",
       SESSION_MINUTES: 10,
@@ -935,20 +938,77 @@
       };
     }
 
+    function buildSupabasePaymentPayload(order) {
+      const nowIso = new Date().toISOString();
+      return {
+        order_id: order.orderId,
+        user_id: user.userId,
+        email: user.email,
+        plan_name: state.planName,
+        amount: Number(state.amount),
+        currency: "INR",
+        payment_method: METHODS[state.method] ? METHODS[state.method].name : "UPI",
+        gateway: "Manual UPI",
+        transaction_id: order.orderId,
+        status: "Pending",
+        created_at: nowIso,
+        verified_at: null,
+        notes: "Payment initiated via Streamium Checkout"
+      };
+    }
+
     async function saveOrder(order) {
-      if (CONFIG.API_ENDPOINT) {
-        const res = await fetch(CONFIG.API_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(order)
-        });
-        if (!res.ok) throw new Error("Request failed with status " + res.status);
+      const supabasePayment = buildSupabasePaymentPayload(order);
+      console.log("Supabase payment payload:", supabasePayment);
+
+      // 1. Direct Supabase insertion via JS SDK or REST API if configured
+      if (window.supabase && CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY) {
+        try {
+          const client = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+          const { data, error } = await client.from(CONFIG.SUPABASE_TABLE).insert([supabasePayment]);
+          if (error) console.warn("Supabase SDK insert warning:", error.message);
+          else console.log("Successfully recorded payment in Supabase payments table:", data);
+        } catch (sbErr) {
+          console.warn("Supabase SDK error:", sbErr.message);
+        }
+      } else if (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY) {
+        try {
+          const res = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${CONFIG.SUPABASE_TABLE}`, {
+            method: "POST",
+            headers: {
+              "apikey": CONFIG.SUPABASE_ANON_KEY,
+              "Authorization": "Bearer " + CONFIG.SUPABASE_ANON_KEY,
+              "Content-Type": "application/json",
+              "Prefer": "return=minimal"
+            },
+            body: JSON.stringify(supabasePayment)
+          });
+          if (res.ok) console.log("Payment saved to Supabase via REST API");
+          else console.warn("Supabase REST error:", await res.text());
+        } catch (fetchErr) {
+          console.warn("Supabase REST fetch error:", fetchErr.message);
+        }
       }
-      // Always keep a local copy so payment-success.html can show the order.
+
+      // 2. Post to backend API endpoint /api/payments
+      if (CONFIG.API_ENDPOINT) {
+        try {
+          await fetch(CONFIG.API_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ order, payment: supabasePayment })
+          });
+        } catch (apiErr) {
+          console.warn("Backend API call warning:", apiErr.message);
+        }
+      }
+
+      // 3. Always keep local copy so payment-success.html works offline/demo mode
       const all = JSON.parse(localStorage.getItem("streamium_orders") || "[]");
       all.push(order);
       localStorage.setItem("streamium_orders", JSON.stringify(all));
       localStorage.setItem("streamium_last_order", JSON.stringify(order));
+      localStorage.setItem("streamium_last_supabase_payment", JSON.stringify(supabasePayment));
     }
 
     function setLoading(isLoading) {

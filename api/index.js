@@ -857,6 +857,63 @@ app.post(["/payment/create-order", "/api/payment/create-order"], async (req, res
   }
 });
 
+// POST /api/payments — Record payment details in Supabase payments table
+app.post(["/payments", "/api/payments"], async (req, res) => {
+  try {
+    const { order, payment } = req.body;
+
+    const paymentData = payment || {
+      order_id: order?.orderId || ("STRM-" + Date.now()),
+      user_id: order?.userId || "GUEST-USER",
+      email: order?.email || "",
+      plan_name: order?.plan || order?.planName || "Netflix Premium (1 Month)",
+      amount: Number(order?.amount) || 199,
+      currency: "INR",
+      payment_method: order?.paymentMethod || "UPI",
+      gateway: "Manual UPI",
+      transaction_id: order?.orderId || ("TXN-" + Date.now()),
+      status: "Pending",
+      created_at: new Date().toISOString(),
+      verified_at: null,
+      notes: "Payment recorded via Streamium API"
+    };
+
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      try {
+        const fetchRes = await fetch(`${SUPABASE_URL}/rest/v1/payments`, {
+          method: "POST",
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+          },
+          body: JSON.stringify(paymentData)
+        });
+        if (!fetchRes.ok) {
+          console.error("Supabase payment insertion error:", await fetchRes.text());
+        } else {
+          console.log("Recorded payment in Supabase payments table:", paymentData.order_id);
+        }
+      } catch (sbErr) {
+        console.error("Supabase insert error:", sbErr.message);
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: "Payment details processed successfully.",
+      payment: paymentData
+    });
+  } catch (err) {
+    console.error("Payment API endpoint error:", err.message);
+    return res.status(500).json({ error: "Failed to process payment." });
+  }
+});
+
 // POST /api/payment/verify — verify + record order in Google Sheets
 app.post(["/payment/verify", "/api/payment/verify"], async (req, res) => {
   try {
